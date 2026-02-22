@@ -1,0 +1,35 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { LabTest } from './entities/lab-test.entity';
+import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
+
+@Injectable()
+export class LaboratoryService {
+    constructor(
+        @InjectRepository(LabTest)
+        private readonly labTestRepo: Repository<LabTest>,
+    ) { }
+
+    async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<LabTest>> {
+        const { page = 1, limit = 10 } = query;
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await this.labTestRepo.findAndCount({
+            relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+            order: { createdAt: 'DESC' },
+            take: limit,
+            skip,
+        });
+
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+}
