@@ -38,19 +38,19 @@ export default function DashboardPage() {
         // Fetch metrics from new modules in parallel
         try {
           const [wardsStats, financialRes, inventoryRes, staffRes, complianceRes] = await Promise.all([
-            apiClient.get('/wards/stats').catch(() => ({})),
-            apiClient.get('/accounts/financial-summary').catch(() => ({})),
-            apiClient.get('/inventory/low-stock').catch(() => []),
-            apiClient.get('/staff?limit=1').catch(() => ({})),
-            apiClient.get('/compliance/non-compliant').catch(() => []),
+            apiClient.get('/wards/stats').catch(() => ({ data: {} })),
+            apiClient.get('/accounts/financial-summary').catch(() => ({ data: {} })),
+            apiClient.get('/inventory/low-stock').catch(() => ({ data: [] })),
+            apiClient.get('/staff?limit=1').catch(() => ({ data: {} })),
+            apiClient.get('/compliance/non-compliant').catch(() => ({ data: [] })),
           ]);
           
           setModuleMetrics({
             wards: wardsStats.data || {},
             financial: financialRes.data || { totalRevenue: 0, totalExpenses: 0, netProfit: 0 },
-            lowStockItems: (inventoryRes.data || []).length,
+            lowStockItems: Array.isArray(inventoryRes.data) ? inventoryRes.data.length : 0,
             staffCount: staffRes.data?.total || 0,
-            nonCompliantItems: (complianceRes.data || []).length,
+            nonCompliantItems: Array.isArray(complianceRes.data) ? complianceRes.data.length : 0,
           });
         } catch (error) {
           console.error('Failed to fetch module metrics', error);

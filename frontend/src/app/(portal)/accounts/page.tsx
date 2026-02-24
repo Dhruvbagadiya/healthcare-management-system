@@ -6,18 +6,18 @@ import { PieChart, DollarSign, TrendingUp } from 'lucide-react';
 
 export default function AccountsPage() {
   const [summary, setSummary] = useState({ totalRevenue: 0, totalExpenses: 0, netProfit: 0 });
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, _setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      _setIsLoading(true);
       try {
         const res = await apiClient.get('/accounts/financial-summary');
         setSummary(res.data);
       } catch (error) {
         console.error('Failed to fetch financial summary', error);
       }
-      setIsLoading(false);
+      _setIsLoading(false);
     };
     fetchData();
   }, []);

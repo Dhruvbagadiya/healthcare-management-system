@@ -12,7 +12,6 @@ import {
   FlaskConical,
   LogOut,
   ChevronRight,
-  User as UserIcon,
   Stethoscope,
   Package,
   Building2,
