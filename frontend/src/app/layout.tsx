@@ -3,9 +3,9 @@ import { Toaster } from 'react-hot-toast';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Healthcare Management System',
+  title: 'ShrutiCare Management System',
   description: 'Professional Hospital & Clinic Management System',
-  authors: [{ name: 'Healthcare Team' }],
+  authors: [{ name: 'ShrutiCare Team' }],
   keywords: ['healthcare', 'hospital', 'clinic', 'management'],
 };
 

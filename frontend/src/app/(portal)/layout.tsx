@@ -20,6 +20,10 @@ import {
   Shield,
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/auth';
+import { useUIStore } from '@/lib/store';
+import { MobileMenuToggle } from '@/components/layout/mobile-menu-toggle';
+import { MobileMenuOverlay } from '@/components/layout/mobile-menu-overlay';
+import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -44,6 +48,8 @@ export default function DashboardLayout({
 }) {
   const { user, isLoading } = useRequireAuth();
   const pathname = usePathname();
+  const { isMobileMenuOpen } = useUIStore();
+  useMobileNavigation();
 
   if (isLoading) {
     return (
@@ -63,16 +69,18 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-50/50">
+      <MobileMenuOverlay />
+
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm lg:flex">
+      <aside className={`fixed left-0 top-0 z-50 h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Brand Header */}
         <div className="flex h-20 items-center border-b border-slate-50 px-8">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 overflow-hidden rounded-xl shadow-lg ring-4 ring-blue-50">
-              <img src="/logo.svg" alt="HealthCare logo" className="h-full w-full object-cover" />
+              <img src="/logo.svg" alt="ShrutiCare logo" className="h-full w-full object-cover" />
             </div>
             <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900 leading-none">HealthCare</h2>
+              <h2 className="text-lg font-bold tracking-tight text-slate-900 leading-none">ShrutiCare</h2>
               <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-blue-600/80">Premium Portal</span>
             </div>
           </div>
@@ -134,10 +142,11 @@ export default function DashboardLayout({
       <div className="flex flex-1 flex-col lg:pl-72 focus:outline-none">
         <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-8 backdrop-blur-md lg:hidden shadow-sm">
           <div className="flex items-center gap-3">
+            <MobileMenuToggle />
             <div className="h-8 w-8 overflow-hidden rounded-lg">
-              <img src="/logo.svg" alt="HealthCare logo" className="h-full w-full object-cover" />
+              <img src="/logo.svg" alt="ShrutiCare logo" className="h-full w-full object-cover" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">HealthCare</h2>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">ShrutiCare</h2>
           </div>
         </header>
         <main className="flex-1 p-6 md:p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-2 duration-700">

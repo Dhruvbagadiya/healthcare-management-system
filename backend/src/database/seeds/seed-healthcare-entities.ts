@@ -206,5 +206,5 @@ export async function seedHealthcareEntities() {
   if (prescriptions.length > 0) await prescriptionRepo.save(prescriptions);
   if (invoices.length > 0) await invoiceRepo.save(invoices);
 
-  console.log('Healthcare entities seeding completed.');
+  console.log('ShrutiCare entities seeding completed.');
 }
