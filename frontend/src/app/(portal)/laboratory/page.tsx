@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Beaker, Search, Filter, MoreHorizontal, Download, FlaskConical, ClipboardList } from 'lucide-react';
+import { Beaker, Search, Filter, MoreHorizontal, FlaskConical, ClipboardList } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function LaboratoryPage() {
