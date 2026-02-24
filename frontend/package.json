@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "eslint --ext .ts,.tsx src --fix",
+    "prebuild": "npm run lint:fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit"
   },
