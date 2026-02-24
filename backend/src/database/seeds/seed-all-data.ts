@@ -260,11 +260,14 @@ async function seedDatabase() {
     const wardRepo = AppDataSource.getRepository(Ward);
     const bedRepo = AppDataSource.getRepository(Bed);
     let bedCount = 0;
+    let wardIndex = 0;
 
     for (const wardData of WARDS_DATA) {
+      wardIndex++;
       const ward = wardRepo.create({
-        name: wardData.name,
-        department: wardData.department,
+        wardName: wardData.name,
+        wardCode: `WARD-${wardIndex.toString().padStart(3, '0')}`,
+        description: `${wardData.department} Ward`,
         totalBeds: wardData.totalBeds,
       });
       const savedWard = await wardRepo.save(ward);
@@ -273,7 +276,7 @@ async function seedDatabase() {
       for (let bedNum = 1; bedNum <= wardData.totalBeds; bedNum++) {
         const bed = bedRepo.create({
           wardId: savedWard.id,
-          bedNumber: bedNum,
+          bedNumber: `BED-${bedNum.toString().padStart(3, '0')}`,
           status: bedNum <= wardData.occupiedBeds ? BedStatus.OCCUPIED : BedStatus.AVAILABLE,
           patientId: bedNum <= wardData.occupiedBeds ? patients[Math.floor(Math.random() * patients.length)].id : null,
         });
@@ -301,7 +304,6 @@ async function seedDatabase() {
         minimumLevel: itemData.minLevel,
         location: 'Main Store',
         status: itemData.quantity > itemData.minLevel ? InventoryStatus.IN_STOCK : InventoryStatus.LOW_STOCK,
-        lastRestockDate: new Date(),
       });
       await inventoryRepo.save(inventory);
       inventoryCount++;

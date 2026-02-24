@@ -2,6 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { StaffRole } from './entities/staff.entity';
 
 @ApiTags('Staff')
 @UseGuards(JwtAuthGuard)
@@ -21,6 +22,6 @@ export class StaffController {
 
   @Get('by-role')
   async getStaffByRole(@Query('role') role: string) {
-    return this.staffService.getStaffByRole(role);
+    return this.staffService.getStaffByRole(role as StaffRole);
   }
 }
