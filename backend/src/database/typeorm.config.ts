@@ -13,6 +13,13 @@ import { Invoice } from '../modules/billing/entities/invoice.entity';
 import { LabTest } from '../modules/laboratory/entities/lab-test.entity';
 import { Medicine } from '../modules/pharmacy/entities/medicine.entity';
 import { AuditLog } from '../common/entities/audit-log.entity';
+import { Staff } from '../modules/staff/entities/staff.entity';
+import { Inventory } from '../modules/inventory/entities/inventory.entity';
+import { Ward, Bed } from '../modules/wards/entities/ward.entity';
+import { OperationTheater, Surgery } from '../modules/operation-theater/entities/operation-theater.entity';
+import { RadiologyRequest } from '../modules/radiology/entities/radiology.entity';
+import { Expense, Revenue } from '../modules/accounts/entities/accounts.entity';
+import { ComplianceRecord, DataAccessLog } from '../modules/compliance/entities/compliance.entity';
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => ({
   type: 'postgres',
@@ -32,6 +39,17 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     LabTest,
     Medicine,
     AuditLog,
+    Staff,
+    Inventory,
+    Ward,
+    Bed,
+    OperationTheater,
+    Surgery,
+    RadiologyRequest,
+    Expense,
+    Revenue,
+    ComplianceRecord,
+    DataAccessLog,
   ],
   migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
   migrationsTableName: 'typeorm_migrations',
@@ -60,6 +78,17 @@ export const AppDataSource = new DataSource({
     LabTest,
     Medicine,
     AuditLog,
+    Staff,
+    Inventory,
+    Ward,
+    Bed,
+    OperationTheater,
+    Surgery,
+    RadiologyRequest,
+    Expense,
+    Revenue,
+    ComplianceRecord,
+    DataAccessLog,
   ],
   migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
   migrationsTableName: 'typeorm_migrations',

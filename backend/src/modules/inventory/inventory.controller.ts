@@ -2,6 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { InventoryType } from './entities/inventory.entity';
 
 @ApiTags('Inventory')
 @UseGuards(JwtAuthGuard)
@@ -21,7 +22,7 @@ export class InventoryController {
 
   @Get('by-type')
   async getByType(@Query('type') type: string) {
-    return this.inventoryService.getByType(type as any);
+    return this.inventoryService.getByType(type as InventoryType);
   }
 
   @Get('low-stock')

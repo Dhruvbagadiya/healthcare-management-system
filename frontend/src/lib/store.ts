@@ -10,6 +10,18 @@ export interface User {
   roles: string[];
 }
 
+export interface UIState {
+  isMobileMenuOpen: boolean;
+  toggleMobileMenu: () => void;
+  closeMobileMenu: () => void;
+}
+
+export const useUIStore = create<UIState>((set) => ({
+  isMobileMenuOpen: false,
+  toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
+  closeMobileMenu: () => set({ isMobileMenuOpen: false }),
+}));
+
 export interface AuthState {
   user: User | null;
   accessToken: string | null;

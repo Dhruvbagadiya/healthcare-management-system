@@ -42,8 +42,8 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Healthcare Management System API')
-    .setDescription('Production-ready Hospital/Clinic Management System API Documentation')
+    .setTitle('ShrutiCare API')
+    .setDescription('Production-ready ShrutiCare Hospital Management System API Documentation')
     .setVersion('1.0.0')
     .addBearerAuth()
     .addTag('Auth')
@@ -64,7 +64,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`✅ Healthcare Management System API running on http://localhost:${port}`);
+  console.log(`✅ ShrutiCare API running on http://localhost:${port}`);
   console.log(`📚 Swagger docs available at http://localhost:${port}/api/docs`);
 }
 

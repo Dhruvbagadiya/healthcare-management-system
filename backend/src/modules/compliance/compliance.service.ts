@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ComplianceRecord, DataAccessLog, ComplianceStatus } from './entities/compliance.entity';
+import { ComplianceRecord, DataAccessLog, ComplianceStatus, ComplianceType } from './entities/compliance.entity';
 
 @Injectable()
 export class ComplianceService {
@@ -21,7 +21,7 @@ export class ComplianceService {
   }
 
   async getComplianceByType(type: string) {
-    return this.complianceRepository.find({ where: { complianceType: type as any } });
+    return this.complianceRepository.find({ where: { complianceType: type as ComplianceType } });
   }
 
   async getNonCompliantItems() {

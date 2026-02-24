@@ -27,7 +27,7 @@ async function seedData() {
       await AppDataSource.initialize();
     }
 
-    console.log('\n🌱 Starting production data seeding...\n');
+    console.log('\n🌱 Starting ShrutiCare production data seeding...\n');
 
     const userRepo = AppDataSource.getRepository(User);
     const doctorRepo = AppDataSource.getRepository(Doctor);
@@ -96,13 +96,15 @@ async function seedData() {
       let savedDoctor = await doctorRepo.findOne({ where: { customUserId: savedUser.userId } });
       if (!savedDoctor) {
         const doctor = doctorRepo.create({
+          user: savedUser,
+          customUserId: savedUser.userId,
+          doctorId: `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
           specialization: docData.specialization,
           licenseNumber: `LIC${Math.random().toString(36).substring(7).toUpperCase()}`,
           yearsOfExperience: Math.floor(Math.random() * 20) + 3,
           consultationFee: Math.floor(Math.random() * 3000) + 500,
           isActive: true,
         });
-        doctor.customUserId = savedUser.userId;
         savedDoctor = await doctorRepo.save(doctor);
       }
       doctors.push(savedDoctor);
@@ -147,6 +149,9 @@ async function seedData() {
       let savedPatient = await patientRepo.findOne({ where: { customUserId: savedUser.userId } });
       if (!savedPatient) {
         const patient = patientRepo.create({
+          user: savedUser,
+          customUserId: savedUser.userId,
+          patientId: `PAT-${Math.floor(1000 + Math.random() * 9000)}`,
           bloodType: bloodTypes[Math.floor(Math.random() * bloodTypes.length)],
           insuranceProvider: 'Health Insurance Company',
           insurancePolicyNumber: `POL${Math.random().toString(36).substring(7).toUpperCase()}`,
@@ -157,7 +162,6 @@ async function seedData() {
           maritalStatus: 'Married',
           occupation: 'Professional',
         });
-        patient.customUserId = savedUser.userId;
         savedPatient = await patientRepo.save(patient);
       }
       patients.push(savedPatient);
@@ -176,8 +180,8 @@ async function seedData() {
       appointmentDate.setHours(hours, 0, 0, 0);
 
       const appointment = appointmentRepo.create({
-        doctorId: doctor.customUserId,
-        patientId: patient.customUserId,
+        doctorId: doctor.id,
+        patientId: patient.id,
         appointmentDate,
         appointmentTime: `${hours.toString().padStart(2, '0')}:00`,
         reason: ['Routine Checkup', 'Follow-up', 'Consultation', 'Emergency'][Math.floor(Math.random() * 4)],
@@ -234,7 +238,7 @@ async function seedData() {
 
     for (const testData of labTestsData) {
       const labTest = labTestRepo.create({
-        patientId: testData.patient.customUserId,
+        patientId: testData.patient.id,
         testName: testData.name,
         description: testData.description,
         status: LabTestStatus.ORDERED,
@@ -276,11 +280,12 @@ async function seedData() {
         savedUser = await userRepo.save(user);
       }
 
-      const existingStaff = await staffRepo.findOne({ where: { userId: savedUser.userId } });
+      const existingStaff = await staffRepo.findOne({ where: { userId: savedUser.id } });
       if (!existingStaff) {
         const staff = staffRepo.create({
+          user: savedUser,
           staffId: `STAFF${Math.random().toString(36).substring(7).toUpperCase()}`,
-          userId: savedUser.userId,
+          userId: savedUser.id,
           role: std.role,
           status: StaffStatus.ACTIVE,
           yearsOfExperience: std.experience,
@@ -302,7 +307,7 @@ async function seedData() {
 
       const invoiceData: any = {
         invoiceNumber: `INV${Date.now()}${i}`,
-        patientId: patient.customUserId,
+        patientId: patient.id,
         subtotal,
         taxAmount,
         taxPercentage: 18,
@@ -385,8 +390,8 @@ async function seedData() {
     for (let i = 0; i < 10; i++) {
       const surgery = surgeryRepo.create({
         surgeryId: `SURG${Math.random().toString(36).substring(7).toUpperCase()}`,
-        patientId: patients[i % patients.length].customUserId,
-        surgeonId: doctors[i % doctors.length].customUserId,
+        patientId: patients[i % patients.length].id,
+        surgeonId: doctors[i % doctors.length].id,
         theatreId: theaters[i % theaters.length].theatreCode,
         surgeryType: surgeryTypes[Math.floor(Math.random() * surgeryTypes.length)],
         scheduledDate: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000),
