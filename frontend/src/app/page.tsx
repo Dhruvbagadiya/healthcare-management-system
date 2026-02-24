@@ -4,6 +4,9 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 p-4">
       <div className="card max-w-2xl text-center">
+        <div className="mb-4 flex items-center justify-center">
+          <img src="/logo.svg" alt="HealthCare logo" className="h-16 w-16" />
+        </div>
         <h1 className="mb-4 text-4xl font-bold text-primary-600">
           Healthcare Management System
         </h1>

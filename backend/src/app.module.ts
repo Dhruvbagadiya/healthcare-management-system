@@ -13,6 +13,13 @@ import { BillingModule } from './modules/billing/billing.module';
 import { LaboratoryModule } from './modules/laboratory/laboratory.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { StaffModule } from './modules/staff/staff.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { WardsModule } from './modules/wards/wards.module';
+import { OperationTheaterModule } from './modules/operation-theater/operation-theater.module';
+import { RadiologyModule } from './modules/radiology/radiology.module';
+import { AccountsModule } from './modules/accounts/accounts.module';
+import { ComplianceModule } from './modules/compliance/compliance.module';
 
 @Module({
   imports: [
@@ -35,6 +42,13 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     LaboratoryModule,
     PharmacyModule,
     DashboardModule,
+    StaffModule,
+    InventoryModule,
+    WardsModule,
+    OperationTheaterModule,
+    RadiologyModule,
+    AccountsModule,
+    ComplianceModule,
   ],
 })
 export class AppModule {}

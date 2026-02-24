@@ -1,0 +1,88 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  Index,
+  OneToMany,
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+
+export enum StaffRole {
+  DOCTOR = 'doctor',
+  NURSE = 'nurse',
+  TECHNICIAN = 'technician',
+  RECEPTIONIST = 'receptionist',
+  ADMIN = 'admin',
+  PHARMACIST = 'pharmacist',
+  LAB_TECHNICIAN = 'lab_technician',
+}
+
+export enum StaffStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  ON_LEAVE = 'on_leave',
+  SUSPENDED = 'suspended',
+}
+
+@Entity('staff')
+@Index(['userId'])
+@Index(['staffId'])
+@Index(['status'])
+export class Staff {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ unique: true })
+  staffId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE', eager: true })
+  user: User;
+
+  @Column()
+  userId: string;
+
+  @Column({ type: 'enum', enum: StaffRole })
+  role: StaffRole;
+
+  @Column({ type: 'enum', enum: StaffStatus, default: StaffStatus.ACTIVE })
+  status: StaffStatus;
+
+  @Column({ nullable: true })
+  specialization: string;
+
+  @Column({ nullable: true })
+  licenseNumber: string;
+
+  @Column({ nullable: true })
+  licenseExpiry: Date;
+
+  @Column({ nullable: true })
+  departmentId: string;
+
+  @Column({ nullable: true })
+  joiningDate: Date;
+
+  @Column({ nullable: true })
+  qualification: string;
+
+  @Column({ nullable: true })
+  yearsOfExperience: number;
+
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ nullable: true })
+  availableFrom: string; // HH:MM format
+
+  @Column({ nullable: true })
+  availableTo: string; // HH:MM format
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

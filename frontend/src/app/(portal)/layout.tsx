@@ -12,7 +12,13 @@ import {
   FlaskConical,
   LogOut,
   ChevronRight,
-  User as UserIcon
+  User as UserIcon,
+  Stethoscope,
+  Package,
+  Building2,
+  Microscope,
+  DollarSign,
+  Shield,
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/auth';
 
@@ -24,6 +30,12 @@ const NAV_ITEMS = [
   { href: '/prescriptions', label: 'Prescriptions', icon: ClipboardList },
   { href: '/billing', label: 'Billing', icon: Wallet },
   { href: '/laboratory', label: 'Laboratory', icon: FlaskConical },
+  { href: '/staff', label: 'Staff', icon: Stethoscope },
+  { href: '/inventory', label: 'Inventory', icon: Package },
+  { href: '/wards', label: 'Wards', icon: Building2 },
+  { href: '/operation-theater', label: 'Operation Theater', icon: Microscope },
+  { href: '/accounts', label: 'Accounts', icon: DollarSign },
+  { href: '/compliance', label: 'Compliance', icon: Shield },
 ];
 
 export default function DashboardLayout({
@@ -57,8 +69,8 @@ export default function DashboardLayout({
         {/* Brand Header */}
         <div className="flex h-20 items-center border-b border-slate-50 px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 ring-4 ring-blue-50">
-              <span className="text-xl font-bold italic">H</span>
+            <div className="h-10 w-10 overflow-hidden rounded-xl shadow-lg ring-4 ring-blue-50">
+              <img src="/logo.svg" alt="HealthCare logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <h2 className="text-lg font-bold tracking-tight text-slate-900 leading-none">HealthCare</h2>
@@ -122,8 +134,10 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col lg:pl-72 focus:outline-none">
         <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-8 backdrop-blur-md lg:hidden shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-600 text-white font-bold italic">H</div>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 overflow-hidden rounded-lg">
+              <img src="/logo.svg" alt="HealthCare logo" className="h-full w-full object-cover" />
+            </div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">HealthCare</h2>
           </div>
         </header>
