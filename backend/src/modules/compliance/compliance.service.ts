@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ComplianceRecord, DataAccessLog } from './entities/compliance.entity';
+import { ComplianceRecord, DataAccessLog, ComplianceStatus } from './entities/compliance.entity';
 
 @Injectable()
 export class ComplianceService {
@@ -27,6 +28,7 @@ export class ComplianceService {
   async getNonCompliantItems() {
     return this.complianceRepository.find({
       where: { status: 'non_compliant' },
+      where: { status: ComplianceStatus.NON_COMPLIANT },
     });
   }
 

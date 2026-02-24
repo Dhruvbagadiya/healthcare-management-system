@@ -65,4 +65,5 @@ export const AppDataSource = new DataSource({
   migrationsTableName: 'typeorm_migrations',
   synchronize: true,
   logging: process.env.NODE_ENV === 'development',
+  ssl: process.env.DATABASE_HOST?.includes('supabase') ? { rejectUnauthorized: false } : false,
 } as DataSourceOptions);
