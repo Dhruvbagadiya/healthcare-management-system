@@ -279,6 +279,7 @@ async function seedDatabase() {
           bedNumber: `BED-${bedNum.toString().padStart(3, '0')}`,
           status: bedNum <= wardData.occupiedBeds ? BedStatus.OCCUPIED : BedStatus.AVAILABLE,
           patientId: bedNum <= wardData.occupiedBeds ? patients[Math.floor(Math.random() * patients.length)].id : null,
+          assignedPatientId: bedNum <= wardData.occupiedBeds ? patients[Math.floor(Math.random() * patients.length)].id : null,
         });
         await bedRepo.save(bed);
         bedCount++;
