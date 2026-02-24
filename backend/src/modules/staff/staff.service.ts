@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Staff } from './entities/staff.entity';
+import { Staff, StaffRole } from './entities/staff.entity';
 
 @Injectable()
 export class StaffService {
@@ -26,7 +26,7 @@ export class StaffService {
     });
   }
 
-  async getStaffByRole(role: string) {
+  async getStaffByRole(role: StaffRole) {
     return this.staffRepository.find({
       where: { role },
       relations: ['user'],

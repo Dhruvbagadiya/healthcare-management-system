@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RadiologyRequest } from './entities/radiology.entity';
+import { RadiologyRequest, ImagingStatus } from './entities/radiology.entity';
 
 @Injectable()
 export class RadiologyService {
@@ -22,15 +22,15 @@ export class RadiologyService {
     return this.radiologyRepository.find({ where: { patientId } });
   }
 
-  async getByStatus(status: string) {
+  async getByStatus(status: ImagingStatus) {
     return this.radiologyRepository.find({ where: { status } });
   }
 
   async getPendingReports() {
-    return this.radiologyRepository.find({ where: { status: 'pending' } });
+    return this.radiologyRepository.find({ where: { status: ImagingStatus.PENDING } });
   }
 
   async getCompletedReports() {
-    return this.radiologyRepository.find({ where: { status: 'completed' } });
+    return this.radiologyRepository.find({ where: { status: ImagingStatus.COMPLETED } });
   }
 }

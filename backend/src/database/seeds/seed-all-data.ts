@@ -1,22 +1,22 @@
 import { AppDataSource } from '../typeorm.config';
-import { User } from '../../modules/users/entities/user.entity';
+import { User, UserRole, UserStatus } from '../../modules/users/entities/user.entity';
 import { Patient } from '../../modules/patients/entities/patient.entity';
 import { Doctor } from '../../modules/doctors/entities/doctor.entity';
-import { Appointment } from '../../modules/appointments/entities/appointment.entity';
+import { Appointment, AppointmentStatus } from '../../modules/appointments/entities/appointment.entity';
 import { Prescription } from '../../modules/prescriptions/entities/prescription.entity';
 import { Medicine } from '../../modules/pharmacy/entities/medicine.entity';
-import { LabTest } from '../../modules/laboratory/entities/lab-test.entity';
+import { LabTest, LabTestStatus } from '../../modules/laboratory/entities/lab-test.entity';
 import { Invoice } from '../../modules/billing/entities/invoice.entity';
 import { Expense, ExpenseType, PaymentStatus } from '../../modules/accounts/entities/accounts.entity';
 import { Revenue } from '../../modules/accounts/entities/accounts.entity';
 import { Staff, StaffRole, StaffStatus } from '../../modules/staff/entities/staff.entity';
-import { Ward, Bed, BedStatus } from '../../modules/wards/entities/wards.entity';
+import { Ward, Bed, BedStatus } from '../../modules/wards/entities/ward.entity';
 import { Inventory, InventoryType, InventoryStatus } from '../../modules/inventory/entities/inventory.entity';
 import { RadiologyRequest, ImagingType, ImagingStatus } from '../../modules/radiology/entities/radiology.entity';
 import { OperationTheater, Surgery, SurgeryStatus } from '../../modules/operation-theater/entities/operation-theater.entity';
-import { ComplianceRecord } from '../../modules/compliance/entities/compliance.entity';
+import { ComplianceRecord, ComplianceStatus, ComplianceType } from '../../modules/compliance/entities/compliance.entity';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'crypto';
 
 const DOCTORS_DATA = [
   { name: 'Dr. Rajesh Kumar', specialization: 'Cardiology', phone: '9876543210' },
@@ -98,21 +98,24 @@ async function seedDatabase() {
 
     for (const doctorData of DOCTORS_DATA) {
       const user = userRepo.create({
+        userId: crypto.randomUUID(),
         email: `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@hospital.com`,
         password: await bcrypt.hash('DoctorPass123!', 10),
-        role: 'doctor',
-        status: 'active',
+        roles: [UserRole.DOCTOR],
+        status: UserStatus.ACTIVE,
         emailVerified: true,
+        firstName: doctorData.name.split(' ')[0],
+        lastName: doctorData.name.split(' ').slice(1).join(' '),
+        phoneNumber: doctorData.phone,
       });
       const savedUser = await userRepo.save(user);
 
       const doctor = doctorRepo.create({
-        userId: savedUser.id,
-        name: doctorData.name,
+        user: savedUser,
+        customUserId: savedUser.userId,
         specialization: doctorData.specialization,
-        phone: doctorData.phone,
-        licenseNumber: `LIC${uuidv4().substring(0, 8).toUpperCase()}`,
-        experience: Math.floor(Math.random() * 20) + 5,
+        licenseNumber: `LIC${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
+        yearsOfExperience: Math.floor(Math.random() * 20) + 5,
       });
       const savedDoctor = await doctorRepo.save(doctor);
       doctors.push(savedDoctor);
@@ -126,22 +129,25 @@ async function seedDatabase() {
 
     for (const patientData of PATIENTS_DATA) {
       const user = userRepo.create({
+        userId: crypto.randomUUID(),
         email: patientData.email,
         password: await bcrypt.hash('PatientPass123!', 10),
-        role: 'patient',
-        status: 'active',
+        roles: [UserRole.PATIENT],
+        status: UserStatus.ACTIVE,
         emailVerified: true,
+        firstName: patientData.name.split(' ')[0],
+        lastName: patientData.name.split(' ').slice(1).join(' '),
+        phoneNumber: patientData.phone,
+        dateOfBirth: new Date(2000 - patientData.age, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
+        address: `${Math.floor(Math.random() * 500)} Hospital Street, City`,
       });
       const savedUser = await userRepo.save(user);
 
       const patient = patientRepo.create({
-        userId: savedUser.id,
-        name: patientData.name,
-        phone: patientData.phone,
-        dateOfBirth: new Date(2000 - patientData.age, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
-        bloodGroup: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'][Math.floor(Math.random() * 8)],
-        address: `${Math.floor(Math.random() * 500)} Hospital Street, City`,
-        medicalHistory: `Patient with ${patientData.age > 50 ? 'chronic conditions' : 'no chronic conditions'}`,
+        user: savedUser,
+        customUserId: savedUser.userId,
+        bloodType: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'][Math.floor(Math.random() * 8)] as any,
+        chronicDiseases: patientData.age > 50 ? ['Hypertension'] : [],
       });
       const savedPatient = await patientRepo.save(patient);
       patients.push(savedPatient);
@@ -151,7 +157,7 @@ async function seedDatabase() {
     // 3. Create Appointments
     console.log('📅 Creating appointments...');
     const appointmentRepo = AppDataSource.getRepository(Appointment);
-    const appointmentStatuses = ['scheduled', 'completed', 'cancelled'];
+    const appointmentStatuses = [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED];
     let appointmentCount = 0;
 
     for (let i = 0; i < 20; i++) {
@@ -159,12 +165,14 @@ async function seedDatabase() {
       const patient = patients[Math.floor(Math.random() * patients.length)];
       const appointmentDate = new Date();
       appointmentDate.setDate(appointmentDate.getDate() + Math.floor(Math.random() * 30) - 15);
-      appointmentDate.setHours(Math.floor(Math.random() * 8) + 9, 0, 0, 0);
+      const hours = Math.floor(Math.random() * 8) + 9;
+      appointmentDate.setHours(hours, 0, 0, 0);
 
       const appointment = appointmentRepo.create({
         doctorId: doctor.id,
         patientId: patient.id,
         appointmentDate,
+        appointmentTime: `${hours.toString().padStart(2, '0')}:00`,
         reason: ['Routine Checkup', 'Follow-up', 'Emergency', 'Consultation'][Math.floor(Math.random() * 4)],
         status: appointmentStatuses[Math.floor(Math.random() * appointmentStatuses.length)],
         notes: 'Appointment notes here',
@@ -181,9 +189,12 @@ async function seedDatabase() {
 
     for (const medicineData of MEDICINES_DATA) {
       const medicine = medicineRepo.create({
+        medicineCode: `MED${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         name: medicineData.name,
-        dosage: medicineData.dosage,
-        price: medicineData.price,
+        strength: medicineData.dosage,
+        formulation: 'Tablet',
+        purchasePrice: medicineData.price * 0.8,
+        sellingPrice: medicineData.price,
         stock: medicineData.stock,
         manufacturer: 'Generic Pharma Co.',
         expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -200,10 +211,11 @@ async function seedDatabase() {
 
     for (const testData of LAB_TESTS_DATA) {
       const labTest = labTestRepo.create({
-        name: testData.name,
+        patientId: patients[0].id, // Assign to first patient for seeding
+        testName: testData.name,
         description: `${testData.name} laboratory test`,
-        price: testData.price,
-        normalRange: testData.normalRange,
+        status: LabTestStatus.ORDERED,
+        orderedDate: new Date(),
       });
       const savedTest = await labTestRepo.save(labTest);
       labTests.push(savedTest);
@@ -216,15 +228,27 @@ async function seedDatabase() {
     let staffCount = 0;
 
     for (const staffData of STAFF_DATA) {
-      const staff = staffRepo.create({
-        name: staffData.name,
-        role: staffData.role,
-        phone: staffData.phone,
+      const user = userRepo.create({
+        userId: crypto.randomUUID(),
         email: `${staffData.name.toLowerCase().replace(/\s+/g, '.')}@hospital.com`,
-        experience: staffData.experience,
-        salary: staffData.salary,
+        password: await bcrypt.hash('StaffPass123!', 10),
+        roles: [staffData.role === StaffRole.NURSE ? UserRole.NURSE : staffData.role === StaffRole.RECEPTIONIST ? UserRole.RECEPTIONIST : UserRole.LAB_TECHNICIAN],
+        status: UserStatus.ACTIVE,
+        emailVerified: true,
+        firstName: staffData.name.split(' ')[0],
+        lastName: staffData.name.split(' ').slice(1).join(' '),
+        phoneNumber: staffData.phone,
+      });
+      const savedUser = await userRepo.save(user);
+
+      const staff = staffRepo.create({
+        user: savedUser,
+        userId: savedUser.id,
+        staffId: `STAFF${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
+        role: staffData.role,
+        yearsOfExperience: staffData.experience,
         status: StaffStatus.ACTIVE,
-        joinDate: new Date(Date.now() - staffData.experience * 365 * 24 * 60 * 60 * 1000),
+        joiningDate: new Date(Date.now() - staffData.experience * 365 * 24 * 60 * 60 * 1000),
       });
       await staffRepo.save(staff);
       staffCount++;
@@ -266,10 +290,14 @@ async function seedDatabase() {
 
     for (const itemData of INVENTORY_DATA) {
       const inventory = inventoryRepo.create({
-        name: itemData.name,
+        itemCode: `INV${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
+        itemName: itemData.name,
         type: itemData.type,
+        category: 'General',
         quantity: itemData.quantity,
-        unitPrice: itemData.price,
+        unit: 'units',
+        unitCost: itemData.price * 0.8,
+        sellingPrice: itemData.price,
         minimumLevel: itemData.minLevel,
         location: 'Main Store',
         status: itemData.quantity > itemData.minLevel ? InventoryStatus.IN_STOCK : InventoryStatus.LOW_STOCK,
@@ -291,13 +319,13 @@ async function seedDatabase() {
       const doctor = doctors[Math.floor(Math.random() * doctors.length)];
       
       const radiology = radiologyRepo.create({
+        requestId: `RAD${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         patientId: patient.id,
         doctorId: doctor.id,
         imagingType: imagingTypes[Math.floor(Math.random() * imagingTypes.length)],
         bodyPart: ['Chest', 'Abdomen', 'Brain', 'Spine'][Math.floor(Math.random() * 4)],
-        indication: 'Clinical evaluation required',
-        status: ['pending', 'completed'][Math.floor(Math.random() * 2)] as any,
-        reportDate: new Date(),
+        clinicalHistory: 'Clinical evaluation required',
+        status: [ImagingStatus.PENDING, ImagingStatus.COMPLETED][Math.floor(Math.random() * 2)],
       });
       await radiologyRepo.save(radiology);
       radiologyCount++;
@@ -312,10 +340,10 @@ async function seedDatabase() {
     const theaters: OperationTheater[] = [];
     for (let i = 1; i <= 3; i++) {
       const theater = theatreRepo.create({
-        name: `Operation Theater ${i}`,
-        location: `Floor ${i}`,
-        capacity: 5,
-        equipment: 'Standard surgical equipment',
+        theatreCode: `OT-${i}`,
+        theatreName: `Operation Theater ${i}`,
+        isAvailable: true,
+        facilities: 'Standard surgical equipment',
       });
       const savedTheater = await theatreRepo.save(theater);
       theaters.push(savedTheater);
@@ -330,14 +358,14 @@ async function seedDatabase() {
       const theater = theaters[Math.floor(Math.random() * theaters.length)];
       
       const surgery = surgeryRepo.create({
-        theaterId: theater.id,
+        surgeryId: `SURG${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
+        theatreId: theater.theatreCode,
         patientId: patient.id,
         surgeonId: doctor.id,
         surgeryType: ['Appendectomy', 'Hernia Repair', 'Knee Replacement', 'Cataract Surgery'][Math.floor(Math.random() * 4)],
         scheduledDate: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000),
-        duration: Math.floor(Math.random() * 240) + 30,
         status: surgeryStatuses[Math.floor(Math.random() * surgeryStatuses.length)],
-        notes: 'Pre-operative assessment completed',
+        preOpNotes: 'Pre-operative assessment completed',
       });
       await surgeryRepo.save(surgery);
       surgeryCount++;
@@ -354,7 +382,7 @@ async function seedDatabase() {
     for (let i = 0; i < 25; i++) {
       // Revenue entries
       const revenue = revenueRepo.create({
-        revenueId: `REV${uuidv4().substring(0, 8).toUpperCase()}`,
+        revenueId: `REV${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         source: ['Patient Fees', 'Consultation', 'Lab Tests', 'Surgery', 'Medicines'][Math.floor(Math.random() * 5)],
         amount: Math.floor(Math.random() * 50000) + 5000,
         date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
@@ -365,7 +393,7 @@ async function seedDatabase() {
 
       // Expense entries
       const expense = expenseRepo.create({
-        expenseId: `EXP${uuidv4().substring(0, 8).toUpperCase()}`,
+        expenseId: `EXP${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         expenseType: expenseTypes[Math.floor(Math.random() * expenseTypes.length)],
         description: 'Hospital expenses',
         amount: Math.floor(Math.random() * 30000) + 2000,
@@ -383,17 +411,18 @@ async function seedDatabase() {
     // 12. Create Compliance Records
     console.log('✅ Creating compliance records...');
     const complianceRepo = AppDataSource.getRepository(ComplianceRecord);
-    const complianceTypes = ['HIPAA', 'GDPR', 'Patient Safety', 'Data Security'];
+    const complianceTypes = [ComplianceType.HIPAA, ComplianceType.GDPR, ComplianceType.DATA_SECURITY];
     let complianceCount = 0;
 
     for (let i = 0; i < 12; i++) {
       const compliance = complianceRepo.create({
-        type: complianceTypes[Math.floor(Math.random() * complianceTypes.length)],
+        recordId: `COMP${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
+        complianceType: complianceTypes[Math.floor(Math.random() * complianceTypes.length)],
         description: 'Compliance check and audit',
-        status: ['compliant', 'non_compliant'][Math.floor(Math.random() * 2)],
-        auditDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+        status: [ComplianceStatus.COMPLIANT, ComplianceStatus.NON_COMPLIANT][Math.floor(Math.random() * 2)],
+        lastAuditDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
         nextAuditDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-        notes: 'Regular compliance audit',
+        remarks: 'Regular compliance audit',
       });
       await complianceRepo.save(compliance);
       complianceCount++;
