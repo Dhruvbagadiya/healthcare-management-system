@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Expense, Revenue } from './entities/accounts.entity';
+import { Expense, Revenue, PaymentStatus } from './entities/accounts.entity';
 
 @Injectable()
 export class AccountsService {
@@ -29,7 +29,7 @@ export class AccountsService {
   }
 
   async getPendingExpenses() {
-    return this.expenseRepository.find({ where: { status: 'pending' } });
+    return this.expenseRepository.find({ where: { status: PaymentStatus.PENDING } });
   }
 
   async getTotalExpenses() {

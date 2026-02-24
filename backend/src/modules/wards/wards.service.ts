@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Ward, Bed } from './entities/ward.entity';
+import { Ward, Bed, BedStatus } from './entities/ward.entity';
 
 @Injectable()
 export class WardsService {
@@ -21,7 +21,7 @@ export class WardsService {
   }
 
   async getAvailableBeds() {
-    return this.bedRepository.find({ where: { status: 'available' } });
+    return this.bedRepository.find({ where: { status: BedStatus.AVAILABLE } });
   }
 
   async getBedsByWard(wardId: string) {
@@ -34,8 +34,8 @@ export class WardsService {
     return {
       totalWards: wards.length,
       totalBeds: beds.length,
-      occupiedBeds: beds.filter((b) => b.status === 'occupied').length,
-      availableBeds: beds.filter((b) => b.status === 'available').length,
+      occupiedBeds: beds.filter((b) => b.status === BedStatus.OCCUPIED).length,
+      availableBeds: beds.filter((b) => b.status === BedStatus.AVAILABLE).length,
     };
   }
 }

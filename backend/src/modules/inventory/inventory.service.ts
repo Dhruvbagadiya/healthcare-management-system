@@ -35,11 +35,10 @@ export class InventoryService {
   }
 
   async getStockValue() {
-    const items = await this.inventoryRepository.find();
-    const totalValue = items.reduce(
-      (sum, item) => sum + Number(item.quantity) * Number(item.unitCost),
-      0,
-    );
-    return totalValue;
+    const { sum } = await this.inventoryRepository
+      .createQueryBuilder('inventory')
+      .select('SUM(inventory.quantity * inventory.unitCost)', 'sum')
+      .getRawOne();
+    return parseFloat(sum || '0');
   }
 }
