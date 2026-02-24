@@ -6,7 +6,7 @@ import { Appointment, AppointmentStatus } from '../../modules/appointments/entit
 import { Prescription } from '../../modules/prescriptions/entities/prescription.entity';
 import { Medicine } from '../../modules/pharmacy/entities/medicine.entity';
 import { LabTest, LabTestStatus } from '../../modules/laboratory/entities/lab-test.entity';
-import { Invoice } from '../../modules/billing/entities/invoice.entity';
+import { Invoice, InvoiceStatus } from '../../modules/billing/entities/invoice.entity';
 import { Expense, ExpenseType, PaymentStatus } from '../../modules/accounts/entities/accounts.entity';
 import { Revenue } from '../../modules/accounts/entities/accounts.entity';
 import { Staff, StaffRole, StaffStatus } from '../../modules/staff/entities/staff.entity';
@@ -333,6 +333,34 @@ async function seedDatabase() {
       radiologyCount++;
     }
     console.log(`✅ Created ${radiologyCount} radiology requests\n`);
+
+    // 10. Create Invoices
+    console.log('💰 Creating invoices...');
+    const invoiceRepo = AppDataSource.getRepository(Invoice);
+    const invoiceStatuses = [InvoiceStatus.PAID, InvoiceStatus.PENDING, InvoiceStatus.OVERDUE];
+    
+    for (let i = 0; i < 15; i++) {
+      const patient = patients[i % patients.length];
+      const subtotal = Math.floor(Math.random() * 15000) + 2000;
+      const taxAmount = Math.floor(subtotal * 0.18);
+      const totalAmount = subtotal + taxAmount;
+
+      const invoice = invoiceRepo.create({
+        invoiceNumber: `INV${Date.now()}${i}`,
+        patientId: patient.id,
+        subtotal,
+        taxAmount,
+        taxPercentage: 18,
+        totalAmount,
+        dueAmount: totalAmount,
+        issueDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+        dueDate: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000),
+        status: invoiceStatuses[Math.floor(Math.random() * invoiceStatuses.length)],
+        notes: 'Hospital treatment and medical services',
+      });
+      await invoiceRepo.save(invoice);
+    }
+    console.log('✅ Created invoices\n');
 
     // 10. Create Operation Theaters & Surgeries
     console.log('🏥 Creating operation theaters and surgeries...');

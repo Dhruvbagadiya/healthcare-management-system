@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/auth';
 import { useUIStore } from '@/lib/store';
-import { MobileMenuToggle } from '@/components/layout/mobile-menu-toggle';
-import { MobileMenuOverlay } from '@/components/layout/mobile-menu-overlay';
+import { MobileMenuToggle } from '@/lib/mobile-menu-toggle';
+import { MobileMenuOverlay } from '@/lib/mobile-menu-overlay';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 
 const NAV_ITEMS = [

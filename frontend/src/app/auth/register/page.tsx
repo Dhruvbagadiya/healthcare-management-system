@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import toast from 'react-hot-toast';
-import { UserRoleEnum } from '@/types';
+import { UserRoleEnum } from '@/types/index';
 
 export default function RegisterPage() {
   const router = useRouter();

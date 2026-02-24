@@ -20,6 +20,7 @@ export enum InvoiceStatus {
   OVERDUE = 'overdue',
   CANCELLED = 'cancelled',
   REFUNDED = 'refunded',
+  PENDING = 'pending',
 }
 
 export enum PaymentMethod {
