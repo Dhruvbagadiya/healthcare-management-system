@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Pill, Search, Filter, MoreHorizontal, Plus, AlertCircle, ShoppingBag } from 'lucide-react';
+import { Pill, Search, Filter, MoreHorizontal, Plus, AlertCircle, ShoppingBag, X, Trash2, Edit } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function PharmacyPage() {
@@ -12,6 +12,23 @@ export default function PharmacyPage() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [selectedMedicine, setSelectedMedicine] = useState<any>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+    // Form state
+    const [formData, setFormData] = useState({
+        name: '',
+        medicineCode: '',
+        genericName: '',
+        strength: '',
+        formulation: 'Tablet',
+        stock: 0,
+        sellingPrice: 0,
+        purchasePrice: 0,
+        description: ''
+    });
+
     const limit = 12;
 
     const fetchMedicines = useCallback(async (searchQuery = '', pageNumber = 1) => {
@@ -33,6 +50,39 @@ export default function PharmacyPage() {
             setIsLoading(false);
         }
     }, []);
+
+    const handleAddMedicine = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await apiClient.post('/pharmacy/medicines', formData);
+            setIsAddModalOpen(false);
+            setFormData({
+                name: '',
+                medicineCode: `MED-${Math.floor(Math.random() * 10000)}`,
+                genericName: '',
+                strength: '',
+                formulation: 'Tablet',
+                stock: 0,
+                sellingPrice: 0,
+                purchasePrice: 0,
+                description: ''
+            });
+            fetchMedicines(search, page);
+        } catch (error) {
+            console.error('Failed to add medicine', error);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this medicine?')) return;
+        try {
+            await apiClient.delete(`/pharmacy/medicines/${id}`);
+            setIsDetailsOpen(false);
+            fetchMedicines(search, page);
+        } catch (error) {
+            console.error('Failed to delete medicine', error);
+        }
+    };
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -60,7 +110,13 @@ export default function PharmacyPage() {
                         <ShoppingBag size={18} />
                         Procurement
                     </button>
-                    <button className="btn btn-primary gap-2">
+                    <button
+                        className="btn btn-primary gap-2"
+                        onClick={() => {
+                            setFormData(prev => ({ ...prev, medicineCode: `MED-${Math.floor(Math.random() * 10000)}` }));
+                            setIsAddModalOpen(true);
+                        }}
+                    >
                         <Plus size={18} />
                         Add Medicine
                     </button>
@@ -126,7 +182,13 @@ export default function PharmacyPage() {
 
                             <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
                                 <span className="text-lg font-bold text-indigo-600">${medicine.sellingPrice || '0.00'}</span>
-                                <button className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">
+                                <button
+                                    className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+                                    onClick={() => {
+                                        setSelectedMedicine(medicine);
+                                        setIsDetailsOpen(true);
+                                    }}
+                                >
                                     Details
                                 </button>
                             </div>
@@ -153,6 +215,154 @@ export default function PharmacyPage() {
                         total={totalItems}
                         limit={limit}
                     />
+                </div>
+            )}
+
+            {/* Add Medicine Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900">Add New Medicine</h2>
+                                <p className="text-sm text-slate-500">Register a new item in the pharmacy inventory</p>
+                            </div>
+                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddMedicine} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Medicine Name</label>
+                                    <input required type="text" className="input" placeholder="e.g. Paracetamol" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Medicine Code</label>
+                                    <input required type="text" className="input bg-slate-50" readOnly value={formData.medicineCode} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Generic Name</label>
+                                    <input type="text" className="input" placeholder="e.g. Acetaminophen" value={formData.genericName} onChange={e => setFormData({ ...formData, genericName: e.target.value })} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Strength</label>
+                                        <input required type="text" className="input" placeholder="e.g. 500mg" value={formData.strength} onChange={e => setFormData({ ...formData, strength: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Formulation</label>
+                                        <select className="input" value={formData.formulation} onChange={e => setFormData({ ...formData, formulation: e.target.value })}>
+                                            <option>Tablet</option>
+                                            <option>Capsule</option>
+                                            <option>Syrup</option>
+                                            <option>Injection</option>
+                                            <option>Ointment</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Stock Quantity</label>
+                                    <input required type="number" className="input" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) })} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Purchase Price</label>
+                                        <input required type="number" step="0.01" className="input" value={formData.purchasePrice} onChange={e => setFormData({ ...formData, purchasePrice: parseFloat(e.target.value) })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Selling Price</label>
+                                        <input required type="number" step="0.01" className="input" value={formData.sellingPrice} onChange={e => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) })} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700">Description</label>
+                                <textarea className="input min-h-[100px]" placeholder="Add medicine details, indications..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
+                            </div>
+                            <div className="flex gap-4 pt-4">
+                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn btn-secondary flex-1">Cancel</button>
+                                <button type="submit" className="btn btn-primary flex-1">Save Medicine</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Medicine Details Slide-over */}
+            {isDetailsOpen && selectedMedicine && (
+                <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="w-full max-w-md bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-slate-900">Medicine Details</h2>
+                            <button onClick={() => setIsDetailsOpen(false)} className="p-2 hover:bg-slate-50 rounded-full">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                            <div className="flex items-center gap-4">
+                                <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm">
+                                    <Pill size={32} />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-slate-900">{selectedMedicine.name}</h3>
+                                    <p className="text-indigo-600 font-semibold tracking-wide uppercase text-xs">{selectedMedicine.medicineCode}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Generic Name</p>
+                                    <p className="font-bold text-slate-900">{selectedMedicine.genericName || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Strength</p>
+                                    <p className="font-bold text-slate-900">{selectedMedicine.strength}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Formulation</p>
+                                    <p className="font-bold text-slate-900">{selectedMedicine.formulation}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Stock Level</p>
+                                    <p className={`font-bold ${selectedMedicine.stock < 20 ? 'text-red-600' : 'text-slate-900'}`}>
+                                        {selectedMedicine.stock} units
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Financials</p>
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-xs text-slate-500">Selling Price</p>
+                                        <p className="text-xl font-bold text-indigo-600">${selectedMedicine.sellingPrice}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-slate-500">Purchase Price</p>
+                                        <p className="text-lg font-bold text-slate-700">${selectedMedicine.purchasePrice}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedMedicine.description && (
+                                <div className="space-y-2">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Description</p>
+                                    <p className="text-sm text-slate-600 leading-relaxed font-medium">{selectedMedicine.description}</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+                            <button className="btn btn-secondary flex-1 gap-2">
+                                <Edit size={16} />
+                                Edit
+                            </button>
+                            <button onClick={() => handleDelete(selectedMedicine.id)} className="btn bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100 flex-1 gap-2">
+                                <Trash2 size={16} />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

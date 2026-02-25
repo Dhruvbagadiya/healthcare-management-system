@@ -72,7 +72,7 @@ export default function DashboardLayout({
       <MobileMenuOverlay />
 
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 z-50 h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Brand Header */}
         <div className="flex h-20 items-center border-b border-slate-50 px-8">
           <div className="flex items-center gap-3">

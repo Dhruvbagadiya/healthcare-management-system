@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { apiClient } from '@/lib/api-client';
-import { 
-  Users, 
-  Calendar, 
-  Heart, 
-  DollarSign, 
-  Package, 
-  Bed, 
-  Stethoscope, 
+import {
+  Users,
+  Calendar,
+  Heart,
+  DollarSign,
+  Package,
+  Bed,
+  Stethoscope,
   AlertCircle,
   TrendingUp,
   CheckCircle2,
@@ -44,7 +45,7 @@ export default function DashboardPage() {
             apiClient.get('/staff?limit=1').catch(() => ({ data: {} })),
             apiClient.get('/compliance/non-compliant').catch(() => ({ data: [] })),
           ]);
-          
+
           setModuleMetrics({
             wards: wardsStats.data || {},
             financial: financialRes.data || { totalRevenue: 0, totalExpenses: 0, netProfit: 0 },
@@ -84,45 +85,45 @@ export default function DashboardPage() {
 
   // Primary metrics cards
   const primaryMetrics = [
-    { 
-      label: 'Total Patients', 
-      value: stats?.totalPatients || 0, 
-      icon: Users, 
+    {
+      label: 'Total Patients',
+      value: stats?.totalPatients || 0,
+      icon: Users,
       color: 'blue',
       trend: '+12%'
     },
-    { 
-      label: 'Appointments Today', 
-      value: stats?.totalAppointments || 0, 
-      icon: Calendar, 
+    {
+      label: 'Appointments Today',
+      value: stats?.totalAppointments || 0,
+      icon: Calendar,
       color: 'purple',
       trend: '+8%'
     },
-    { 
-      label: 'Active Doctors', 
-      value: stats?.totalDoctors || 0, 
-      icon: Heart, 
+    {
+      label: 'Active Doctors',
+      value: stats?.totalDoctors || 0,
+      icon: Heart,
       color: 'red',
       trend: '+2%'
     },
-    { 
-      label: 'Monthly Revenue', 
-      value: `₹${(stats?.revenue || 0).toLocaleString()}`, 
-      icon: DollarSign, 
+    {
+      label: 'Monthly Revenue',
+      value: `₹${(stats?.revenue || 0).toLocaleString()}`,
+      icon: DollarSign,
       color: 'green',
       trend: '+15%'
     },
-    { 
-      label: 'Occupied Beds', 
-      value: moduleMetrics.wards?.occupiedBeds || 0, 
-      icon: Bed, 
+    {
+      label: 'Occupied Beds',
+      value: moduleMetrics.wards?.occupiedBeds || 0,
+      icon: Bed,
       color: 'orange',
       trend: `${Math.round(((moduleMetrics.wards?.occupiedBeds || 0) / (moduleMetrics.wards?.totalBeds || 1) * 100))}%`
     },
-    { 
-      label: 'Net Profit', 
-      value: `₹${(moduleMetrics.financial?.netProfit || 0).toLocaleString()}`, 
-      icon: TrendingUp, 
+    {
+      label: 'Net Profit',
+      value: `₹${(moduleMetrics.financial?.netProfit || 0).toLocaleString()}`,
+      icon: TrendingUp,
       color: 'indigo',
       trend: moduleMetrics.financial?.netProfit >= 0 ? '+' : '-'
     },
@@ -159,8 +160,21 @@ export default function DashboardPage() {
         {primaryMetrics.map((metric, idx) => {
           const color = colorMap[metric.color];
           const Icon = metric.icon;
+          const hrefMap: any = {
+            'Total Patients': '/patients',
+            'Appointments Today': '/appointments',
+            'Active Doctors': '/doctors',
+            'Monthly Revenue': '/accounts',
+            'Occupied Beds': '/wards',
+            'Net Profit': '/accounts',
+          };
+
           return (
-            <div key={idx} className={`card group hover:shadow-lg transition-all border-l-4 ${color.border} ${color.bg}`}>
+            <Link
+              key={idx}
+              href={hrefMap[metric.label] || '#'}
+              className={`card group hover:shadow-lg transition-all border-l-4 ${color.border} ${color.bg} cursor-pointer active:scale-[0.98]`}
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{metric.label}</p>
@@ -169,9 +183,9 @@ export default function DashboardPage() {
                     {metric.trend}
                   </p>
                 </div>
-                <Icon className={`${color.icon} h-8 w-8 opacity-70`} />
+                <Icon className={`${color.icon} h-8 w-8 opacity-70 group-hover:scale-110 transition-transform`} />
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -179,40 +193,40 @@ export default function DashboardPage() {
       {/* Critical Alerts Section - 3 columns */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Low Stock Inventory */}
-        <div className="card border-l-4 border-orange-200 bg-orange-50/50 hover:shadow-md transition-all">
+        <Link href="/inventory" className="card border-l-4 border-orange-200 bg-orange-50/50 hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-600">Low Stock Items</p>
               <p className="mt-1 text-2xl font-bold text-orange-600">{moduleMetrics.lowStockItems || 0}</p>
               <p className="text-xs text-gray-500 mt-1">Items require attention</p>
             </div>
-            <Package className="h-10 w-10 text-orange-600 opacity-60" />
+            <Package className="h-10 w-10 text-orange-600 opacity-60 group-hover:scale-110 transition-transform" />
           </div>
-        </div>
+        </Link>
 
         {/* Compliance Issues */}
-        <div className="card border-l-4 border-red-200 bg-red-50/50 hover:shadow-md transition-all">
+        <Link href="/compliance" className="card border-l-4 border-red-200 bg-red-50/50 hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-600">Compliance Issues</p>
               <p className="mt-1 text-2xl font-bold text-red-600">{moduleMetrics.nonCompliantItems || 0}</p>
               <p className="text-xs text-gray-500 mt-1">Urgent: Review needed</p>
             </div>
-            <AlertCircle className="h-10 w-10 text-red-600 opacity-60" />
+            <AlertCircle className="h-10 w-10 text-red-600 opacity-60 group-hover:scale-110 transition-transform" />
           </div>
-        </div>
+        </Link>
 
         {/* Staff Count */}
-        <div className="card border-l-4 border-blue-200 bg-blue-50/50 hover:shadow-md transition-all">
+        <Link href="/staff" className="card border-l-4 border-blue-200 bg-blue-50/50 hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-600">Active Staff</p>
               <p className="mt-1 text-2xl font-bold text-blue-600">{moduleMetrics.staffCount || 0}</p>
               <p className="text-xs text-gray-500 mt-1">Personnel on duty</p>
             </div>
-            <Stethoscope className="h-10 w-10 text-blue-600 opacity-60" />
+            <Stethoscope className="h-10 w-10 text-blue-600 opacity-60 group-hover:scale-110 transition-transform" />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Financial & Analytics Section - 2 cols */}
@@ -220,7 +234,7 @@ export default function DashboardPage() {
         {/* Financial Summary */}
         <div className="card lg:col-span-2">
           <h2 className="mb-6 text-lg font-bold text-slate-900">Financial Summary</h2>
-          
+
           {/* Financial KPIs */}
           <div className="grid gap-4 sm:grid-cols-3 mb-8">
             <div className="p-3 bg-green-50 rounded-lg border border-green-100">
@@ -274,7 +288,7 @@ export default function DashboardPage() {
               </div>
               <span className="text-lg font-bold text-gray-900">{moduleMetrics.wards?.occupiedBeds || 0}</span>
             </div>
-            
+
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5 text-purple-600" />
@@ -368,7 +382,7 @@ export default function DashboardPage() {
         <div className="card">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
-            <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">View all</button>
+            <Link href="/appointments" className="text-sm font-semibold text-blue-600 hover:text-blue-700">View all</Link>
           </div>
           <div className="divide-y divide-slate-100">
             {recentActivity.slice(0, 5).map((activity, idx) => (

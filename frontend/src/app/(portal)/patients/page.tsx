@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Search, UserPlus, Filter, MoreHorizontal } from 'lucide-react';
+import { Search, UserPlus, Filter, MoreHorizontal, X } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function PatientsPage() {
@@ -12,6 +12,21 @@ export default function PatientsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    patientId: '',
+    bloodType: 'A+',
+    gender: 'Male',
+    dateOfBirth: '',
+    phoneNumber: '',
+    insuranceProvider: ''
+  });
+
   const limit = 10;
 
   const fetchPatients = useCallback(async (searchQuery = '', pageNumber = 1) => {
@@ -35,6 +50,28 @@ export default function PatientsPage() {
     }
   }, []);
 
+  const handleAddPatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/patients', formData);
+      setIsAddModalOpen(false);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        patientId: `PAT-${Math.floor(Math.random() * 100000)}`,
+        bloodType: 'A+',
+        gender: 'Male',
+        dateOfBirth: '',
+        phoneNumber: '',
+        insuranceProvider: ''
+      });
+      fetchPatients(search, page);
+    } catch (error) {
+      console.error('Failed to add patient', error);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1); // Reset to first page on search
@@ -56,7 +93,13 @@ export default function PatientsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Patients</h1>
           <p className="mt-1 text-slate-500">Manage patient records and medical history</p>
         </div>
-        <button className="btn btn-primary gap-2">
+        <button
+          className="btn btn-primary gap-2"
+          onClick={() => {
+            setFormData(prev => ({ ...prev, patientId: `PAT-${Math.floor(Math.random() * 100000)}` }));
+            setIsAddModalOpen(true);
+          }}
+        >
           <UserPlus size={18} />
           Add Patient
         </button>
@@ -157,6 +200,78 @@ export default function PatientsPage() {
           />
         )}
       </div>
+
+      {/* Add Patient Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Add New Patient</h2>
+                <p className="text-sm text-slate-500">Register a new patient into the hospital system</p>
+              </div>
+              <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddPatient} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">First Name</label>
+                  <input required type="text" className="input" placeholder="e.g. Dhruv" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Last Name</label>
+                  <input required type="text" className="input" placeholder="e.g. Bagadiya" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Email Address</label>
+                  <input required type="email" className="input" placeholder="e.g. dhruv@example.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Patient ID</label>
+                  <input required type="text" className="input bg-slate-50" readOnly value={formData.patientId} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Blood Type</label>
+                    <select className="input" value={formData.bloodType} onChange={e => setFormData({ ...formData, bloodType: e.target.value })}>
+                      <option>A+</option><option>A-</option>
+                      <option>B+</option><option>B-</option>
+                      <option>AB+</option><option>AB-</option>
+                      <option>O+</option><option>O-</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Gender</label>
+                    <select className="input" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
+                      <option>Male</option>
+                      <option>Female</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Phone Number</label>
+                  <input type="tel" className="input" placeholder="+1..." value={formData.phoneNumber} onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Date of Birth</label>
+                  <input type="date" className="input" value={formData.dateOfBirth} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Insurance Provider</label>
+                  <input type="text" className="input" placeholder="e.g. Blue Cross" value={formData.insuranceProvider} onChange={e => setFormData({ ...formData, insuranceProvider: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn btn-secondary flex-1">Cancel</button>
+                <button type="submit" className="btn btn-primary flex-1">Register Patient</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
