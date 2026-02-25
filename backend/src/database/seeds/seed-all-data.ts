@@ -119,7 +119,7 @@ async function seedDatabase() {
         licenseNumber: `LIC${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         yearsOfExperience: Math.floor(Math.random() * 20) + 5,
       } as any);
-      const savedDoctor = await doctorRepo.save(doctor);
+      const savedDoctor = await doctorRepo.save(doctor) as any;
       doctors.push(savedDoctor);
     }
     console.log(`✅ Created ${doctors.length} doctors\n`);
@@ -153,7 +153,7 @@ async function seedDatabase() {
         bloodType: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'][Math.floor(Math.random() * 8)] as any,
         chronicDiseases: patientData.age > 50 ? ['Hypertension'] : [],
       } as any);
-      const savedPatient = await patientRepo.save(patient);
+      const savedPatient = await patientRepo.save(patient) as any;
       patients.push(savedPatient);
     }
     console.log(`✅ Created ${patients.length} patients\n`);
@@ -325,7 +325,7 @@ async function seedDatabase() {
     for (let i = 0; i < 10; i++) {
       const patient = patients[Math.floor(Math.random() * patients.length)];
       const doctor = doctors[Math.floor(Math.random() * doctors.length)];
-      
+
       const radiology = radiologyRepo.create({
         requestId: `RAD${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         patientId: patient.id,
@@ -344,7 +344,7 @@ async function seedDatabase() {
     console.log('💰 Creating invoices...');
     const invoiceRepo = AppDataSource.getRepository(Invoice);
     const invoiceStatuses = [InvoiceStatus.PAID, InvoiceStatus.PENDING, InvoiceStatus.OVERDUE];
-    
+
     for (let i = 0; i < 15; i++) {
       const patient = patients[i % patients.length];
       const subtotal = Math.floor(Math.random() * 15000) + 2000;
@@ -372,7 +372,7 @@ async function seedDatabase() {
     console.log('🏥 Creating operation theaters and surgeries...');
     const theatreRepo = AppDataSource.getRepository(OperationTheater);
     const surgeryRepo = AppDataSource.getRepository(Surgery);
-    
+
     const theaters: OperationTheater[] = [];
     for (let i = 1; i <= 3; i++) {
       const theater = theatreRepo.create({
@@ -392,7 +392,7 @@ async function seedDatabase() {
       const patient = patients[Math.floor(Math.random() * patients.length)];
       const doctor = doctors[Math.floor(Math.random() * doctors.length)];
       const theater = theaters[Math.floor(Math.random() * theaters.length)];
-      
+
       const surgery = surgeryRepo.create({
         surgeryId: `SURG${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         theatreId: theater.theatreCode,
