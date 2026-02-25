@@ -128,6 +128,47 @@ async function seedData() {
     }
     console.log('✅ Shruti Gadhiya account ready (sgadhiya03@gmail.com / Shruti@1530)\n');
 
+    // Create Dharmi Dhameliya (Doctor)
+    const dharmiEmail = 'dharmidhameliya@gmail.com';
+    let dharmiUser = await userRepo.findOne({ where: { email: dharmiEmail } });
+
+    if (!dharmiUser) {
+      dharmiUser = await userRepo.save(userRepo.create({
+        userId: crypto.randomUUID(),
+        email: dharmiEmail,
+        password: await bcrypt.hash('Dharmi@2704', 10),
+        roles: [UserRole.DOCTOR],
+        status: UserStatus.ACTIVE,
+        emailVerified: true,
+        firstName: 'Dharmi',
+        lastName: 'Dhameliya',
+      }));
+    } else {
+      await userRepo.update(dharmiUser.id, {
+        password: await bcrypt.hash('Dharmi@2704', 10),
+        status: UserStatus.ACTIVE,
+        roles: [UserRole.DOCTOR],
+      });
+      dharmiUser = await userRepo.findOne({ where: { email: dharmiEmail } });
+    }
+
+    const dharmiDoc = await doctorRepo.findOne({ where: { customUserId: dharmiUser!.userId } });
+    if (!dharmiDoc) {
+      await doctorRepo.save(doctorRepo.create({
+        user: dharmiUser,
+        customUserId: dharmiUser!.userId,
+        firstName: 'Dharmi',
+        lastName: 'Dhameliya',
+        doctorId: 'DOC-DHA-002',
+        specialization: 'General Practitioner',
+        licenseNumber: 'DOC987654',
+        yearsOfExperience: 3,
+        consultationFee: 1000,
+        isActive: true,
+      } as any));
+    }
+    console.log('✅ Dharmi Dhameliya account ready (dharmidhameliya@gmail.com / Dharmi@2704)\n');
+
     // ─────────────────────────────────────────────────────────────────────────
     // CLEANUP — Remove records with null names or null required foreign IDs
     // ─────────────────────────────────────────────────────────────────────────
@@ -135,7 +176,7 @@ async function seedData() {
     const q = AppDataSource.query.bind(AppDataSource);
 
     // Users without a firstName or lastName
-    await q(`DELETE FROM users WHERE ("firstName" IS NULL OR "firstName" = '' OR "lastName" IS NULL OR "lastName" = '') AND email != $1`, [adminEmail]);
+    await q(`DELETE FROM users WHERE ("firstName" IS NULL OR "firstName" = '' OR "lastName" IS NULL OR "lastName" = '') AND email NOT IN ($1, $2, $3)`, [adminEmail, shrutiEmail, dharmiEmail]);
 
     // Doctors: null customUserId OR null doctorId OR orphaned (user deleted)
     await q(`DELETE FROM doctors WHERE "custom_user_id" IS NULL OR "custom_user_id" = '' OR "doctorId" IS NULL OR "doctorId" = ''`);
