@@ -140,54 +140,54 @@ export default function PatientsPage() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Blood Type</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Joined</th>
-                <th className="px-6 py-4 text-right"></th>
+                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Blood Type</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Joined</th>
+                <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100bg-white">
+            <tbody className="divide-y divide-slate-100 bg-white">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-12 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4" />
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-12 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden lg:table-cell"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
               ) : (
                 patients.map((patient) => (
                   <tr key={patient.id} className="hover:bg-indigo-50/30 transition-colors group border-b border-slate-50 last:border-0">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 shadow-sm">
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 shadow-sm text-sm sm:text-base">
                           {patient.user?.firstName?.charAt(0)}
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors truncate max-w-[120px] sm:max-w-none">
                             {patient.user?.firstName} {patient.user?.lastName}
                           </p>
-                          <p className="text-xs text-slate-500">{patient.user?.email}</p>
+                          <p className="text-xs text-slate-500 truncate max-w-[120px] sm:max-w-none">{patient.user?.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-sm text-slate-600">{patient.patientId}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 font-mono text-sm text-slate-600 hidden md:table-cell">{patient.patientId}</td>
+                    <td className="px-6 py-4 hidden sm:table-cell">
                       <span className="badge badge-primary">{patient.bloodType}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden lg:table-cell">
                       <span className="badge badge-success">Active</span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm text-slate-600 hidden sm:table-cell">
                       {new Date(patient.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="p-1.5 rounded-full hover:bg-white hover:shadow-sm text-slate-400 hover:text-indigo-600 transition-all">
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <button className="p-1.5 rounded-full hover:bg-slate-50 text-slate-400 hover:text-indigo-600 transition-all">
                         <MoreHorizontal size={20} />
                       </button>
                     </td>
@@ -204,15 +204,18 @@ export default function PatientsPage() {
         </div>
 
         {!isLoading && totalPages > 1 && (
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            total={totalItems}
-            limit={limit}
-          />
+          <div className="p-4 border-t border-slate-50">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              total={totalItems}
+              limit={limit}
+            />
+          </div>
         )}
       </div>
+
 
       {/* Add Patient Modal */}
       {isAddModalOpen && (

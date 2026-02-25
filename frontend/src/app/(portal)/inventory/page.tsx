@@ -185,65 +185,65 @@ export default function InventoryPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Item / SKU</th>
+                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Item / SKU</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">In Stock</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Unit Price</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Expiry</th>
-                <th className="px-6 py-4 text-right"></th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Unit Price</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Expiry</th>
+                <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4" />
+                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden lg:table-cell"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
               ) : (
                 inventory.map((item) => (
                   <tr key={item.id} className="hover:bg-indigo-50/30 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">
                           {item.itemName}
                         </p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.itemCode}</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{item.itemCode}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-sm font-bold text-slate-700">
-                        {item.quantity} <span className="text-slate-400 font-medium text-[10px] uppercase">{item.unit}</span>
+                        {item.quantity} <span className="text-slate-400 font-medium text-[9px] sm:text-[10px] uppercase">{item.unit}</span>
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">
+                    <td className="px-6 py-4 text-sm font-bold text-slate-900 hidden md:table-cell">
                       ${item.unitPrice?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`badge ${item.status === 'in_stock' ? 'badge-success' : item.status === 'low_stock' ? 'badge-warning' : 'badge-error'} font-bold`}>
+                    <td className="px-6 py-4 hidden sm:table-cell">
+                      <span className={`badge ${item.status === 'in_stock' ? 'badge-success' : item.status === 'low_stock' ? 'badge-warning' : 'badge-error'} font-bold text-[10px]`}>
                         {item.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap hidden lg:table-cell">
                       {new Date(item.expiryDate).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                          className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
-                        <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                        <button className="p-1.5 sm:p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
                           <MoreHorizontal size={18} />
                         </button>
                       </div>
@@ -255,13 +255,13 @@ export default function InventoryPage() {
           </table>
           {!isLoading && inventory.length === 0 && (
             <div className="py-20 text-center bg-white">
-              <p className="text-slate-500 font-medium font-display">No inventory items found matches your search.</p>
+              <p className="text-slate-500 font-medium font-display text-sm">No inventory items found matches your search.</p>
             </div>
           )}
         </div>
 
         {!isLoading && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100">
+          <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
             <Pagination
               currentPage={page}
               totalPages={totalPages}
@@ -272,6 +272,7 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
+
 
       {/* Add Item Modal */}
       {isModalOpen && (

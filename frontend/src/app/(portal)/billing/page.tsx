@@ -229,68 +229,68 @@ export default function BillingPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice</th>
+                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                <th className="px-6 py-4 text-right"></th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right sm:text-left">Amount</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Date</th>
+                <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4" />
+                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
               ) : (
                 invoices.map((invoice) => (
                   <tr key={invoice.id} className="hover:bg-indigo-50/30 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base">
                         INV-{invoice.invoiceNumber || '2026-001'}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-[10px] text-indigo-600 shadow-sm border border-indigo-100">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-[9px] sm:text-[10px] text-indigo-600 shadow-sm border border-indigo-100 hidden xs:flex">
                           {invoice.patient?.user?.firstName?.charAt(0)}
                         </div>
-                        <p className="text-sm font-bold text-slate-700">
+                        <p className="text-sm font-bold text-slate-700 truncate max-w-[100px] sm:max-w-none">
                           {invoice.patient?.user?.firstName} {invoice.patient?.user?.lastName}
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">
+                    <td className="px-6 py-4 text-sm font-bold text-slate-900 text-right sm:text-left">
                       ${invoice.totalAmount?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden sm:table-cell">
                       <span className={`badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
-                        } font-bold`}>
+                        } font-bold text-[10px]`}>
                         {invoice.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap hidden md:table-cell">
                       {new Date(invoice.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleDelete(invoice.id)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                          className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
-                        <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                        <button className="p-1.5 sm:p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
                           <MoreHorizontal size={18} />
                         </button>
                       </div>
@@ -308,7 +308,7 @@ export default function BillingPage() {
         </div>
 
         {!isLoading && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100">
+          <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
             <Pagination
               currentPage={page}
               totalPages={totalPages}
@@ -319,6 +319,7 @@ export default function BillingPage() {
           </div>
         )}
       </div>
+
 
       {/* Create Invoice Modal */}
       {isModalOpen && (

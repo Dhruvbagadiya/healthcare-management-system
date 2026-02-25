@@ -181,66 +181,66 @@ export default function WardsPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Ward Name / Type</th>
+                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Ward Name / Type</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Capacity</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Occupied</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Occupied</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Available</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Location</th>
-                <th className="px-6 py-4 text-right"></th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Location</th>
+                <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4" />
+                    <td className="px-6 py-4 hidden lg:table-cell"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
               ) : (
                 wards.map((ward) => (
                   <tr key={ward.id} className="hover:bg-indigo-50/30 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">
                           {ward.wardName}
                         </p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ward.wardType} Ward</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{ward.wardType} Ward</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm font-bold text-slate-700">{ward.totalBeds} <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">Beds</span></p>
+                      <p className="text-sm font-bold text-slate-700">{ward.totalBeds} <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-tighter">Beds</span></p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                       <p className="text-sm font-bold text-slate-700">{ward.occupiedBeds}</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`badge ${ward.availableBeds > 5 ? 'badge-success' : ward.availableBeds > 0 ? 'badge-warning' : 'badge-error'} font-bold`}>
-                        {ward.availableBeds} Available
+                      <span className={`badge ${ward.availableBeds > 5 ? 'badge-success' : ward.availableBeds > 0 ? 'badge-warning' : 'badge-error'} font-bold text-[10px]`}>
+                        {ward.availableBeds} <span className="hidden sm:inline">Available</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap hidden lg:table-cell">
                       <div className="flex items-center gap-1.5">
                         <MapPin size={14} className="text-slate-400" />
                         {ward.floor}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleDelete(ward.id)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                          className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
-                        <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                        <button className="p-1.5 sm:p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
                           <MoreHorizontal size={18} />
                         </button>
                       </div>
@@ -252,13 +252,13 @@ export default function WardsPage() {
           </table>
           {!isLoading && wards.length === 0 && (
             <div className="py-20 text-center bg-white">
-              <p className="text-slate-500 font-medium font-display">No wards found matches your search.</p>
+              <p className="text-slate-500 font-medium font-display text-sm">No wards found matches your search.</p>
             </div>
           )}
         </div>
 
         {!isLoading && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100">
+          <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
             <Pagination
               currentPage={page}
               totalPages={totalPages}
@@ -269,6 +269,7 @@ export default function WardsPage() {
           </div>
         )}
       </div>
+
 
       {/* Add Ward Modal */}
       {isModalOpen && (
