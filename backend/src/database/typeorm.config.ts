@@ -16,6 +16,7 @@ import { AuditLog } from '../common/entities/audit-log.entity';
 import { Staff } from '../modules/staff/entities/staff.entity';
 import { Inventory } from '../modules/inventory/entities/inventory.entity';
 import { Ward, Bed } from '../modules/wards/entities/ward.entity';
+import { Admission } from '../modules/admissions/entities/admission.entity';
 import { OperationTheater, Surgery } from '../modules/operation-theater/entities/operation-theater.entity';
 import { RadiologyRequest } from '../modules/radiology/entities/radiology.entity';
 import { Expense, Revenue } from '../modules/accounts/entities/accounts.entity';
@@ -43,6 +44,7 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     Inventory,
     Ward,
     Bed,
+    Admission,
     OperationTheater,
     Surgery,
     RadiologyRequest,
@@ -82,6 +84,7 @@ export const AppDataSource = new DataSource({
     Inventory,
     Ward,
     Bed,
+    Admission,
     OperationTheater,
     Surgery,
     RadiologyRequest,

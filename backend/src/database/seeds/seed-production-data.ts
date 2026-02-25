@@ -20,6 +20,7 @@ import { Surgery, SurgeryStatus, OperationTheater } from '../../modules/operatio
 import { ComplianceRecord, ComplianceStatus, ComplianceType, DataAccessLog } from '../../modules/compliance/entities/compliance.entity';
 import { RadiologyRequest, ImagingType, ImagingStatus } from '../../modules/radiology/entities/radiology.entity';
 import { Ward, Bed, BedStatus } from '../../modules/wards/entities/ward.entity';
+import { Admission, AdmissionStatus } from '../../modules/admissions/entities/admission.entity';
 
 // Load environment variables FIRST
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -58,6 +59,7 @@ async function seedData() {
     const radiologyRepo = AppDataSource.getRepository(RadiologyRequest);
     const wardRepo = AppDataSource.getRepository(Ward);
     const bedRepo = AppDataSource.getRepository(Bed);
+    const admissionRepo = AppDataSource.getRepository(Admission);
 
     // ─────────────────────────────────────────────────────────────────────────
     // 0. Admin User — dhruvbagadiya@gmail.com
@@ -296,6 +298,9 @@ async function seedData() {
 
     // Beds with null wardId
     await q(`DELETE FROM beds WHERE "wardId" IS NULL`);
+
+    // Admissions with null ids
+    await q(`DELETE FROM admissions WHERE "patientId" IS NULL OR "doctorId" IS NULL OR "bedId" IS NULL OR "wardId" IS NULL`);
 
     // Data access logs with null userId or entityId
     await q(`DELETE FROM data_access_logs WHERE "userId" IS NULL OR "entityId" IS NULL`);
@@ -883,6 +888,62 @@ async function seedData() {
     console.log('✅ 10 Wards and 10 Beds created\n');
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 14b. Admissions (10)
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('🛏️ Seeding 10 admissions...');
+    const admissions: Admission[] = [];
+    const allBeds = await bedRepo.find();
+    for (let i = 0; i < 10; i++) {
+      const status = i < 5 ? AdmissionStatus.ADMITTED : AdmissionStatus.DISCHARGED;
+      const bed = allBeds[i % allBeds.length];
+
+      let admission = await admissionRepo.findOne({ where: { admissionId: `ADM-SEED-00${i + 1}` } });
+      if (!admission) {
+        admission = await admissionRepo.save(admissionRepo.create({
+          admissionId: `ADM-SEED-00${i + 1}`,
+          patient: patients[i],
+          patientId: patients[i].id,
+          doctor: doctors[i % 10],
+          doctorId: doctors[i % 10].id,
+          ward: wards[i % 10],
+          wardId: wards[i % 10].id,
+          bed: bed,
+          bedId: bed.id,
+          admissionDate: daysOffset(-i - 5),
+          dischargeDate: status === AdmissionStatus.DISCHARGED ? daysOffset(-i - 1) : null,
+          status,
+          reason: rand(['Fever and weakness', 'Post-surgery recovery', 'Observation for chest pain', 'Routine procedure recovery']),
+          diagnosis: diagnosisList[i % diagnosisList.length],
+          vitalsHistory: status === AdmissionStatus.ADMITTED ? [{
+            timestamp: new Date(),
+            bp: '120/80',
+            pulse: 75,
+            temp: 98.6,
+            spO2: 98,
+            recordedBy: 'Nurse Maria'
+          }] : [],
+        }));
+      }
+      admissions.push(admission);
+
+      // Update the bed status to match
+      if (status === AdmissionStatus.ADMITTED) {
+        await bedRepo.update(bed.id, {
+          status: BedStatus.OCCUPIED,
+          assignedPatientId: patients[i].id,
+          assignedDate: daysOffset(-i - 5)
+        });
+      } else {
+        await bedRepo.update(bed.id, {
+          status: BedStatus.AVAILABLE,
+          assignedPatientId: null,
+          assignedDate: null
+        });
+      }
+    }
+    console.log('✅ 10 Admissions created\n');
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 15. Radiology Requests (10)
     // ─────────────────────────────────────────────────────────────────────────
     console.log('🔭 Seeding 10 radiology requests...');
@@ -927,7 +988,7 @@ async function seedData() {
       ['staff', 10], ['operation_theaters', 10], ['surgeries', 10],
       ['expenses', 10], ['revenue', 10], ['compliance_records', 10],
       ['data_access_logs', 10], ['wards', 10], ['beds', 10],
-      ['radiology_requests', 10],
+      ['admissions', 10], ['radiology_requests', 10],
     ];
     for (const [table, count] of tables) {
       console.log(`   ✓ ${table.toString().padEnd(24)} → ${count} records`);
