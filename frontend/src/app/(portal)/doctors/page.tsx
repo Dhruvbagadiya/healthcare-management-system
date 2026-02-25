@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { UserCheck, Star, Mail, Phone, MoreVertical, Search, Filter } from 'lucide-react';
+import { UserCheck, Star, Mail, Phone, MoreVertical, Search, Filter, X, Trash2 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function DoctorsPage() {
@@ -12,7 +12,23 @@ export default function DoctorsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const limit = 6; // Using 6 for grid layout 2x3 or 3x2
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    doctorId: `DOC-${Math.floor(Math.random() * 10000)}`,
+    specialization: '',
+    licenseNumber: '',
+    yearsOfExperience: 0,
+    consultationFee: 500,
+    phoneNumber: '',
+    isActive: true
+  });
+
+  const limit = 6;
 
   const fetchDoctors = useCallback(async (searchQuery = '', pageNumber = 1) => {
     setIsLoading(true);
@@ -27,7 +43,7 @@ export default function DoctorsPage() {
       setDoctors(res.data.data);
       setTotalPages(res.data.meta.totalPages);
       setTotalItems(res.data.meta.total);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch doctors', error);
     } finally {
       setIsLoading(false);
@@ -48,14 +64,51 @@ export default function DoctorsPage() {
     }
   }, [page, fetchDoctors]);
 
+  const handleCreateDoctor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/doctors', formData);
+      setIsModalOpen(false);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        doctorId: `DOC-${Math.floor(Math.random() * 10000)}`,
+        specialization: '',
+        licenseNumber: '',
+        yearsOfExperience: 0,
+        consultationFee: 500,
+        phoneNumber: '',
+        isActive: true
+      });
+      fetchDoctors(search, page);
+    } catch (error: any) {
+      console.error('Failed to create doctor', error);
+      alert(error.response?.data?.message || 'Failed to create doctor');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this doctor from the portal?')) return;
+    try {
+      await apiClient.delete(`/doctors/${id}`);
+      fetchDoctors(search, page);
+    } catch (error: any) {
+      console.error('Failed to delete doctor', error);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Doctors</h1>
           <p className="mt-1 text-sm md:text-base text-slate-500">Manage medical staff and specialists</p>
         </div>
-        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11"
+        >
           <UserCheck size={18} />
           Add Doctor
         </button>
@@ -88,7 +141,7 @@ export default function DoctorsPage() {
             <div key={doctor.id} className="card group hover:border-indigo-200 transition-all hover:shadow-md bg-white border-slate-200">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xl shadow-sm">
+                  <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xl shadow-sm border border-indigo-100">
                     {doctor.user?.firstName?.charAt(0)}
                   </div>
                   <div>
@@ -98,15 +151,23 @@ export default function DoctorsPage() {
                     <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">{doctor.specialization}</p>
                   </div>
                 </div>
-                <button className="text-slate-400 hover:text-slate-600 transition-colors">
-                  <MoreVertical size={20} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleDelete(doctor.id)}
+                    className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                  <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
+                    <MoreVertical size={18} />
+                  </button>
+                </div>
               </div>
 
               <div className="mt-6 flex items-center gap-4 text-sm text-slate-600">
                 <div className="flex items-center bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg font-bold border border-amber-100 shadow-sm">
                   <Star size={14} className="fill-amber-400 text-amber-400 mr-1.5" />
-                  {doctor.rating}
+                  {doctor.rating || '5.0'}
                 </div>
                 <div className="font-medium bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
                   {doctor.yearsOfExperience} years exp.
@@ -120,7 +181,7 @@ export default function DoctorsPage() {
                 </div>
                 <div className="flex items-center text-sm text-slate-500">
                   <Phone size={16} className="mr-3 text-slate-400" />
-                  <span>{doctor.user?.phoneNumber || '+1 (555) 000-0000'}</span>
+                  <span>{doctor.user?.phoneNumber || 'N/A'}</span>
                 </div>
               </div>
 
@@ -135,7 +196,7 @@ export default function DoctorsPage() {
 
       {!isLoading && doctors.length === 0 && (
         <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-slate-200">
-          <p className="text-slate-500 font-medium">No doctors found matches your search.</p>
+          <p className="text-slate-500 font-medium font-display">No doctors found matches your search.</p>
         </div>
       )}
 
@@ -150,6 +211,91 @@ export default function DoctorsPage() {
           />
         </div>
       )}
+
+      {/* Add Doctor Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 font-display">Add New Doctor</h2>
+                <p className="text-sm text-slate-500">Register a new medical specialist</p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDoctor} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">First Name</label>
+                  <input required className="input h-11" placeholder="Dr. First Name" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Last Name</label>
+                  <input required className="input h-11" placeholder="Last Name" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Email Address</label>
+                  <input required type="email" className="input h-11" placeholder="doctor@aarogentix.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Phone Number</label>
+                  <input required className="input h-11" placeholder="+1234567890" value={formData.phoneNumber} onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Doctor ID</label>
+                  <input required className="input h-11 bg-slate-50" readOnly value={formData.doctorId} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Specialization</label>
+                  <select required className="input h-11" value={formData.specialization} onChange={e => setFormData({ ...formData, specialization: e.target.value })}>
+                    <option value="">Select Specialization</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Dermatology">Dermatology</option>
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Physiotherapy">Physiotherapy</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">License Number</label>
+                  <input required className="input h-11" placeholder="e.g. MC12345" value={formData.licenseNumber} onChange={e => setFormData({ ...formData, licenseNumber: e.target.value })} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Experience (Yrs)</label>
+                    <input required type="number" className="input h-11" value={formData.yearsOfExperience} onChange={e => setFormData({ ...formData, yearsOfExperience: parseInt(e.target.value) })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Fee ($)</label>
+                    <input required type="number" className="input h-11" value={formData.consultationFee} onChange={e => setFormData({ ...formData, consultationFee: parseInt(e.target.value) })} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1 h-12">Cancel</button>
+                <button type="submit" className="btn btn-primary flex-1 h-12 shadow-indigo-100">Register Doctor</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

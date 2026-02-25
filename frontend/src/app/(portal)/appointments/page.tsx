@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Calendar as CalendarIcon, Clock, MoreHorizontal, Plus, Search, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MoreHorizontal, Plus, Search, Filter, X, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function AppointmentsPage() {
@@ -12,6 +12,21 @@ export default function AppointmentsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    patientId: '',
+    doctorId: '',
+    appointmentDate: new Date().toISOString().split('T')[0],
+    appointmentTime: '09:00',
+    reason: '',
+    notes: '',
+    status: 'scheduled'
+  });
+
   const limit = 10;
 
   const fetchAppointments = useCallback(async (searchQuery = '', pageNumber = 1) => {
@@ -34,6 +49,19 @@ export default function AppointmentsPage() {
     }
   }, []);
 
+  const fetchDependencies = useCallback(async () => {
+    try {
+      const [patientsRes, doctorsRes] = await Promise.all([
+        apiClient.get('/patients', { params: { limit: 100 } }),
+        apiClient.get('/doctors', { params: { limit: 100 } })
+      ]);
+      setPatients(patientsRes.data.data || []);
+      setDoctors(doctorsRes.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch dependencies', error);
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -48,14 +76,51 @@ export default function AppointmentsPage() {
     }
   }, [page, fetchAppointments]);
 
+  useEffect(() => {
+    fetchDependencies();
+  }, [fetchDependencies]);
+
+  const handleCreateAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/appointments', formData);
+      setIsModalOpen(false);
+      setFormData({
+        patientId: '',
+        doctorId: '',
+        appointmentDate: new Date().toISOString().split('T')[0],
+        appointmentTime: '09:00',
+        reason: '',
+        notes: '',
+        status: 'scheduled'
+      });
+      fetchAppointments(search, page);
+    } catch (error) {
+      console.error('Failed to create appointment', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to cancel and delete this appointment?')) return;
+    try {
+      await apiClient.delete(`/appointments/${id}`);
+      fetchAppointments(search, page);
+    } catch (error) {
+      console.error('Failed to delete appointment', error);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Appointments</h1>
           <p className="mt-1 text-sm md:text-base text-slate-500">Schedule and manage patient consultations</p>
         </div>
-        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11"
+        >
           <Plus size={18} />
           New Appointment
         </button>
@@ -144,9 +209,17 @@ export default function AppointmentsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-1.5 rounded-full hover:bg-white hover:shadow-sm text-slate-400 hover:text-indigo-600 transition-all">
-                          <MoreHorizontal size={20} />
-                        </button>
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleDelete(app.id)}
+                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                          <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                            <MoreHorizontal size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -171,6 +244,120 @@ export default function AppointmentsPage() {
           )}
         </div>
       </div>
+
+      {/* New Appointment Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 font-display">New Appointment</h2>
+                <p className="text-sm text-slate-500">Schedule a new consultation session</p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAppointment} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Patient</label>
+                  <select
+                    required
+                    className="input h-11"
+                    value={formData.patientId}
+                    onChange={e => setFormData({ ...formData, patientId: e.target.value })}
+                  >
+                    <option value="">Select Patient</option>
+                    {patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.user?.firstName} {p.user?.lastName} ({p.patientId})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Doctor</label>
+                  <select
+                    required
+                    className="input h-11"
+                    value={formData.doctorId}
+                    onChange={e => setFormData({ ...formData, doctorId: e.target.value })}
+                  >
+                    <option value="">Select Doctor</option>
+                    {doctors.map(d => (
+                      <option key={d.id} value={d.id}>Dr. {d.user?.firstName} {d.user?.lastName} - {d.specialization}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Appointment Date</label>
+                  <input
+                    required
+                    type="date"
+                    className="input h-11"
+                    value={formData.appointmentDate}
+                    onChange={e => setFormData({ ...formData, appointmentDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Preferred Time</label>
+                  <input
+                    required
+                    type="time"
+                    className="input h-11"
+                    value={formData.appointmentTime}
+                    onChange={e => setFormData({ ...formData, appointmentTime: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-bold text-slate-700">Reason for Visit</label>
+                  <input
+                    required
+                    type="text"
+                    className="input h-11"
+                    placeholder="Brief description of the consultation"
+                    value={formData.reason}
+                    onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-bold text-slate-700">Special Notes</label>
+                  <textarea
+                    className="input min-h-[100px] py-3"
+                    placeholder="Any specific symptoms or prior history..."
+                    value={formData.notes}
+                    onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="btn btn-secondary flex-1 h-12"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary flex-1 h-12 shadow-indigo-100"
+                >
+                  Confirm Appointment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

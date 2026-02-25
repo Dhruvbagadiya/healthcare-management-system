@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Users, Search, Filter, MoreHorizontal } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, X, Trash2, Plus, Mail, Phone, Briefcase, Calendar } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function StaffPage() {
@@ -12,6 +12,24 @@ export default function StaffPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: 'Password123!',
+    phoneNumber: '',
+    role: 'Nurse',
+    department: 'General',
+    shift: 'Morning',
+    salary: 3000,
+    hireDate: new Date().toISOString().split('T')[0],
+    contractType: 'Full-time',
+    notes: ''
+  });
+
   const limit = 10;
 
   const fetchStaff = useCallback(async (searchQuery = '', pageNumber = 1) => {
@@ -26,8 +44,8 @@ export default function StaffPage() {
       });
       setStaff(res.data.data);
       setTotalPages(res.data.meta?.totalPages || 1);
-      setTotalItems(res.data.total || 0);
-    } catch (error) {
+      setTotalItems(res.data.meta?.total || 0);
+    } catch (error: any) {
       console.error('Failed to fetch staff', error);
     } finally {
       setIsLoading(false);
@@ -48,15 +66,54 @@ export default function StaffPage() {
     }
   }, [page, fetchStaff]);
 
+  const handleAddStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/staff', formData);
+      setIsModalOpen(false);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: 'Password123!',
+        phoneNumber: '',
+        role: 'Nurse',
+        department: 'General',
+        shift: 'Morning',
+        salary: 3000,
+        hireDate: new Date().toISOString().split('T')[0],
+        contractType: 'Full-time',
+        notes: ''
+      });
+      fetchStaff(search, page);
+    } catch (error: any) {
+      console.error('Failed to add staff', error);
+      alert(error.response?.data?.message || 'Failed to add staff');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this staff member?')) return;
+    try {
+      await apiClient.delete(`/staff/${id}`);
+      fetchStaff(search, page);
+    } catch (error: any) {
+      console.error('Failed to delete staff', error);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Staff Management</h1>
-          <p className="mt-1 text-sm md:text-base text-slate-500">Manage doctors, nurses, and healthcare professionals</p>
+          <p className="mt-1 text-sm md:text-base text-slate-500">Manage nurses, administrative, and clinical professionals</p>
         </div>
-        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
-          <Users size={18} />
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11 shadow-indigo-100"
+        >
+          <Plus size={18} />
           <span>Add Staff</span>
         </button>
       </div>
@@ -66,13 +123,13 @@ export default function StaffPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder="Search staff..."
+            placeholder="Search staff by name, role or ID..."
             className="input pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
+        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6 font-bold">
           <Filter size={18} />
           Filters
         </button>
@@ -83,10 +140,10 @@ export default function StaffPage() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Role & Dept</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hire Date</th>
                 <th className="px-6 py-4 text-right"></th>
               </tr>
             </thead>
@@ -103,26 +160,46 @@ export default function StaffPage() {
                 ))
               ) : (
                 staff.map((member) => (
-                  <tr key={member.id} className="hover:bg-indigo-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-slate-900">{member.user?.firstName} {member.user?.lastName}</p>
-                      <p className="text-xs text-slate-500">{member.staffId}</p>
+                  <tr key={member.id} className="hover:bg-indigo-50/30 transition-colors group">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-indigo-600 shadow-sm border border-slate-200">
+                          {member.user?.firstName?.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                            {member.user?.firstName} {member.user?.lastName}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{member.staffId}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="badge badge-primary text-xs">{member.role}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="badge badge-primary text-[10px] font-bold w-fit uppercase">{member.role}</span>
+                        <span className="text-xs text-slate-500 font-medium">{member.department}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'}`}>
+                      <span className={`badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'} font-bold`}>
                         {member.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {member.user?.phoneNumber || 'N/A'}
+                    <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+                      {new Date(member.hireDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-1.5 rounded-full hover:bg-white hover:shadow-sm text-slate-400 hover:text-indigo-600 transition-all">
-                        <MoreHorizontal size={20} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleDelete(member.id)}
+                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                          <MoreHorizontal size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -131,21 +208,135 @@ export default function StaffPage() {
           </table>
           {!isLoading && staff.length === 0 && (
             <div className="py-20 text-center bg-white">
-              <p className="text-slate-500 font-medium">No staff found.</p>
+              <p className="text-slate-500 font-medium font-display">No staff members found matches your search.</p>
             </div>
           )}
         </div>
 
         {!isLoading && totalPages > 1 && (
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            total={totalItems}
-            limit={limit}
-          />
+          <div className="px-6 py-4 border-t border-slate-100">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              total={totalItems}
+              limit={limit}
+            />
+          </div>
         )}
       </div>
+
+      {/* Add Staff Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 font-display">Add Staff Member</h2>
+                <p className="text-sm text-slate-500">Create new staff profile and credentials</p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStaff} className="flex-1 overflow-y-auto p-8 space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2">Personal Information</h3>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">First Name</label>
+                    <input required className="input h-11" placeholder="John" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Last Name</label>
+                    <input required className="input h-11" placeholder="Doe" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><Mail size={14} /> Email</label>
+                    <input type="email" required className="input h-11" placeholder="john.doe@hospital.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><Phone size={14} /> Phone</label>
+                    <input className="input h-11" placeholder="+1 (555) 000-0000" value={formData.phoneNumber} onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2">Employment Details</h3>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><Briefcase size={14} /> Role</label>
+                    <select required className="input h-11" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                      <option value="Nurse">Nurse</option>
+                      <option value="Pharmacist">Pharmacist</option>
+                      <option value="Lab Technician">Lab Technician</option>
+                      <option value="Receptionist">Receptionist</option>
+                      <option value="Accountant">Accountant</option>
+                      <option value="Manager">Manager</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Department</label>
+                    <select required className="input h-11" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
+                      <option value="General">General</option>
+                      <option value="Pharmacy">Pharmacy</option>
+                      <option value="Laboratory">Laboratory</option>
+                      <option value="Administration">Administration</option>
+                      <option value="Emergency">Emergency</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Shift</label>
+                    <select required className="input h-11" value={formData.shift} onChange={e => setFormData({ ...formData, shift: e.target.value })}>
+                      <option value="Morning">Morning (8 AM - 4 PM)</option>
+                      <option value="Evening">Evening (4 PM - 12 AM)</option>
+                      <option value="Night">Night (12 AM - 8 AM)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Monthly Salary ($)</label>
+                    <input type="number" required className="input h-11" value={formData.salary} onChange={e => setFormData({ ...formData, salary: parseInt(e.target.value) })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><Calendar size={14} /> Hire Date</label>
+                    <input type="date" required className="input h-11" value={formData.hireDate} onChange={e => setFormData({ ...formData, hireDate: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Contract</label>
+                    <select required className="input h-11" value={formData.contractType} onChange={e => setFormData({ ...formData, contractType: e.target.value })}>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Internal Notes</label>
+                <textarea className="input min-h-[100px] py-3 text-sm" placeholder="Additional background info..." value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}></textarea>
+              </div>
+            </form>
+
+            <div className="px-8 py-6 border-t border-slate-100 bg-white flex gap-4 shrink-0">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1 h-12 font-bold">Cancel</button>
+              <button
+                type="submit"
+                onClick={handleAddStaff}
+                className="btn btn-primary flex-1 h-12 shadow-indigo-100 font-bold"
+              >
+                Create Staff Member
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

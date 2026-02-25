@@ -51,4 +51,20 @@ export class AppointmentsService {
 
     return appointment;
   }
+
+  async create(createAppointmentDto: any) {
+    const appointment = this.appointmentRepo.create(createAppointmentDto);
+    return this.appointmentRepo.save(appointment);
+  }
+
+  async update(id: string, updateAppointmentDto: any) {
+    const appointment = await this.findOne(id);
+    Object.assign(appointment, updateAppointmentDto);
+    return this.appointmentRepo.save(appointment);
+  }
+
+  async remove(id: string) {
+    const appointment = await this.findOne(id);
+    return this.appointmentRepo.remove(appointment);
+  }
 }

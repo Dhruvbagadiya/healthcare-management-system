@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { FileText, Plus, User, UserCheck, Pill, MoreHorizontal, Search, Filter } from 'lucide-react';
+import { FileText, Plus, User, UserCheck, Pill, MoreHorizontal, Search, Filter, X, Trash2, PlusCircle, AlertCircle } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function PrescriptionsPage() {
@@ -12,6 +12,22 @@ export default function PrescriptionsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    patientId: '',
+    doctorId: '',
+    diagnosis: '',
+    notes: '',
+    status: 'active',
+    medicines: [
+      { medicineName: '', dosage: '', frequency: '', duration: '', instructions: '' }
+    ]
+  });
+
   const limit = 5;
 
   const fetchPrescriptions = useCallback(async (searchQuery = '', pageNumber = 1) => {
@@ -34,6 +50,19 @@ export default function PrescriptionsPage() {
     }
   }, []);
 
+  const fetchDependencies = useCallback(async () => {
+    try {
+      const [patientsRes, doctorsRes] = await Promise.all([
+        apiClient.get('/patients', { params: { limit: 100 } }),
+        apiClient.get('/doctors', { params: { limit: 100 } })
+      ]);
+      setPatients(patientsRes.data.data || []);
+      setDoctors(doctorsRes.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch dependencies', error);
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -48,14 +77,68 @@ export default function PrescriptionsPage() {
     }
   }, [page, fetchPrescriptions]);
 
+  useEffect(() => {
+    fetchDependencies();
+  }, [fetchDependencies]);
+
+  const addMedicineRow = () => {
+    setFormData({
+      ...formData,
+      medicines: [...formData.medicines, { medicineName: '', dosage: '', frequency: '', duration: '', instructions: '' }]
+    });
+  };
+
+  const removeMedicineRow = (index: number) => {
+    const newMedicines = formData.medicines.filter((_, i) => i !== index);
+    setFormData({ ...formData, medicines: newMedicines });
+  };
+
+  const updateMedicine = (index: number, field: string, value: string) => {
+    const newMedicines = [...formData.medicines];
+    newMedicines[index] = { ...newMedicines[index], [field]: value };
+    setFormData({ ...formData, medicines: newMedicines });
+  };
+
+  const handleCreatePrescription = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/prescriptions', formData);
+      setIsModalOpen(false);
+      setFormData({
+        patientId: '',
+        doctorId: '',
+        diagnosis: '',
+        notes: '',
+        status: 'active',
+        medicines: [{ medicineName: '', dosage: '', frequency: '', duration: '', instructions: '' }]
+      });
+      fetchPrescriptions(search, page);
+    } catch (error) {
+      console.error('Failed to create prescription', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this prescription?')) return;
+    try {
+      await apiClient.delete(`/prescriptions/${id}`);
+      fetchPrescriptions(search, page);
+    } catch (error) {
+      console.error('Failed to delete prescription', error);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Prescriptions</h1>
           <p className="mt-1 text-sm md:text-base text-slate-500">Manage digital prescriptions and history</p>
         </div>
-        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11 shadow-indigo-100"
+        >
           <Plus size={18} />
           New Prescription
         </button>
@@ -72,7 +155,7 @@ export default function PrescriptionsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
+        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6 font-semibold">
           <Filter size={18} />
           Filters
         </button>
@@ -85,17 +168,17 @@ export default function PrescriptionsPage() {
           ))
         ) : (
           prescriptions.map((prescription) => (
-            <div key={prescription.id} className="card group hover:border-indigo-200 transition-all hover:shadow-md bg-white border-slate-200">
+            <div key={prescription.id} className="card group hover:border-indigo-200 transition-all hover:shadow-md bg-white border-slate-200 p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm">
+                  <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
                     <FileText size={24} />
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-lg group-hover:text-indigo-700 transition-colors">
                       Prescription #{prescription.prescriptionNumber}
                     </h3>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-500 font-medium">
                       Standard Medical Prescription • {new Date(prescription.issuedDate).toLocaleDateString()}
                     </p>
                   </div>
@@ -105,47 +188,55 @@ export default function PrescriptionsPage() {
                     }`}>
                     {prescription.status}
                   </span>
-                  <button className="p-1.5 rounded-full hover:bg-white hover:shadow-sm text-slate-400 hover:text-indigo-600 transition-all">
-                    <MoreHorizontal size={20} />
-                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                    <button
+                      onClick={() => handleDelete(prescription.id)}
+                      className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                    <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                      <MoreHorizontal size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
                     <User size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Patient</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Patient</p>
                     <p className="text-sm font-bold text-slate-900">
                       {prescription.patient?.user?.firstName} {prescription.patient?.user?.lastName}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
                     <UserCheck size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Doctor</p>
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Doctor</p>
+                    <p className="text-sm font-bold text-slate-900 font-display">
                       Dr. {prescription.doctor?.user?.firstName} {prescription.doctor?.user?.lastName}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:col-span-2 lg:col-span-1 lg:justify-end">
-                  <button className="btn btn-secondary text-xs py-1.5 px-3 flex-1 sm:flex-none">View Details</button>
-                  <button className="btn btn-primary text-xs py-1.5 px-3 shadow-indigo-100 flex-1 sm:flex-none">Download PDF</button>
+                  <button className="btn btn-secondary text-xs py-2 px-4 shadow-sm font-bold">View Details</button>
+                  <button className="btn btn-primary text-xs py-2 px-4 shadow-indigo-100 font-bold">Download PDF</button>
                 </div>
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-50 flex flex-wrap gap-2">
                 {prescription.medicines?.map((med: any, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2 bg-indigo-50/50 px-3 py-1.5 rounded-lg border border-indigo-100/50">
+                  <div key={idx} className="flex items-center gap-2 bg-indigo-50/50 px-3 py-1.5 rounded-lg border border-indigo-100/50 hover:bg-indigo-50 hover:border-indigo-200 transition-colors cursor-default">
                     <Pill size={14} className="text-indigo-500" />
-                    <span className="text-sm font-medium text-slate-700">{med.medicineName}</span>
-                    <span className="text-xs text-slate-500 font-medium">({med.dosage})</span>
+                    <span className="text-sm font-bold text-slate-700">{med.medicineName}</span>
+                    <span className="text-xs text-slate-500 font-bold">• {med.dosage}</span>
                   </div>
                 ))}
               </div>
@@ -155,8 +246,130 @@ export default function PrescriptionsPage() {
       </div>
 
       {!isLoading && prescriptions.length === 0 && (
-        <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-slate-200">
-          <p className="text-slate-500 font-medium">No prescriptions found matches your search.</p>
+        <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200 shadow-sm">
+          <p className="text-slate-500 font-medium font-display">No prescriptions found matches your search.</p>
+        </div>
+      )}
+
+      {/* New Prescription Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 font-display">New Digital Prescription</h2>
+                <p className="text-sm text-slate-500">Create and issue medication orders</p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePrescription} className="flex-1 overflow-y-auto p-8 space-y-8">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Patient</label>
+                  <select required className="input h-11" value={formData.patientId} onChange={e => setFormData({ ...formData, patientId: e.target.value })}>
+                    <option value="">Select Patient</option>
+                    {patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.user?.firstName} {p.user?.lastName} ({p.patientId})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Doctor</label>
+                  <select required className="input h-11" value={formData.doctorId} onChange={e => setFormData({ ...formData, doctorId: e.target.value })}>
+                    <option value="">Select Doctor</option>
+                    {doctors.map(d => (
+                      <option key={d.id} value={d.id}>Dr. {d.user?.firstName} {d.user?.lastName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Diagnosis</label>
+                  <input required className="input h-11" placeholder="Search or type diagnosis" value={formData.diagnosis} onChange={e => setFormData({ ...formData, diagnosis: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Notes</label>
+                  <input className="input h-11" placeholder="Extra instructions..." value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Medicines</h3>
+                  <button
+                    type="button"
+                    onClick={addMedicineRow}
+                    className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-indigo-50 transition-all font-display"
+                  >
+                    <PlusCircle size={16} />
+                    Add Medicine
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto -mx-8 px-8">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th className="py-3 pr-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Medicine Name</th>
+                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-32">Dosage</th>
+                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-32">Freq.</th>
+                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-32">Dur.</th>
+                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Instruction</th>
+                        <th className="py-3 pl-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {formData.medicines.map((med, idx) => (
+                        <tr key={idx}>
+                          <td className="py-3 pr-4">
+                            <input required className="input text-sm h-10" placeholder="e.g. Paracetamol" value={med.medicineName} onChange={e => updateMedicine(idx, 'medicineName', e.target.value)} />
+                          </td>
+                          <td className="py-3 px-4">
+                            <input required className="input text-sm h-10" placeholder="e.g. 500mg" value={med.dosage} onChange={e => updateMedicine(idx, 'dosage', e.target.value)} />
+                          </td>
+                          <td className="py-3 px-4">
+                            <input required className="input text-sm h-10" placeholder="e.g. 1-0-1" value={med.frequency} onChange={e => updateMedicine(idx, 'frequency', e.target.value)} />
+                          </td>
+                          <td className="py-3 px-4">
+                            <input required className="input text-sm h-10" placeholder="e.g. 5 Days" value={med.duration} onChange={e => updateMedicine(idx, 'duration', e.target.value)} />
+                          </td>
+                          <td className="py-3 px-4">
+                            <input className="input text-sm h-10" placeholder="After meal" value={med.instructions} onChange={e => updateMedicine(idx, 'instructions', e.target.value)} />
+                          </td>
+                          <td className="py-3 pl-4">
+                            {formData.medicines.length > 1 && (
+                              <button type="button" onClick={() => removeMedicineRow(idx)} className="p-1.5 text-slate-300 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors">
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </form>
+
+            <div className="px-8 py-6 border-t border-slate-100 bg-slate-50/50 flex gap-4 shrink-0">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1 h-12 font-bold">Cancel</button>
+              <button
+                type="submit"
+                onClick={handleCreatePrescription}
+                className="btn btn-primary flex-1 h-12 shadow-indigo-100 font-bold"
+              >
+                Issue Prescription
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -174,3 +387,4 @@ export default function PrescriptionsPage() {
     </div>
   );
 }
+

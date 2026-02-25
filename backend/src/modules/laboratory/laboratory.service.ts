@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LabTest } from './entities/lab-test.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
+import { CreateLabTestDto, UpdateLabTestDto } from './dto/create-lab-test.dto';
 
 @Injectable()
 export class LaboratoryService {
@@ -16,7 +17,7 @@ export class LaboratoryService {
         const skip = (page - 1) * limit;
 
         const [data, total] = await this.labTestRepo.findAndCount({
-            relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+            relations: ['patient', 'patient.user'],
             order: { createdAt: 'DESC' },
             take: limit,
             skip,
@@ -31,5 +32,34 @@ export class LaboratoryService {
                 totalPages: Math.ceil(total / limit),
             },
         };
+    }
+
+    async findOne(id: string) {
+        const labTest = await this.labTestRepo.findOne({
+            where: { id },
+            relations: ['patient', 'patient.user'],
+        });
+
+        if (!labTest) {
+            throw new NotFoundException(`Lab test with ID ${id} not found`);
+        }
+
+        return labTest;
+    }
+
+    async create(createLabTestDto: CreateLabTestDto) {
+        const labTest = this.labTestRepo.create(createLabTestDto);
+        return this.labTestRepo.save(labTest);
+    }
+
+    async update(id: string, updateLabTestDto: UpdateLabTestDto) {
+        const labTest = await this.findOne(id);
+        Object.assign(labTest, updateLabTestDto);
+        return this.labTestRepo.save(labTest);
+    }
+
+    async remove(id: string) {
+        const labTest = await this.findOne(id);
+        return this.labTestRepo.remove(labTest);
     }
 }
