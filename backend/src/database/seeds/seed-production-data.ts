@@ -169,6 +169,88 @@ async function seedData() {
     }
     console.log('✅ Dharmi Dhameliya account ready (dharmidhameliya@gmail.com / Dharmi@2704)\n');
 
+    // Create Chintan Mangukiya (Doctor)
+    const chintanEmail = 'chintanmangukiya@gmail.com';
+    let chintanUser = await userRepo.findOne({ where: { email: chintanEmail } });
+
+    if (!chintanUser) {
+      chintanUser = await userRepo.save(userRepo.create({
+        userId: crypto.randomUUID(),
+        email: chintanEmail,
+        password: await bcrypt.hash('Chintan@123', 10),
+        roles: [UserRole.DOCTOR],
+        status: UserStatus.ACTIVE,
+        emailVerified: true,
+        firstName: 'Chintan',
+        lastName: 'Mangukiya',
+      }));
+    } else {
+      await userRepo.update(chintanUser.id, {
+        password: await bcrypt.hash('Chintan@123', 10),
+        status: UserStatus.ACTIVE,
+        roles: [UserRole.DOCTOR],
+      });
+      chintanUser = await userRepo.findOne({ where: { email: chintanEmail } });
+    }
+
+    const chintanDoc = await doctorRepo.findOne({ where: { customUserId: chintanUser!.userId } });
+    if (!chintanDoc) {
+      await doctorRepo.save(doctorRepo.create({
+        user: chintanUser,
+        customUserId: chintanUser!.userId,
+        firstName: 'Chintan',
+        lastName: 'Mangukiya',
+        doctorId: 'DOC-CHI-003',
+        specialization: 'Orthopedic Surgeon',
+        licenseNumber: 'DOC-CHI-999',
+        yearsOfExperience: 8,
+        consultationFee: 2000,
+        isActive: true,
+      } as any));
+    }
+    console.log('✅ Chintan Mangukiya account ready (chintanmangukiya@gmail.com / Chintan@123)\n');
+
+    // Create Srushti Savaliya (Doctor)
+    const srushtiEmail = 'srushtisavaliya@gmail.com';
+    let srushtiUser = await userRepo.findOne({ where: { email: srushtiEmail } });
+
+    if (!srushtiUser) {
+      srushtiUser = await userRepo.save(userRepo.create({
+        userId: crypto.randomUUID(),
+        email: srushtiEmail,
+        password: await bcrypt.hash('Srushti@123', 10),
+        roles: [UserRole.DOCTOR],
+        status: UserStatus.ACTIVE,
+        emailVerified: true,
+        firstName: 'Srushti',
+        lastName: 'Savaliya',
+      }));
+    } else {
+      await userRepo.update(srushtiUser.id, {
+        password: await bcrypt.hash('Srushti@123', 10),
+        status: UserStatus.ACTIVE,
+        roles: [UserRole.DOCTOR],
+      });
+      srushtiUser = await userRepo.findOne({ where: { email: srushtiEmail } });
+    }
+
+    const srushtiDoc = await doctorRepo.findOne({ where: { customUserId: srushtiUser!.userId } });
+    if (!srushtiDoc) {
+      await doctorRepo.save(doctorRepo.create({
+        user: srushtiUser,
+        customUserId: srushtiUser!.userId,
+        firstName: 'Srushti',
+        lastName: 'Savaliya',
+        doctorId: 'DOC-SRU-004',
+        specialization: 'Neurologist',
+        licenseNumber: 'DOC-SRU-888',
+        yearsOfExperience: 6,
+        consultationFee: 1800,
+        isActive: true,
+      } as any));
+    }
+    console.log('✅ Srushti Savaliya account ready (srushtisavaliya@gmail.com / Srushti@123)\n');
+
     // ─────────────────────────────────────────────────────────────────────────
     // CLEANUP — Remove records with null names or null required foreign IDs
     // ─────────────────────────────────────────────────────────────────────────
@@ -176,7 +258,7 @@ async function seedData() {
     const q = AppDataSource.query.bind(AppDataSource);
 
     // Users without a firstName or lastName
-    await q(`DELETE FROM users WHERE ("firstName" IS NULL OR "firstName" = '' OR "lastName" IS NULL OR "lastName" = '') AND email NOT IN ($1, $2, $3)`, [adminEmail, shrutiEmail, dharmiEmail]);
+    await q(`DELETE FROM users WHERE ("firstName" IS NULL OR "firstName" = '' OR "lastName" IS NULL OR "lastName" = '') AND email NOT IN ($1, $2, $3, $4, $5)`, [adminEmail, shrutiEmail, dharmiEmail, chintanEmail, srushtiEmail]);
 
     // Doctors: null customUserId OR null doctorId OR orphaned (user deleted)
     await q(`DELETE FROM doctors WHERE "custom_user_id" IS NULL OR "custom_user_id" = '' OR "doctorId" IS NULL OR "doctorId" = ''`);
