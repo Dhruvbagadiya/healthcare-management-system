@@ -187,14 +187,13 @@ export default function OperationTheaterPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
+          <table className="w-full text-left border-collapse min-w-[850px] sm:min-w-0">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Surgery / ID</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Surgeon</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Surgeon / Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Schedule</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
                 <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
@@ -202,48 +201,54 @@ export default function OperationTheaterPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-48 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
                     <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
               ) : (
                 surgeries.map((surgery) => (
-                  <tr key={surgery.id} className="hover:bg-indigo-50/30 transition-colors group">
+                  <tr key={surgery.id} className="hover:bg-indigo-50/30 transition-colors group border-b border-slate-50 last:border-0">
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">
-                          {surgery.surgeryType}
-                        </p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{surgery.surgeryId}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm">
+                          <Stethoscope size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base">
+                            {surgery.surgeryType}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{surgery.surgeryId}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {surgery.patient ? (
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-bold text-slate-700 truncate max-w-[120px] sm:max-w-none">{surgery.patient.firstName} {surgery.patient.lastName}</span>
-                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{surgery.patient.patientId}</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-700">{surgery.patient.firstName} {surgery.patient.lastName}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{surgery.patient.patientId}</p>
                         </div>
                       ) : (
-                        <span className="text-slate-400">N/A</span>
+                        <span className="text-slate-400 text-xs italic">Not Assigned</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900 hidden md:table-cell">
-                      Dr. {surgery.surgeon?.user?.firstName} {surgery.surgeon?.user?.lastName}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-700 mb-1">
+                          Dr. {surgery.surgeon?.user?.firstName} {surgery.surgeon?.user?.lastName}
+                        </p>
+                        <span className={`badge ${surgery.status === 'completed' ? 'badge-success' : surgery.status === 'in_progress' ? 'badge-warning' : 'badge-primary'} font-bold text-[10px]`}>
+                          {surgery.status.replace('_', ' ')}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-700">{new Date(surgery.scheduledDate).toLocaleDateString()}</span>
-                        <span className="text-[10px] sm:text-xs text-slate-400 font-medium">{surgery.startTime} - {surgery.endTime}</span>
+                        <p className="text-sm font-bold text-slate-700">{new Date(surgery.scheduledDate).toLocaleDateString()}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{surgery.startTime} - {surgery.endTime}</p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 hidden sm:table-cell">
-                      <span className={`badge ${surgery.status === 'completed' ? 'badge-success' : surgery.status === 'in_progress' ? 'badge-warning' : 'badge-primary'} font-bold text-[10px]`}>
-                        {surgery.status.replace('_', ' ')}
-                      </span>
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
@@ -263,6 +268,7 @@ export default function OperationTheaterPage() {
               )}
             </tbody>
           </table>
+
           {!isLoading && surgeries.length === 0 && (
             <div className="py-20 text-center bg-white">
               <p className="text-slate-500 font-medium font-display text-sm">No surgeries scheduled matches your search.</p>

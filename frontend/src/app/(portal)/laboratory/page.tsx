@@ -186,14 +186,12 @@ export default function LaboratoryPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
+          <table className="w-full text-left border-collapse min-w-[800px] sm:min-w-0">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Test Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Requested By</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Date</th>
+                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Test / Patient</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Doctor / Date</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                 <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
@@ -201,11 +199,9 @@ export default function LaboratoryPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden lg:table-cell"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-48 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
                     <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
@@ -213,38 +209,36 @@ export default function LaboratoryPage() {
                 labTests.map((test) => (
                   <tr key={test.id} className="hover:bg-indigo-50/30 transition-colors group">
                     <td className="px-4 sm:px-6 py-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100 shadow-sm">
-                          <FlaskConical size={16} className="sm:size-[18px]" />
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100 shadow-sm">
+                          <FlaskConical size={16} />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm truncate max-w-[120px] sm:max-w-none">
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm truncate">
                             {test.testName}
                           </p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{test.testCode}</p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            Patient: <span className="font-bold text-slate-700">{test.patient?.user?.firstName} {test.patient?.user?.lastName}</span>
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-slate-700 truncate max-w-[100px] sm:max-w-none">
-                        {test.patient?.user?.firstName} {test.patient?.user?.lastName}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{test.patient?.patientId}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-700 truncate">
+                          Dr. {test.doctor?.user?.firstName} {test.doctor?.user?.lastName}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                          Requested: {new Date(test.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <p className="text-sm font-bold text-slate-700 truncate max-w-[150px]">
-                        Dr. {test.doctor?.user?.firstName} {test.doctor?.user?.lastName}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 hidden sm:table-cell">
+                    <td className="px-6 py-4">
                       <span className={`badge ${test.status === 'completed' ? 'badge-success' :
                         test.status === 'pending' ? 'badge-warning' : 'badge-primary'
                         } font-bold text-[10px]`}>
                         {test.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-medium hidden lg:table-cell whitespace-nowrap">
-                      {new Date(test.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
@@ -269,6 +263,7 @@ export default function LaboratoryPage() {
               )}
             </tbody>
           </table>
+
           {!isLoading && labTests.length === 0 && (
             <div className="py-20 text-center bg-white">
               <p className="text-slate-500 font-medium font-display text-sm">No lab tests found matches your search.</p>

@@ -137,13 +137,12 @@ export default function StaffPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
+          <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Role & Dept</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Hire Date</th>
+                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Staff Details</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Department</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status / Hire Date</th>
                 <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
@@ -151,42 +150,46 @@ export default function StaffPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-48 bg-slate-100 rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
                     <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
               ) : (
                 staff.map((member) => (
-                  <tr key={member.id} className="hover:bg-indigo-50/30 transition-colors group">
+                  <tr key={member.id} className="hover:bg-indigo-50/30 transition-colors group border-b border-slate-50 last:border-0">
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full bg-slate-100 flex items-center justify-center font-bold text-indigo-600 shadow-sm border border-slate-200 text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-indigo-600 shadow-sm border border-indigo-100 text-sm">
                           {member.user?.firstName?.charAt(0)}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base">
                             {member.user?.firstName} {member.user?.lastName}
                           </p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{member.staffId}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-slate-500 font-medium">{member.user?.email}</span>
+                            <span className="h-3 w-[1px] bg-slate-200"></span>
+                            <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">{member.role}</span>
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="badge badge-primary text-[9px] sm:text-[10px] font-bold w-fit uppercase">{member.role}</span>
-                        <span className="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[100px] sm:max-w-none">{member.department}</span>
+                      <p className="text-sm font-bold text-slate-700">{member.department}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="min-w-0">
+                        <div className="mb-1">
+                          <span className={`badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'} font-bold text-[10px]`}>
+                            {member.status}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                          Joined: {new Date(member.hireDate).toLocaleDateString()}
+                        </p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 hidden sm:table-cell">
-                      <span className={`badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'} font-bold text-[10px]`}>
-                        {member.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-medium hidden md:table-cell whitespace-nowrap">
-                      {new Date(member.hireDate).toLocaleDateString()}
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
@@ -206,6 +209,7 @@ export default function StaffPage() {
               )}
             </tbody>
           </table>
+
           {!isLoading && staff.length === 0 && (
             <div className="py-20 text-center bg-white">
               <p className="text-slate-500 font-medium font-display text-sm">No staff members found matches your search.</p>
