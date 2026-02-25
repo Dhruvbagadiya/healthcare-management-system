@@ -36,7 +36,7 @@ async function seedData() {
       await AppDataSource.initialize();
     }
 
-    console.log('\n🌱 Starting ShrutiCare full database seeding (10 records per table)...\n');
+    console.log('\n🌱 Starting Aarogentix full database seeding (10 records per table)...\n');
 
     const userRepo = AppDataSource.getRepository(User);
     const doctorRepo = AppDataSource.getRepository(Doctor);
@@ -341,7 +341,7 @@ async function seedData() {
         status: rand(apptStatuses),
         notes: 'Patient arrived on time. Consultation completed satisfactorily.',
         isVirtual: i % 4 === 0,
-        meetingLink: i % 4 === 0 ? 'https://meet.shruticare.in/room-' + i : null,
+        meetingLink: i % 4 === 0 ? 'https://meet.Aarogentix.in/room-' + i : null,
       }));
     }
     console.log('✅ 10 Appointments created\n');
@@ -501,7 +501,7 @@ async function seedData() {
           { description: 'Laboratory Tests', quantity: 1, unitPrice: subtotal * 0.3, totalPrice: subtotal * 0.3, category: 'test' },
         ],
         payments: [],
-        notes: 'Thank you for choosing ShrutiCare Hospital.',
+        notes: 'Thank you for choosing Aarogentix Hospital.',
       } as any));
     }
     console.log('✅ 10 Invoices created\n');
