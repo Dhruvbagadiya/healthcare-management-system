@@ -61,7 +61,7 @@ export class PatientsService {
   }
 
   async create(createPatientDto: CreatePatientDto) {
-    const { email, firstName, lastName, ...patientData } = createPatientDto;
+    const { email, firstName, lastName, phoneNumber, dateOfBirth, gender, ...patientData } = createPatientDto;
 
     // Check if user already exists
     const existingUser = await this.userRepo.findOne({ where: { email } });
@@ -75,10 +75,14 @@ export class PatientsService {
       email,
       firstName,
       lastName,
+      phoneNumber,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      gender: gender ? gender.toLowerCase() as any : null,
       password: hashedPassword,
       roles: [UserRole.PATIENT],
       status: UserStatus.ACTIVE,
       userId: `PAT-${Date.now().toString().slice(-6)}`,
+      emailVerified: true,
     });
 
     const savedUser = await this.userRepo.save(user);

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Search, UserPlus, Filter, MoreHorizontal, X } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<any[]>([]);
@@ -52,8 +53,16 @@ export default function PatientsPage() {
 
   const handleAddPatient = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      await apiClient.post('/patients', formData);
+      // Ensure dateOfBirth is null if empty to avoid validation errors
+      const submissionData = {
+        ...formData,
+        dateOfBirth: formData.dateOfBirth || undefined,
+      };
+
+      await apiClient.post('/patients', submissionData);
+      toast.success('Patient registered successfully!');
       setIsAddModalOpen(false);
       setFormData({
         firstName: '',
@@ -67,8 +76,12 @@ export default function PatientsPage() {
         insuranceProvider: ''
       });
       fetchPatients(search, page);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add patient', error);
+      const message = error.response?.data?.message || 'Failed to register patient';
+      toast.error(Array.isArray(message) ? message[0] : message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
