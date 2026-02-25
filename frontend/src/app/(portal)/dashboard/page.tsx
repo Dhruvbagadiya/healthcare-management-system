@@ -155,8 +155,8 @@ export default function DashboardPage() {
         <p className="mt-1 text-slate-500">Hospital Operations Overview</p>
       </div>
 
-      {/* Primary KPI Metrics Grid - 6 columns */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      {/* Primary KPI Metrics Grid */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {primaryMetrics.map((metric, idx) => {
           const color = colorMap[metric.color];
           const Icon = metric.icon;
@@ -190,8 +190,8 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Critical Alerts Section - 3 columns */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Critical Alerts Section */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {/* Low Stock Inventory */}
         <Link href="/inventory" className="card border-l-4 border-orange-200 bg-orange-50/50 hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]">
           <div className="flex items-center justify-between">
@@ -229,14 +229,14 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Financial & Analytics Section - 2 cols */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Financial & Analytics Section */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         {/* Financial Summary */}
         <div className="card lg:col-span-2">
           <h2 className="mb-6 text-lg font-bold text-slate-900">Financial Summary</h2>
 
           {/* Financial KPIs */}
-          <div className="grid gap-4 sm:grid-cols-3 mb-8">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 mb-8">
             <div className="p-3 bg-green-50 rounded-lg border border-green-100">
               <p className="text-xs font-semibold text-gray-600 uppercase">Total Revenue</p>
               <p className="mt-2 text-2xl font-bold text-green-600">₹{(moduleMetrics.financial?.totalRevenue || 0).toLocaleString()}</p>
@@ -325,7 +325,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Activity Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <div className="card lg:col-span-2">
           <h2 className="mb-6 text-lg font-bold text-slate-900">Activity Analytics (Last 6 Months)</h2>
           <div className="h-[300px] w-full">

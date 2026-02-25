@@ -50,29 +50,29 @@ export default function PrescriptionsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Prescriptions</h1>
-          <p className="mt-1 text-slate-500">Manage digital prescriptions and history</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Prescriptions</h1>
+          <p className="mt-1 text-sm md:text-base text-slate-500">Manage digital prescriptions and history</p>
         </div>
-        <button className="btn btn-primary gap-2">
+        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
           <Plus size={18} />
           New Prescription
         </button>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder="Search prescriptions..."
-            className="input pl-10"
+            className="input pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2">
+        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
           <Filter size={18} />
           Filters
         </button>
@@ -111,7 +111,7 @@ export default function PrescriptionsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
                     <User size={16} />
@@ -134,9 +134,9 @@ export default function PrescriptionsPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 lg:justify-end">
-                  <button className="btn btn-secondary text-xs py-1.5 px-3">View Details</button>
-                  <button className="btn btn-primary text-xs py-1.5 px-3 shadow-indigo-100">Download PDF</button>
+                <div className="flex items-center gap-3 sm:col-span-2 lg:col-span-1 lg:justify-end">
+                  <button className="btn btn-secondary text-xs py-1.5 px-3 flex-1 sm:flex-none">View Details</button>
+                  <button className="btn btn-primary text-xs py-1.5 px-3 shadow-indigo-100 flex-1 sm:flex-none">Download PDF</button>
                 </div>
               </div>
 

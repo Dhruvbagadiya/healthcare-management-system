@@ -33,49 +33,49 @@ export default function CompliancePage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Compliance & Audit</h1>
-        <p className="mt-1 text-slate-500">Monitor HIPAA, data security, and regulatory compliance</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Compliance & Audit</h1>
+        <p className="mt-1 text-sm md:text-base text-slate-500">Monitor HIPAA, data security, and regulatory compliance</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-              <Shield size={20} />
+            <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Shield size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Compliance Items</p>
-              <p className="text-2xl font-bold text-slate-900">{compliance.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Compliance Items</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{compliance.length}</p>
             </div>
           </div>
         </div>
 
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
-              <AlertCircle size={20} />
+            <div className="h-9 w-9 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
+              <AlertCircle size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Non-Compliant</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.nonCompliant}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Non-Compliant</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.nonCompliant}</p>
             </div>
           </div>
         </div>
 
-        <div className="card shadow-sm border-slate-200">
+        <div className="card shadow-sm border-slate-200 sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
-              <CheckCircle2 size={20} />
+            <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Audit Logs</p>
-              <p className="text-2xl font-bold text-slate-900">{logs.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Audit Logs</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{logs.length}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
           <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
             <h3 className="font-bold text-slate-900">Compliance Records</h3>

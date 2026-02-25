@@ -39,43 +39,41 @@ export default function InventoryPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Inventory Management</h1>
-        <p className="mt-1 text-slate-500">Track medical supplies, equipment, and medicines</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Inventory Management</h1>
+        <p className="mt-1 text-sm md:text-base text-slate-500">Track medical supplies, equipment, and medicines</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-              <Package size={24} />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Package size={20} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Items</p>
-              <p className="text-2xl font-bold text-slate-900">{inventory.length}</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Items</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{inventory.length}</p>
             </div>
           </div>
         </div>
-
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
-              <TrendingDown size={24} />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
+              <TrendingDown size={20} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Low Stock</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.lowStock}</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Low Stock</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.lowStock}</p>
             </div>
           </div>
         </div>
-
-        <div className="card shadow-sm border-slate-200">
+        <div className="card shadow-sm border-slate-200 sm:col-span-2 md:col-span-1">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
-              <AlertTriangle size={24} />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+              <AlertTriangle size={20} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Expired Items</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.expired}</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Expired Items</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.expired}</p>
             </div>
           </div>
         </div>

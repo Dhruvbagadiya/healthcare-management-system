@@ -141,7 +141,7 @@ export default function DashboardLayout({
             </Link>
           </div>
         </header>
-        <main className="flex-1 p-6 md:p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <main className="flex-1 p-4 md:p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-3 duration-700">
           {children}
         </main>
       </div>

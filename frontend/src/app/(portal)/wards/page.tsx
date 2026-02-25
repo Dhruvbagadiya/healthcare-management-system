@@ -30,55 +30,55 @@ export default function WardsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Ward Management</h1>
-        <p className="mt-1 text-slate-500">Manage hospital wards and bed allocation</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Ward Management</h1>
+        <p className="mt-1 text-sm md:text-base text-slate-500">Manage hospital wards and bed allocation</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-              <Building2 size={20} />
+            <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Building2 size={18} />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-600 uppercase">Total Wards</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.totalWards}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Wards</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.totalWards}</p>
             </div>
           </div>
         </div>
 
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
-              <Bed size={20} />
+            <div className="h-9 w-9 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+              <Bed size={18} />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-600 uppercase">Total Beds</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.totalBeds}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Beds</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.totalBeds}</p>
             </div>
           </div>
         </div>
 
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
-              <BarChart3 size={20} />
+            <div className="h-9 w-9 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+              <BarChart3 size={18} />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-600 uppercase">Occupied</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.occupiedBeds}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Occupied</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.occupiedBeds}</p>
             </div>
           </div>
         </div>
 
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
-              <Bed size={20} />
+            <div className="h-9 w-9 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+              <Bed size={18} />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-600 uppercase">Available</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.availableBeds}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Available</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{stats.availableBeds}</p>
             </div>
           </div>
         </div>

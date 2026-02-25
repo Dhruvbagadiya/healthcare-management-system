@@ -50,73 +50,74 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Billing</h1>
-          <p className="mt-1 text-slate-500">Manage invoices, payments and financial records</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Billing</h1>
+          <p className="mt-1 text-sm md:text-base text-slate-500">Manage invoices, payments and financial records</p>
         </div>
-        <div className="flex gap-3">
-          <button className="btn btn-secondary gap-2">
+        <div className="flex flex-wrap gap-2 md:gap-3">
+          <button className="btn btn-secondary gap-2 flex-1 sm:flex-none justify-center h-11">
             <Download size={18} />
-            Export Report
+            <span className="hidden xs:inline">Export</span>
+            <span className="xs:hidden">Export</span>
           </button>
-          <button className="btn btn-primary gap-2">
+          <button className="btn btn-primary gap-2 flex-1 sm:flex-none justify-center h-11">
             <Plus size={18} />
             Create Invoice
           </button>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <div className="card bg-indigo-600 text-white border-none shadow-indigo-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-100 text-sm font-medium">Total Outstanding</p>
-              <h3 className="text-3xl font-bold mt-1">$12,450.00</h3>
+              <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Total Outstanding</p>
+              <h3 className="text-2xl md:text-3xl font-bold mt-1">$12,450.00</h3>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <DollarSign size={24} />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <DollarSign size={20} />
             </div>
           </div>
         </div>
         <div className="card bg-emerald-600 text-white border-none shadow-emerald-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-emerald-100 text-sm font-medium">Monthly Revenue</p>
-              <h3 className="text-3xl font-bold mt-1">$45,820.00</h3>
+              <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Monthly Revenue</p>
+              <h3 className="text-2xl md:text-3xl font-bold mt-1">$45,820.00</h3>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <CreditCard size={24} />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <CreditCard size={20} />
             </div>
           </div>
         </div>
-        <div className="card bg-white border-slate-200 shadow-sm">
+        <div className="card bg-white border-slate-200 shadow-sm sm:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-500 text-sm font-medium">Pending Approvals</p>
-              <h3 className="text-3xl font-bold mt-1 text-slate-900">18</h3>
+              <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending Approvals</p>
+              <h3 className="text-2xl md:text-3xl font-bold mt-1 text-slate-900">18</h3>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
-              <FileText size={24} />
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+              <FileText size={20} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder="Search invoices by patient name or number..."
-            className="input pl-10"
+            placeholder="Search invoices..."
+            className="input pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2 text-sm">
+        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
           <Filter size={18} />
-          More Filters
+          Filters
         </button>
       </div>
 

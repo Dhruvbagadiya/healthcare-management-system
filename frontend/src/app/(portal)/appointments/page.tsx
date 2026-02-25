@@ -50,29 +50,29 @@ export default function AppointmentsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Appointments</h1>
-          <p className="mt-1 text-slate-500">Schedule and manage patient consultations</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Appointments</h1>
+          <p className="mt-1 text-sm md:text-base text-slate-500">Schedule and manage patient consultations</p>
         </div>
-        <button className="btn btn-primary gap-2">
+        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
           <Plus size={18} />
           New Appointment
         </button>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder="Search appointments..."
-            className="input pl-10"
+            className="input pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2">
+        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
           <Filter size={18} />
           Filters
         </button>

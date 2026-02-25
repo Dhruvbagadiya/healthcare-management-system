@@ -50,70 +50,68 @@ export default function LaboratoryPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Laboratory</h1>
-          <p className="mt-1 text-slate-500">Monitor lab tests, results and diagnostic reports</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Laboratory</h1>
+          <p className="mt-1 text-sm md:text-base text-slate-500">Monitor lab tests, results and diagnostic reports</p>
         </div>
-        <div className="flex gap-3">
-          <button className="btn btn-primary gap-2">
-            <Beaker size={18} />
-            New Lab Order
-          </button>
+        <button className="btn btn-primary gap-2 w-full sm:w-auto justify-center h-11">
+          <Beaker size={18} />
+          <span>New Order</span>
+        </button>
+      </div>
+
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="card shadow-sm border-slate-200">
+          <div className="flex flex-col gap-1">
+            <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Pending Tests</span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl md:text-3xl font-bold text-slate-900">24</span>
+              <span className="badge badge-warning text-[9px] font-bold">+4 new</span>
+            </div>
+          </div>
+        </div>
+        <div className="card shadow-sm border-slate-200">
+          <div className="flex flex-col gap-1">
+            <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Completed Today</span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl md:text-3xl font-bold text-slate-900">42</span>
+              <span className="badge badge-success text-[9px] font-bold uppercase">Target</span>
+            </div>
+          </div>
+        </div>
+        <div className="card shadow-sm border-slate-200">
+          <div className="flex flex-col gap-1">
+            <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Critical Results</span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl md:text-3xl font-bold text-red-600">3</span>
+              <span className="badge badge-error text-[9px] font-bold pulse">Action</span>
+            </div>
+          </div>
+        </div>
+        <div className="card shadow-sm border-slate-200">
+          <div className="flex flex-col gap-1">
+            <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Turnaround Time</span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl md:text-3xl font-bold text-indigo-600">4.2h</span>
+              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-tight">Avg this week</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="card shadow-sm border-slate-200">
-          <div className="flex flex-col gap-1">
-            <span className="text-slate-500 text-sm font-medium">Pending Tests</span>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-slate-900">24</span>
-              <span className="badge badge-warning text-[10px] font-bold">+4 new</span>
-            </div>
-          </div>
-        </div>
-        <div className="card shadow-sm border-slate-200">
-          <div className="flex flex-col gap-1">
-            <span className="text-slate-500 text-sm font-medium">Completed Today</span>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-slate-900">42</span>
-              <span className="badge badge-success text-[10px] font-bold">In Target</span>
-            </div>
-          </div>
-        </div>
-        <div className="card shadow-sm border-slate-200">
-          <div className="flex flex-col gap-1">
-            <span className="text-slate-500 text-sm font-medium">Critical Results</span>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-red-600">3</span>
-              <span className="badge badge-error text-[10px] font-bold pulse">Action Required</span>
-            </div>
-          </div>
-        </div>
-        <div className="card shadow-sm border-slate-200">
-          <div className="flex flex-col gap-1">
-            <span className="text-slate-500 text-sm font-medium">Turnaround Time</span>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-indigo-600">4.2h</span>
-              <span className="text-xs text-indigo-400 font-medium">Avg this week</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder="Search lab tests by patient or test name..."
-            className="input pl-10"
+            placeholder="Search lab tests..."
+            className="input pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2 text-sm">
+        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
           <Filter size={18} />
           Filters
         </button>

@@ -100,18 +100,19 @@ export default function PharmacyPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Pharmacy</h1>
-                    <p className="mt-1 text-slate-500">Manage medicine inventory and dispensing</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Pharmacy</h1>
+                    <p className="mt-1 text-sm md:text-base text-slate-500">Manage medicine inventory and dispensing</p>
                 </div>
-                <div className="flex gap-3">
-                    <button className="btn btn-secondary gap-2">
+                <div className="flex flex-wrap gap-2 md:gap-3">
+                    <button className="btn btn-secondary gap-2 flex-1 sm:flex-none justify-center">
                         <ShoppingBag size={18} />
-                        Procurement
+                        <span className="hidden xs:inline">Procurement</span>
+                        <span className="xs:hidden">Buy</span>
                     </button>
                     <button
-                        className="btn btn-primary gap-2"
+                        className="btn btn-primary gap-2 flex-1 sm:flex-none justify-center"
                         onClick={() => {
                             setFormData(prev => ({ ...prev, medicineCode: `MED-${Math.floor(Math.random() * 10000)}` }));
                             setIsAddModalOpen(true);
@@ -123,24 +124,24 @@ export default function PharmacyPage() {
                 </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Search medicines by name or generic name..."
-                        className="input pl-10"
+                        placeholder="Search medicines..."
+                        className="input pl-10 h-11"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <button className="btn btn-secondary gap-2 text-sm font-medium">
+                <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
                     <Filter size={18} />
                     Filters
                 </button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {isLoading ? (
                     Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="card h-48 animate-pulse bg-slate-50 border-slate-100" />

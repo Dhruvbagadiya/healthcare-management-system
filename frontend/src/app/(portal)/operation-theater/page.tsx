@@ -24,46 +24,46 @@ export default function OperationTheaterPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Operation Theater</h1>
-          <p className="mt-1 text-slate-500">Schedule and manage surgical procedures</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Operation Theater</h1>
+          <p className="mt-1 text-sm md:text-base text-slate-500">Schedule and manage surgical procedures</p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-              <Stethoscope size={20} />
+            <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Stethoscope size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Surgeries</p>
-              <p className="text-2xl font-bold text-slate-900">{surgeries.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Surgeries</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{surgeries.length}</p>
             </div>
           </div>
         </div>
 
         <div className="card shadow-sm border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
-              <Clock size={20} />
+            <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+              <Clock size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">In Progress</p>
-              <p className="text-2xl font-bold text-slate-900">{surgeries.filter(s => s.status === 'in_progress').length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">In Progress</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{surgeries.filter(s => s.status === 'in_progress').length}</p>
             </div>
           </div>
         </div>
 
-        <div className="card shadow-sm border-slate-200">
+        <div className="card shadow-sm border-slate-200 sm:col-span-2 md:col-span-1">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
-              <CheckCircle size={20} />
+            <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <CheckCircle size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Completed</p>
-              <p className="text-2xl font-bold text-slate-900">{surgeries.filter(s => s.status === 'completed').length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Completed</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">{surgeries.filter(s => s.status === 'completed').length}</p>
             </div>
           </div>
         </div>
