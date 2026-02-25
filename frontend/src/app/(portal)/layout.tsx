@@ -74,8 +74,8 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-20 items-center border-b border-slate-50 px-4">
-          <Link href="/dashboard" className="flex items-center">
-            <img src="/logo.svg" alt="Aarogentix logo" className="h-16 w-auto" />
+          <Link href="/dashboard" className="flex items-center h-full">
+            <img src="/logo.svg" alt="Aarogentix logo" className="h-20 w-auto" />
           </Link>
         </div>
 
@@ -134,10 +134,10 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col lg:pl-72 focus:outline-none">
         <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md lg:hidden shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 h-full">
             <MobileMenuToggle />
-            <Link href="/dashboard">
-              <img src="/logo.svg" alt="Aarogentix logo" className="h-14 w-auto" />
+            <Link href="/dashboard" className="h-full flex items-center">
+              <img src="/logo.svg" alt="Aarogentix logo" className="h-16 w-auto" />
             </Link>
           </div>
         </header>
