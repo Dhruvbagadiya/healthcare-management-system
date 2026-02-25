@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentPaginationDto } from './dto/appointment-pagination.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
@@ -53,7 +53,28 @@ export class AppointmentsService {
   }
 
   async create(createAppointmentDto: any) {
-    const appointment = this.appointmentRepo.create(createAppointmentDto);
+    const { doctorId, appointmentDate } = createAppointmentDto;
+
+    // Get count of appointments for this doctor on this day
+    const date = new Date(appointmentDate);
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const todayCount = await this.appointmentRepo.count({
+      where: {
+        doctorId,
+        appointmentDate: Between(startOfDay, endOfDay),
+      },
+    });
+
+    const tokenNumber = todayCount + 1;
+
+    const appointment = this.appointmentRepo.create({
+      ...createAppointmentDto,
+      tokenNumber,
+    });
     return this.appointmentRepo.save(appointment);
   }
 

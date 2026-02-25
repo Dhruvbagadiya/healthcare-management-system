@@ -59,6 +59,9 @@ export class Appointment {
   @Column({ nullable: true })
   duration: number; // in minutes
 
+  @Column({ type: 'int', nullable: true })
+  tokenNumber: number;
+
   @Column({
     type: 'enum',
     enum: AppointmentStatus,

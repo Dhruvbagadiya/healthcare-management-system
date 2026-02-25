@@ -20,6 +20,7 @@ import { OperationTheaterModule } from './modules/operation-theater/operation-th
 import { RadiologyModule } from './modules/radiology/radiology.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
+import { AdmissionsModule } from './modules/admissions/admissions.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ComplianceModule } from './modules/compliance/compliance.module';
     RadiologyModule,
     AccountsModule,
     ComplianceModule,
+    AdmissionsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

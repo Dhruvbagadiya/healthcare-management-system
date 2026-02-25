@@ -18,6 +18,8 @@ import {
   Microscope,
   DollarSign,
   Shield,
+  Clock,
+  UserPlus,
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/auth';
 import { useUIStore } from '@/lib/store';
@@ -34,6 +36,8 @@ const NAV_ITEMS = [
   { href: '/billing', label: 'Billing', icon: Wallet },
   { href: '/laboratory', label: 'Laboratory', icon: FlaskConical },
   { href: '/staff', label: 'Staff', icon: Stethoscope },
+  { href: '/opd-queue', label: 'OPD Queue', icon: Clock },
+  { href: '/admissions', label: 'Admissions', icon: UserPlus },
   { href: '/inventory', label: 'Inventory', icon: Package },
   { href: '/wards', label: 'Wards', icon: Building2 },
   { href: '/operation-theater', label: 'Operation Theater', icon: Microscope },
