@@ -50,8 +50,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 p-4">
       <div className="card w-full max-w-md">
-        <div className="mb-4 flex items-center justify-center">
-          <img src="/logo.svg" alt="Aarogentix logo" className="h-12 w-12" />
+        <div className="mb-6 flex items-center justify-center">
+          <img src="/logo.svg" alt="Aarogentix logo" className="h-20 w-auto" />
         </div>
         <h1 className="mb-2 text-3xl font-bold text-primary-600">Welcome Back</h1>
         <p className="mb-6 text-slate-600">Sign in to your Aarogentix account</p>
