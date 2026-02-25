@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'Professional Hospital & Clinic Management System',
   authors: [{ name: 'Aarogentix Team' }],
   keywords: ['healthcare', 'hospital', 'clinic', 'management'],
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

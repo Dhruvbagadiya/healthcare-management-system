@@ -73,17 +73,10 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Brand Header */}
-        <div className="flex h-20 items-center border-b border-slate-50 px-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 overflow-hidden rounded-xl shadow-lg ring-4 ring-blue-50">
-              <img src="/logo.svg" alt="Aarogentix logo" className="h-full w-full object-cover" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900 leading-none">Aarogentix</h2>
-              <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-blue-600/80">Premium Portal</span>
-            </div>
-          </div>
+        <div className="flex h-20 items-center border-b border-slate-50 px-6">
+          <Link href="/dashboard" className="flex items-center">
+            <img src="/logo.svg" alt="Aarogentix logo" className="h-12 w-auto" />
+          </Link>
         </div>
 
         {/* Navigation Section */}
@@ -140,13 +133,12 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col lg:pl-72 focus:outline-none">
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-8 backdrop-blur-md lg:hidden shadow-sm">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md lg:hidden shadow-sm">
           <div className="flex items-center gap-3">
             <MobileMenuToggle />
-            <div className="h-8 w-8 overflow-hidden rounded-lg">
-              <img src="/logo.svg" alt="Aarogentix logo" className="h-full w-full object-cover" />
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">Aarogentix</h2>
+            <Link href="/dashboard">
+              <img src="/logo.svg" alt="Aarogentix logo" className="h-10 w-auto" />
+            </Link>
           </div>
         </header>
         <main className="flex-1 p-6 md:p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
