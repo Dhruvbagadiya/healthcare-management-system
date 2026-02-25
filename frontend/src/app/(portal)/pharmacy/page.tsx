@@ -114,18 +114,18 @@ export default function PharmacyPage() {
                                 <div className="mt-4 flex items-center justify-between">
                                     <div className="text-sm">
                                         <span className="text-slate-500">Stock: </span>
-                                        <span className={`font-bold ${medicine.quantity < 20 ? 'text-red-600' : 'text-slate-900'}`}>
-                                            {medicine.quantity} {medicine.unit || 'units'}
+                                        <span className={`font-bold ${medicine.stock < 20 ? 'text-red-600' : 'text-slate-900'}`}>
+                                            {medicine.stock} {medicine.unit || 'units'}
                                         </span>
                                     </div>
-                                    {medicine.quantity < 20 && (
+                                    {medicine.stock < 20 && (
                                         <AlertCircle size={16} className="text-red-500 animate-pulse" />
                                     )}
                                 </div>
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-                                <span className="text-lg font-bold text-indigo-600">${medicine.price || '0.00'}</span>
+                                <span className="text-lg font-bold text-indigo-600">${medicine.sellingPrice || '0.00'}</span>
                                 <button className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">
                                     Details
                                 </button>

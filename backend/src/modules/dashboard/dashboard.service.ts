@@ -45,7 +45,7 @@ export class DashboardService {
 
     async getRecentActivity() {
         const recentAppointments = await this.appointmentRepo.find({
-            relations: ['patient', 'doctor'],
+            relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
             order: { appointmentDate: 'DESC' },
             take: 5,
         });

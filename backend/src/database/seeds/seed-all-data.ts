@@ -113,10 +113,12 @@ async function seedDatabase() {
       const doctor = doctorRepo.create({
         user: savedUser,
         customUserId: savedUser.userId,
+        firstName: doctorData.name.split(' ')[0],
+        lastName: doctorData.name.split(' ').slice(1).join(' '),
         specialization: doctorData.specialization,
         licenseNumber: `LIC${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         yearsOfExperience: Math.floor(Math.random() * 20) + 5,
-      });
+      } as any);
       const savedDoctor = await doctorRepo.save(doctor);
       doctors.push(savedDoctor);
     }
@@ -146,9 +148,11 @@ async function seedDatabase() {
       const patient = patientRepo.create({
         user: savedUser,
         customUserId: savedUser.userId,
+        firstName: patientData.name.split(' ')[0],
+        lastName: patientData.name.split(' ').slice(1).join(' '),
         bloodType: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'][Math.floor(Math.random() * 8)] as any,
         chronicDiseases: patientData.age > 50 ? ['Hypertension'] : [],
-      });
+      } as any);
       const savedPatient = await patientRepo.save(patient);
       patients.push(savedPatient);
     }
@@ -244,12 +248,14 @@ async function seedDatabase() {
       const staff = staffRepo.create({
         user: savedUser,
         userId: savedUser.id,
+        firstName: staffData.name.split(' ')[0],
+        lastName: staffData.name.split(' ').slice(1).join(' '),
         staffId: `STAFF${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
         role: staffData.role,
         yearsOfExperience: staffData.experience,
         status: StaffStatus.ACTIVE,
         joiningDate: new Date(Date.now() - staffData.experience * 365 * 24 * 60 * 60 * 1000),
-      });
+      } as any);
       await staffRepo.save(staff);
       staffCount++;
     }
@@ -424,7 +430,7 @@ async function seedDatabase() {
       // Expense entries
       const expense = expenseRepo.create({
         expenseId: `EXP${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
-        expenseType: expenseTypes[Math.floor(Math.random() * expenseTypes.length)],
+        expenseType: expenseTypes[Math.floor(Math.random() * expenseTypes.length)] as ExpenseType,
         description: 'Hospital expenses',
         amount: Math.floor(Math.random() * 30000) + 2000,
         vendorName: ['Medical Supplies Inc', 'Pharma Corp', 'Equipment Ltd'][Math.floor(Math.random() * 3)],
