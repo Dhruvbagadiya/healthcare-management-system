@@ -47,4 +47,9 @@ export class AdmissionsController {
     discharge(@Param('id') id: string, @Body() dischargeDto: DischargeAdmissionDto) {
         return this.admissionsService.discharge(id, dischargeDto);
     }
+
+    @Get(':id/billing')
+    getBillingInfo(@Param('id') id: string) {
+        return this.admissionsService.getBillingInfo(id);
+    }
 }

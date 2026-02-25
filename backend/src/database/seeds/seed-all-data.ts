@@ -76,10 +76,10 @@ const INVENTORY_DATA = [
 ];
 
 const WARDS_DATA = [
-  { name: 'Cardiology Ward', department: 'Cardiology', totalBeds: 20, occupiedBeds: 15 },
-  { name: 'Orthopedics Ward', department: 'Orthopedics', totalBeds: 25, occupiedBeds: 18 },
-  { name: 'Pediatrics Ward', department: 'Pediatrics', totalBeds: 15, occupiedBeds: 10 },
-  { name: 'General Ward', department: 'General', totalBeds: 30, occupiedBeds: 22 },
+  { name: 'Cardiology Ward', department: 'Cardiology', totalBeds: 20, occupiedBeds: 15, pricePerDay: 5000 },
+  { name: 'Orthopedics Ward', department: 'Orthopedics', totalBeds: 25, occupiedBeds: 18, pricePerDay: 4000 },
+  { name: 'Pediatrics Ward', department: 'Pediatrics', totalBeds: 15, occupiedBeds: 10, pricePerDay: 3500 },
+  { name: 'General Ward', department: 'General', totalBeds: 30, occupiedBeds: 22, pricePerDay: 2000 },
 ];
 
 async function seedDatabase() {
@@ -275,6 +275,7 @@ async function seedDatabase() {
         wardCode: `WARD-${wardIndex.toString().padStart(3, '0')}`,
         description: `${wardData.department} Ward`,
         totalBeds: wardData.totalBeds,
+        pricePerDay: wardData.pricePerDay,
       });
       const savedWard = await wardRepo.save(ward);
 

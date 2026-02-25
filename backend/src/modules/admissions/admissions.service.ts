@@ -149,4 +149,28 @@ export class AdmissionsService {
 
         return admission;
     }
+
+    async getBillingInfo(id: string) {
+        const admission = await this.findOne(id);
+        const now = admission.dischargeDate || new Date();
+        const admissionDate = new Date(admission.admissionDate);
+
+        // Calculate days (minimum 1 day)
+        const diffTime = Math.abs(now.getTime() - admissionDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
+        const wardPrice = admission.ward?.pricePerDay || 0;
+        const estimatedStayCharges = diffDays * Number(wardPrice);
+
+        return {
+            admissionId: admission.admissionId,
+            stayDuration: diffDays,
+            wardRate: wardPrice,
+            estimatedStayCharges,
+            admissionDate: admission.admissionDate,
+            dischargeDate: admission.dischargeDate,
+            status: admission.status,
+            patient: admission.patient,
+        };
+    }
 }

@@ -841,6 +841,7 @@ async function seedData() {
     // ─────────────────────────────────────────────────────────────────────────
     console.log('🏨 Seeding 10 wards and 10 beds...');
     const wardNames = ['General Ward', 'ICU', 'Pediatric Ward', 'Maternity Ward', 'Surgical Ward', 'Cardiac Ward', 'Ortho Ward', 'Oncology Ward', 'Neuro Ward', 'Isolation Ward'];
+    const wardPrices = [2000, 8000, 3500, 4500, 4000, 6000, 4000, 5500, 5000, 10000];
     const wards: Ward[] = [];
     for (let i = 0; i < 10; i++) {
       const code = `WRD-${String(i + 1).padStart(3, '0')}`;
@@ -858,7 +859,11 @@ async function seedData() {
           block: rand(['A', 'B', 'C']),
           facilities: JSON.stringify(['AC', 'Nursing Station', 'Monitor', 'Oxygen Supply']),
           remarks: 'Operational',
+          pricePerDay: wardPrices[i],
         }));
+      } else {
+        // Update price for existing wards
+        await wardRepo.update(ward.id, { pricePerDay: wardPrices[i] });
       }
       wards.push(ward);
     }

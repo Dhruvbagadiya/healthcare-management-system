@@ -38,6 +38,9 @@ export class Ward {
   @Column({ type: 'int', default: 0 })
   maintenanceBeds: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  pricePerDay: number;
+
   @Column({ nullable: true })
   wardIncharge: string; // Staff ID
 

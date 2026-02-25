@@ -14,6 +14,8 @@ export default function BillingPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'invoices' | 'admissions'>('invoices');
+  const [activeAdmissions, setActiveAdmissions] = useState<any[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -61,6 +63,16 @@ export default function BillingPage() {
     }
   }, []);
 
+  const fetchActiveAdmissions = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/admissions', { params: { limit: 100 } });
+      // Only show admitted/active ones
+      setActiveAdmissions(res.data.data?.filter((a: any) => a.status === 'admitted') || []);
+    } catch (error) {
+      console.error('Failed to fetch active admissions', error);
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -77,7 +89,8 @@ export default function BillingPage() {
 
   useEffect(() => {
     fetchDependencies();
-  }, [fetchDependencies]);
+    fetchActiveAdmissions();
+  }, [fetchDependencies, fetchActiveAdmissions]);
 
   const totals = useMemo(() => {
     const subtotal = formData.lineItems.reduce((acc, item) => acc + item.total, 0);
@@ -139,6 +152,35 @@ export default function BillingPage() {
       fetchInvoices(search, page);
     } catch (error) {
       console.error('Failed to create invoice', error);
+    }
+  };
+
+  const handleGenerateIPDInvoice = async (admissionId: string) => {
+    try {
+      const res = await apiClient.get(`/admissions/${admissionId}/billing`);
+      const { patient, stayDuration, wardRate, estimatedStayCharges } = res.data;
+
+      setFormData({
+        patientId: patient.id,
+        status: 'pending',
+        billingDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        discount: 0,
+        taxRate: 10,
+        paidAmount: 0,
+        notes: `IPD Stay: ${stayDuration} days in ${patient.ward?.wardName || 'Ward'}.`,
+        lineItems: [
+          {
+            description: `Bed Charges (${stayDuration} days @ $${wardRate}/day)`,
+            quantity: stayDuration,
+            unitPrice: wardRate,
+            total: estimatedStayCharges
+          }
+        ]
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Failed to generate IPD invoice', error);
     }
   };
 
@@ -211,11 +253,28 @@ export default function BillingPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+          <button
+            onClick={() => setActiveTab('invoices')}
+            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'invoices' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+              }`}
+          >
+            Invoices
+          </button>
+          <button
+            onClick={() => setActiveTab('admissions')}
+            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'admissions' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+              }`}
+          >
+            Active Admissions
+          </button>
+        </div>
+
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder="Search invoices..."
+            placeholder={activeTab === 'invoices' ? "Search invoices..." : "Search patients..."}
             className="input pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -227,104 +286,169 @@ export default function BillingPage() {
         </button>
       </div>
 
-      <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice / Date</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-4 sm:px-6 py-4 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-4 sm:px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
-                    <td className="px-4 sm:px-6 py-4 text-right" />
-                  </tr>
-                ))
-              ) : (
-                invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-indigo-50/30 transition-colors group border-b border-slate-50 last:border-0">
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base">
-                          INV-{invoice.invoiceNumber || '2026-001'}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                          {new Date(invoice.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-[10px] text-indigo-600 shadow-sm border border-indigo-100">
-                          {invoice.patient?.user?.firstName?.charAt(0)}
-                        </div>
+      {activeTab === 'invoices' ? (
+        <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice / Date</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                  <th className="px-4 sm:px-6 py-4 text-right"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-4 sm:px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
+                      <td className="px-4 sm:px-6 py-4 text-right" />
+                    </tr>
+                  ))
+                ) : (
+                  invoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-indigo-50/30 transition-colors group border-b border-slate-50 last:border-0">
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-700 truncate">
-                            {invoice.patient?.user?.firstName} {invoice.patient?.user?.lastName}
+                          <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base">
+                            INV-{invoice.invoiceNumber || '2026-001'}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium truncate">
-                            {invoice.patient?.user?.email}
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            {new Date(invoice.createdAt).toLocaleDateString()}
                           </p>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">
-                      ${invoice.totalAmount?.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
-                        } font-bold text-[10px]`}>
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleDelete(invoice.id)}
-                          className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                        <button className="p-1.5 sm:p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
-                          <MoreHorizontal size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="h-8 w-8 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-[10px] text-indigo-600 shadow-sm border border-indigo-100">
+                            {invoice.patient?.user?.firstName?.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-700 truncate">
+                              {invoice.patient?.user?.firstName} {invoice.patient?.user?.lastName}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-medium truncate">
+                              {invoice.patient?.user?.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900">
+                        ${invoice.totalAmount?.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
+                          } font-bold text-[10px]`}>
+                          {invoice.status}
+                        </span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleDelete(invoice.id)}
+                            className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                          <button className="p-1.5 sm:p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                            <MoreHorizontal size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
 
-          {!isLoading && invoices.length === 0 && (
-            <div className="py-20 text-center bg-white">
-              <p className="text-slate-500 font-medium font-display">No invoices found matches your search.</p>
+            {!isLoading && invoices.length === 0 && (
+              <div className="py-20 text-center bg-white">
+                <p className="text-slate-500 font-medium font-display">No invoices found matches your search.</p>
+              </div>
+            )}
+          </div>
+
+          {!isLoading && totalPages > 1 && (
+            <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                total={totalItems}
+                limit={limit}
+              />
             </div>
           )}
         </div>
+      ) : (
+        <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Admission ID / Bed</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Ward / Rate</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Stay Duration</th>
+                  <th className="px-4 sm:px-6 py-4 text-right"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {activeAdmissions.map((adm) => (
+                  <tr key={adm.id} className="hover:bg-indigo-50/30 transition-colors group">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-bold text-slate-900">{adm.admissionId}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        Bed {adm.bed?.bedNumber}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-[10px] text-slate-500">
+                          {adm.patient?.user?.firstName?.[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-700">{adm.patient?.user?.firstName} {adm.patient?.user?.lastName}</p>
+                          <p className="text-[10px] text-slate-400">{adm.patient?.patientId}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-bold text-slate-700">{adm.ward?.wardName}</p>
+                      <p className="text-[10px] text-slate-400 font-bold tracking-widest">${adm.ward?.pricePerDay || 0}/day</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-indigo-600">
+                        {Math.ceil((new Date().getTime() - new Date(adm.admissionDate).getTime()) / (1000 * 60 * 60 * 24)) || 1} days
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <button
+                        onClick={() => handleGenerateIPDInvoice(adm.id)}
+                        className="btn btn-secondary h-9 px-4 text-xs gap-2 font-bold"
+                      >
+                        <DollarSign size={14} />
+                        Invoice Stay
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-        {!isLoading && totalPages > 1 && (
-          <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              total={totalItems}
-              limit={limit}
-            />
+            {activeAdmissions.length === 0 && (
+              <div className="py-20 text-center bg-white">
+                <p className="text-slate-500 font-medium font-display">No active IPD admissions found.</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Create Invoice Modal */}
       {isModalOpen && (
