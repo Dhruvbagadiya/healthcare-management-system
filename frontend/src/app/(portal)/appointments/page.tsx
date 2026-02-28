@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Calendar as CalendarIcon, Clock, MoreHorizontal, Plus, Search, Filter, X, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MoreHorizontal, Plus, Search, Filter, X, Trash2 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function AppointmentsPage() {

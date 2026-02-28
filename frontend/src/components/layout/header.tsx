@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { LogOut, Bell } from 'lucide-react';
-import { MobileMenuToggle } from '@/lib/mobile-menu-toggle';
+import { MobileMenuToggle } from '@/components/layout/mobile-menu-toggle';
 import { useAuth } from '@/hooks/auth';
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md lg:hidden shadow-sm">

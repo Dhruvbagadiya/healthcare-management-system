@@ -1,11 +1,8 @@
 'use client';
-import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/auth';
-import { useUIStore } from '@/lib/store';
-import { MobileMenuOverlay } from '@/lib/mobile-menu-overlay';
+import { MobileMenuOverlay } from '@/components/layout/mobile-menu-overlay';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { Header } from '@/components/layout/header';
-import { MobileNav } from '@/components/layout/mobile-nav';
 import { Sidebar } from '@/components/layout/sidebar';
 
 export default function DashboardLayout({
@@ -14,7 +11,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading } = useRequireAuth();
-  const { isMobileMenuOpen } = useUIStore();
   useMobileNavigation();
 
   if (isLoading) {

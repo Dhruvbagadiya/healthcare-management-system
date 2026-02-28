@@ -4,7 +4,7 @@ import { LogOut } from 'lucide-react';
 import { useUIStore } from '@/lib/store';
 import { useAuth } from '@/hooks/auth';
 import { MobileNav } from './mobile-nav';
-import { User } from '@/types';
+import { User } from '@/lib/store';
 
 type SidebarProps = {
   user: User | null;
@@ -16,9 +16,8 @@ export function Sidebar({ user }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}
+      className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
     >
       <div className="flex h-20 items-center border-b border-slate-50 px-4">
         <Link href="/dashboard" className="flex items-center h-full">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { FileText, Plus, User, UserCheck, Pill, MoreHorizontal, Search, Filter, X, Trash2, PlusCircle, AlertCircle } from 'lucide-react';
+import { FileText, Plus, User, UserCheck, Pill, MoreHorizontal, Search, Filter, X, Trash2, PlusCircle } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
 export default function PrescriptionsPage() {
