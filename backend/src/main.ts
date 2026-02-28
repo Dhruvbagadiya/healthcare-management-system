@@ -15,21 +15,44 @@ const sanitize = (val: any): any => {
 };
 
 async function bootstrap() {
-  console.log('🚀 Starting Aarogentix API - Version: 1.0.1 (with DB SSL & Sanitization Fixes)');
+  console.log('🚀 Starting Aarogentix API - Version: 1.0.2 (CORS & Helmet Optimization)');
   const app = await NestFactory.create(AppModule);
 
-  // Security Middleware
-  app.use(helmet());
-  app.use(compression());
-  app.use(cookieParser());
+  // Enable CORS first
+  const frontendUrl = sanitize(process.env.FRONTEND_URL);
+  const origins = [
+    frontendUrl?.replace(/\/$/, ''),
+    'https://healthcare-management-system-psi.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ].filter(Boolean) as string[];
 
-  // Enable CORS
+  console.log(`🛡️  CORS allowed origins: ${origins.join(', ')}`);
+
   app.enableCors({
-    origin: true, // Mirrors the request origin, allowing any origin to work with credentials
+    origin: (origin, callback) => {
+      if (!origin || origins.includes(origin.replace(/\/$/, ''))) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️  CORS blocked request from origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
+    exposedHeaders: ['Set-Cookie'],
   });
+
+  // Security Middleware (Configured for Cross-Origin)
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+  app.use(compression());
+  app.use(cookieParser());
 
   // Global pipes and filters
   app.useGlobalPipes(
