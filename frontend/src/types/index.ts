@@ -19,8 +19,19 @@ export interface LoginResponse {
     email: string;
     firstName: string;
     lastName: string;
-    roles: UserRole[];
+    roles: string[];
+    organizationId: string;
   };
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string;
+  subscriptionPlan: 'basic' | 'premium' | 'enterprise';
+  status: 'active' | 'suspended' | 'pending';
+  settings?: any;
 }
 
 export interface RegisterPayload {
@@ -28,7 +39,8 @@ export interface RegisterPayload {
   firstName: string;
   lastName: string;
   password: string;
-  role?: UserRole;
+  role?: string;
+  organizationId?: string;
 }
 
 export interface AppointmentData {

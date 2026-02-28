@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum SurgeryStatus {
   SCHEDULED = 'scheduled',
@@ -17,9 +20,17 @@ export enum SurgeryStatus {
 
 @Entity('operation_theaters')
 @Index(['theatreCode'])
+@Index(['organizationId'])
 export class OperationTheater {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column({ unique: true })
   theatreCode: string;
@@ -46,9 +57,17 @@ export class OperationTheater {
 @Entity('surgeries')
 @Index(['patientId'])
 @Index(['status'])
+@Index(['organizationId'])
 export class Surgery {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   surgeryId: string;

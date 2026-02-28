@@ -29,15 +29,17 @@ export default function DashboardLayout({
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50">
+    <div className="flex min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50 via-slate-50 to-white">
       <MobileMenuOverlay />
 
       <Sidebar user={user} />
 
       <div className="flex flex-1 flex-col lg:pl-72 focus:outline-none">
         <Header />
-        <main className="flex-1 p-4 md:p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-3 duration-700">
-          {children}
+        <main className="flex-1 px-4 py-8 md:px-8 md:py-10 lg:px-12 lg:py-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
+          <div className="mx-auto max-w-7xl">
+            {children}
+          </div>
         </main>
       </div>
     </div>

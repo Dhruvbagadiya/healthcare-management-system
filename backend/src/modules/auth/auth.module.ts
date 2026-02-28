@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { RbacModule } from '../rbac/rbac.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         },
       }),
     }),
+    RbacModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

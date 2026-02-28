@@ -30,8 +30,9 @@ export async function seedUsers(count: number = 150) {
 
     // Specific user for the USER
     const dhruvEmail = 'dhruvbagadiya@gmail.com';
-    const dhruvUserId = 'ADM-888888';
+    const dhruvUserId = 'DOC-000001';
     const dhruvStableId = '00000000-0000-4000-a000-000000000001';
+    const hashedDhruv = await bcrypt.hash('Dhruv@6606', 10);
 
     let dhruvUser = await userRepo.findOne({
         where: [
@@ -45,8 +46,9 @@ export async function seedUsers(count: number = 150) {
         // Update existing user to match desired state
         dhruvUser.email = dhruvEmail;
         dhruvUser.userId = dhruvUserId;
-        dhruvUser.password = hashedDefault;
+        dhruvUser.password = hashedDhruv;
         dhruvUser.status = UserStatus.ACTIVE;
+        dhruvUser.roles = [UserRole.ADMIN, UserRole.DOCTOR];
         await userRepo.save(dhruvUser);
         console.log(`Updated specific admin user: ${dhruvEmail}`);
     } else {
@@ -56,8 +58,8 @@ export async function seedUsers(count: number = 150) {
             email: dhruvEmail,
             firstName: 'Dhruv',
             lastName: 'Bagdiya',
-            password: hashedDefault,
-            roles: [UserRole.ADMIN],
+            password: hashedDhruv,
+            roles: [UserRole.ADMIN, UserRole.DOCTOR],
             status: UserStatus.ACTIVE,
             emailVerified: true,
             phoneNumber: '+91 9876543210',

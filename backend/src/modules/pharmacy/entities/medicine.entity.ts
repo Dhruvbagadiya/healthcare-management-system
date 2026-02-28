@@ -5,16 +5,27 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('medicines')
 @Index(['medicineCode'])
 @Index(['name'])
 @Index(['stock'])
+@Index(['organizationId'])
 export class Medicine {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column({ unique: true })
   medicineCode: string; // e.g., MED-001

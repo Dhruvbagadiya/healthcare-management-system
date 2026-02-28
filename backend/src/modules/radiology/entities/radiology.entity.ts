@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum ImagingType {
   X_RAY = 'x_ray',
@@ -25,9 +28,17 @@ export enum ImagingStatus {
 @Entity('radiology_requests')
 @Index(['patientId'])
 @Index(['status'])
+@Index(['organizationId'])
 export class RadiologyRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   requestId: string;

@@ -10,6 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Patient } from '../../patients/entities/patient.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -40,6 +41,14 @@ export enum PaymentMethod {
 export class Invoice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  @Index()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @ManyToOne(() => Patient, { onDelete: 'CASCADE' })
   @JoinColumn()

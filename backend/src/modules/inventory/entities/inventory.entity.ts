@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum InventoryType {
   MEDICINE = 'medicine',
@@ -26,9 +29,17 @@ export enum InventoryStatus {
 @Index(['itemCode'])
 @Index(['type'])
 @Index(['status'])
+@Index(['organizationId'])
 export class Inventory {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column({ unique: true })
   itemCode: string;

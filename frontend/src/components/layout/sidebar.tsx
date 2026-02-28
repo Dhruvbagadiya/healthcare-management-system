@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import React from 'react';
 import { LogOut } from 'lucide-react';
 import { useUIStore } from '@/lib/store';
 import { useAuth } from '@/hooks/auth';
@@ -10,22 +10,22 @@ type SidebarProps = {
   user: User | null;
 };
 
+import { OrganizationSwitcher } from './organization-switcher';
+
 export function Sidebar({ user }: SidebarProps) {
   const { isMobileMenuOpen } = useUIStore();
   const { logout } = useAuth();
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200 bg-white shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-slate-200/60 bg-white/70 backdrop-blur-xl shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
     >
-      <div className="flex h-20 items-center border-b border-slate-50 px-4">
-        <Link href="/dashboard" className="flex items-center h-full">
-          <img src="/logo.svg" alt="Aarogentix logo" className="h-20 w-auto" />
-        </Link>
+      <div className="flex h-20 items-center px-6 mb-2">
+        <OrganizationSwitcher />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-8">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         <MobileNav />
       </div>
 

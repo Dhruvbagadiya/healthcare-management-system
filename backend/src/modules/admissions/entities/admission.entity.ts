@@ -12,6 +12,7 @@ import {
 import { Patient } from '../../patients/entities/patient.entity';
 import { Doctor } from '../../doctors/entities/doctor.entity';
 import { Ward, Bed } from '../../wards/entities/ward.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum AdmissionStatus {
     ADMITTED = 'admitted',
@@ -27,6 +28,14 @@ export enum AdmissionStatus {
 export class Admission {
     @PrimaryGeneratedColumn('uuid')
     id: string;
+
+    @Column()
+    @Index()
+    organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'organizationId' })
+    organization: Organization;
 
     @Column({ unique: true })
     admissionId: string; // ADM-001

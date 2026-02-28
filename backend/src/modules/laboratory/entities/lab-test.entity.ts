@@ -10,6 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Patient } from '../../patients/entities/patient.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum LabTestStatus {
   ORDERED = 'ordered',
@@ -24,9 +25,17 @@ export enum LabTestStatus {
 @Index(['patientId'])
 @Index(['status'])
 @Index(['orderedDate'])
+@Index(['organizationId'])
 export class LabTest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @ManyToOne(() => Patient, { onDelete: 'CASCADE' })
   @JoinColumn()

@@ -7,8 +7,10 @@ import {
   ManyToOne,
   Index,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum StaffRole {
   DOCTOR = 'doctor',
@@ -34,6 +36,14 @@ export enum StaffStatus {
 export class Staff {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  @Index()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column({ unique: true })
   staffId: string;

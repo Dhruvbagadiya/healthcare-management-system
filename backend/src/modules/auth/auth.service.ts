@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, UserStatus, UserRole } from '../users/entities/user.entity';
+import { RbacService } from '../rbac/rbac.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -15,6 +16,7 @@ export class AuthService {
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private rbacService: RbacService,
   ) { }
 
   async register(registerDto: RegisterDto) {
@@ -35,9 +37,17 @@ export class AuthService {
       firstName: registerDto.firstName,
       lastName: registerDto.lastName,
       password: hashedPassword,
-      roles: [registerDto.role || UserRole.PATIENT],
-      status: UserStatus.PENDING_VERIFICATION,
     });
+
+    // For now, in registration, we might need a default organization or handle it from DTO
+    // Assuming registerDto might be updated to include organizationId soon
+    const orgId = registerDto.organizationId || 'default-org-id';
+    const roles = await this.rbacService.getOrganizationRoles(orgId);
+    const role = roles.find(r => r.name === (registerDto.role || UserRole.PATIENT));
+
+    user.roles = role ? [role] : [];
+    user.status = UserStatus.PENDING_VERIFICATION;
+    user.organizationId = orgId;
 
     await this.usersRepository.save(user);
 
@@ -51,6 +61,7 @@ export class AuthService {
     console.log(`Login attempt for email: ${loginDto.email}`);
     const user = await this.usersRepository.findOne({
       where: { email: loginDto.email },
+      relations: ['roles'],
     });
 
     if (!user) {
@@ -88,6 +99,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         roles: user.roles,
+        organizationId: user.organizationId,
       },
     };
   }
@@ -139,6 +151,7 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
+      relations: ['roles', 'roles.permissions'],
     });
 
     if (!user) {
@@ -154,7 +167,8 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       userId: user.userId,
-      roles: user.roles,
+      roles: user.roles.map(r => r.name),
+      organizationId: user.organizationId,
     };
 
     const accessToken = this.jwtService.sign(payload, {

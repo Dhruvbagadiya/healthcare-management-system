@@ -7,9 +7,17 @@ import {
   DeleteDateColumn,
   Index,
   Unique,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  JoinColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Organization } from '../../organizations/entities/organization.entity';
 
+import { Role } from '../../rbac/entities/role.entity';
+
+// TODO: Phase out UserRole enum once RBAC is fully dynamic
 export enum UserRole {
   ADMIN = 'admin',
   DOCTOR = 'doctor',
@@ -38,6 +46,14 @@ export class User {
 
   @Column({ unique: true })
   userId: string; // Custom user ID (e.g., DOC-001, PAT-001)
+
+  @Column()
+  @Index()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   email: string;
@@ -76,13 +92,13 @@ export class User {
   @Exclude()
   password: string;
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    array: true,
-    default: [UserRole.PATIENT],
+  @ManyToMany(() => Role)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  roles: UserRole[];
+  roles: Role[];
 
   @Column({
     type: 'enum',

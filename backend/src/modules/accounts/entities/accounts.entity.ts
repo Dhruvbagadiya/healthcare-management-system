@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum ExpenseType {
   SALARY = 'salary',
@@ -27,9 +30,17 @@ export enum PaymentStatus {
 @Entity('expenses')
 @Index(['expenseType'])
 @Index(['status'])
+@Index(['organizationId'])
 export class Expense {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   expenseId: string;
@@ -76,9 +87,17 @@ export class Expense {
 
 @Entity('revenue')
 @Index(['source'])
+@Index(['organizationId'])
 export class Revenue {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   revenueId: string;

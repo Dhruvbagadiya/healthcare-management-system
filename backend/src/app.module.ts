@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -6,6 +7,7 @@ import { typeormConfig } from './database/typeorm.config';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PatientsModule } from './modules/patients/patients.module';
 import { DoctorsModule } from './modules/doctors/doctors.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
@@ -22,6 +24,10 @@ import { RadiologyModule } from './modules/radiology/radiology.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
 import { AdmissionsModule } from './modules/admissions/admissions.module';
+import { RbacModule } from './modules/rbac/rbac.module';
+
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
+import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 
 @Module({
   imports: [
@@ -36,6 +42,7 @@ import { AdmissionsModule } from './modules/admissions/admissions.module';
     CommonModule,
     AuthModule,
     UsersModule,
+    OrganizationsModule,
     PatientsModule,
     DoctorsModule,
     AppointmentsModule,
@@ -52,6 +59,17 @@ import { AdmissionsModule } from './modules/admissions/admissions.module';
     AccountsModule,
     ComplianceModule,
     AdmissionsModule,
+    RbacModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantInterceptor,
+    },
   ],
 })
 export class AppModule {

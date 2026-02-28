@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Patient } from '../../patients/entities/patient.entity';
 import { Doctor } from '../../doctors/entities/doctor.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum AppointmentStatus {
   SCHEDULED = 'scheduled',
@@ -30,6 +31,14 @@ export enum AppointmentStatus {
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  @Index()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @ManyToOne(() => Patient, (patient) => patient.appointments, {
     onDelete: 'CASCADE',

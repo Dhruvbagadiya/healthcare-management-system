@@ -4,16 +4,11 @@ import { UserRole } from '../modules/users/entities/user.entity';
 
 export const ROLES_KEY = 'roles';
 
-export const Roles = (..._roles: UserRole[]) => {
-  return Reflector.createDecorator<UserRole[]>({
-    key: ROLES_KEY,
-    transform: (value: UserRole[]) => value,
-  });
-};
+export const Roles = Reflector.createDecorator<UserRole[]>();
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [

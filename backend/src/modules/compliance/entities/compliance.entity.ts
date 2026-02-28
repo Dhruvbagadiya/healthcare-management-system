@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum ComplianceType {
   HIPAA = 'hipaa',
@@ -27,9 +30,17 @@ export enum ComplianceStatus {
 @Entity('compliance_records')
 @Index(['complianceType'])
 @Index(['status'])
+@Index(['organizationId'])
 export class ComplianceRecord {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   recordId: string;
@@ -77,9 +88,17 @@ export class ComplianceRecord {
 @Entity('data_access_logs')
 @Index(['userId'])
 @Index(['timestamp'])
+@Index(['organizationId'])
 export class DataAccessLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column()
   userId: string;

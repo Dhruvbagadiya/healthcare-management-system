@@ -9,14 +9,23 @@ import {
   Index,
 } from 'typeorm';
 import { Patient } from './patient.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('medical_records')
+@Index(['organizationId'])
 @Index(['patientId'])
 @Index(['recordType'])
 @Index(['createdAt'])
 export class MedicalRecord {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @ManyToOne(() => Patient, (patient) => patient.medicalRecords, {
     onDelete: 'CASCADE',

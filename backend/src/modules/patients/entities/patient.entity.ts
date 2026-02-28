@@ -9,8 +9,10 @@ import {
   OneToOne,
   OneToMany,
   JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
 import { MedicalRecord } from './medical-record.entity';
 import { Prescription } from '../../prescriptions/entities/prescription.entity';
@@ -37,6 +39,14 @@ export class Patient {
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column()
+  @Index()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
 
   @Column({ name: 'custom_user_id', nullable: true })
   customUserId: string;

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from './store';
 
 const getApiUrl = () => {
   const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -19,12 +20,17 @@ export const apiClient = axios.create({
   },
 });
 
-// Add token to requests
+// Add token and organizationId to requests
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const user = useAuthStore.getState().user;
+    if (user?.organizationId) {
+      config.headers['x-tenant-id'] = user.organizationId;
     }
   }
   return config;

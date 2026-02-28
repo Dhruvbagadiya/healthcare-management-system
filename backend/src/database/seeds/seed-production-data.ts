@@ -21,6 +21,9 @@ import { ComplianceRecord, ComplianceStatus, ComplianceType, DataAccessLog } fro
 import { RadiologyRequest, ImagingType, ImagingStatus } from '../../modules/radiology/entities/radiology.entity';
 import { Ward, Bed, BedStatus } from '../../modules/wards/entities/ward.entity';
 import { Admission, AdmissionStatus } from '../../modules/admissions/entities/admission.entity';
+import { Organization, OrganizationStatus, SubscriptionPlan } from '../../modules/organizations/entities/organization.entity';
+import { Role } from '../../modules/rbac/entities/role.entity';
+import { Permission } from '../../modules/rbac/entities/permission.entity';
 
 // Load environment variables FIRST
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -60,30 +63,129 @@ async function seedData() {
     const wardRepo = AppDataSource.getRepository(Ward);
     const bedRepo = AppDataSource.getRepository(Bed);
     const admissionRepo = AppDataSource.getRepository(Admission);
+    const orgRepo = AppDataSource.getRepository(Organization);
+    const roleRepo = AppDataSource.getRepository(Role);
+    const permRepo = AppDataSource.getRepository(Permission);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 0. Initial Organization & RBAC Setup
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log('🏢 Setting up initial organization and RBAC...');
+
+    let org = await orgRepo.findOne({ where: { slug: 'aarogentix-main' } });
+    if (!org) {
+      org = await orgRepo.save(orgRepo.create({
+        name: 'Aarogentix Hospital',
+        slug: 'aarogentix-main',
+        subscriptionPlan: SubscriptionPlan.PREMIUM,
+        status: OrganizationStatus.ACTIVE,
+      }));
+    }
+    const orgId = org.id;
+
+    const permissions = [
+      { name: 'users:read', category: 'Users' },
+      { name: 'users:manage', category: 'Users' },
+      { name: 'patients:read', category: 'Patients' },
+      { name: 'patients:manage', category: 'Patients' },
+      { name: 'doctors:read', category: 'Doctors' },
+      { name: 'doctors:manage', category: 'Doctors' },
+    ];
+
+    for (const p of permissions) {
+      if (!(await permRepo.findOne({ where: { name: p.name } }))) {
+        await permRepo.save(permRepo.create(p));
+      }
+    }
+
+    const allPerms = await permRepo.find();
+
+    const getRole = async (name: string, isSystem = false) => {
+      let role = await roleRepo.findOne({
+        where: { name, organizationId: orgId },
+        relations: ['permissions']
+      });
+      if (!role) {
+        role = await roleRepo.save(roleRepo.create({
+          name,
+          organizationId: orgId,
+          isSystemRole: isSystem,
+          permissions: allPerms, // For simplicity in seed, give all perms to all roles for now
+        }));
+      }
+      return role;
+    };
+
+    const adminRole = await getRole(UserRole.ADMIN, true);
+    const doctorRole = await getRole(UserRole.DOCTOR, true);
+    const nurseRole = await getRole(UserRole.NURSE, true);
+    const receptionRole = await getRole(UserRole.RECEPTIONIST, true);
+    const patientRole = await getRole(UserRole.PATIENT, true);
+    const pharmacistRole = await getRole(UserRole.PHARMACIST, true);
+    const labRole = await getRole(UserRole.LAB_TECHNICIAN, true);
+
+    const roleMap = {
+      [UserRole.ADMIN]: adminRole,
+      [UserRole.DOCTOR]: doctorRole,
+      [UserRole.NURSE]: nurseRole,
+      [UserRole.RECEPTIONIST]: receptionRole,
+      [UserRole.PATIENT]: patientRole,
+      [UserRole.PHARMACIST]: pharmacistRole,
+      [UserRole.LAB_TECHNICIAN]: labRole,
+    };
 
     // ─────────────────────────────────────────────────────────────────────────
     // 0. Admin User — dhruvbagadiya@gmail.com
     // ─────────────────────────────────────────────────────────────────────────
     console.log('👤 Creating admin user...');
     const adminEmail = 'dhruvbagadiya@gmail.com';
+    const adminPassword = 'Dhruv@6606';
+    const adminUserId = 'DOC-000001';
+
     let adminUser = await userRepo.findOne({ where: { email: adminEmail } });
     if (!adminUser) {
       adminUser = await userRepo.save(userRepo.create({
         id: '00000000-0000-4000-a000-000000000001',
-        userId: 'ADM-888888',
+        userId: adminUserId,
         email: adminEmail,
-        password: await bcrypt.hash('Admin@123', 10),
-        roles: [UserRole.ADMIN],
+        password: await bcrypt.hash(adminPassword, 10),
+        roles: [adminRole, doctorRole],
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: 'Dhruv',
         lastName: 'Bagdiya',
+        organizationId: orgId,
       }));
     } else {
-      // Always ensure admin role is set
-      await userRepo.update(adminUser.id, { roles: [UserRole.ADMIN], status: UserStatus.ACTIVE });
+      // Always ensure admin and doctor roles are set and password is correct
+      await userRepo.update(adminUser.id, {
+        userId: adminUserId,
+        password: await bcrypt.hash(adminPassword, 10),
+        roles: [adminRole, doctorRole],
+        status: UserStatus.ACTIVE,
+        organizationId: orgId
+      });
+      adminUser = await userRepo.findOne({ where: { id: adminUser.id } });
     }
-    console.log('✅ Admin user ready (dhruvbagadiya@gmail.com / Admin@123)\n');
+
+    // Create doctor record for Admin Dhruv
+    const adminDoc = await doctorRepo.findOne({ where: { customUserId: adminUserId } });
+    if (!adminDoc) {
+      await doctorRepo.save(doctorRepo.create({
+        user: adminUser,
+        customUserId: adminUserId,
+        firstName: 'Dhruv',
+        lastName: 'Bagdiya',
+        doctorId: adminUserId,
+        specialization: 'Administrator',
+        licenseNumber: 'ADMIN-001',
+        yearsOfExperience: 10,
+        consultationFee: 0,
+        isActive: true,
+        organizationId: orgId,
+      } as any));
+    }
+    console.log(`✅ Admin account ready (${adminEmail} / ${adminPassword})\n`);
 
     // ─────────────────────────────────────────────────────────────────────────
     // 0b. Special Account — Shruti Gadhiya (Physiotherapist)
@@ -96,18 +198,19 @@ async function seedData() {
         userId: 'PHY-000001',
         email: shrutiEmail,
         password: await bcrypt.hash('Shruti@1530', 10),
-        roles: [UserRole.DOCTOR],
-        status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: 'Shruti',
         lastName: 'Gadhiya',
+        roles: [doctorRole],
+        organizationId: orgId,
       }));
     } else {
       // Update password in case it changed
       await userRepo.update(shrutiUser.id, {
         password: await bcrypt.hash('Shruti@1530', 10),
         status: UserStatus.ACTIVE,
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
+        organizationId: orgId,
       });
       shrutiUser = await userRepo.findOne({ where: { email: shrutiEmail } });
     }
@@ -126,6 +229,7 @@ async function seedData() {
         yearsOfExperience: 5,
         consultationFee: 1500,
         isActive: true,
+        organizationId: orgId,
       } as any));
     }
     console.log('✅ Shruti Gadhiya account ready (sgadhiya03@gmail.com / Shruti@1530)\n');
@@ -139,17 +243,19 @@ async function seedData() {
         userId: crypto.randomUUID(),
         email: dharmiEmail,
         password: await bcrypt.hash('Dharmi@2704', 10),
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: 'Dharmi',
         lastName: 'Dhameliya',
+        organizationId: orgId,
       }));
     } else {
       await userRepo.update(dharmiUser.id, {
         password: await bcrypt.hash('Dharmi@2704', 10),
         status: UserStatus.ACTIVE,
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
+        organizationId: orgId,
       });
       dharmiUser = await userRepo.findOne({ where: { email: dharmiEmail } });
     }
@@ -167,6 +273,7 @@ async function seedData() {
         yearsOfExperience: 3,
         consultationFee: 1000,
         isActive: true,
+        organizationId: orgId,
       } as any));
     }
     console.log('✅ Dharmi Dhameliya account ready (dharmidhameliya@gmail.com / Dharmi@2704)\n');
@@ -180,17 +287,19 @@ async function seedData() {
         userId: crypto.randomUUID(),
         email: chintanEmail,
         password: await bcrypt.hash('Chintan@123', 10),
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: 'Chintan',
         lastName: 'Mangukiya',
+        organizationId: orgId,
       }));
     } else {
       await userRepo.update(chintanUser.id, {
         password: await bcrypt.hash('Chintan@123', 10),
         status: UserStatus.ACTIVE,
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
+        organizationId: orgId,
       });
       chintanUser = await userRepo.findOne({ where: { email: chintanEmail } });
     }
@@ -221,17 +330,19 @@ async function seedData() {
         userId: crypto.randomUUID(),
         email: srushtiEmail,
         password: await bcrypt.hash('Srushti@123', 10),
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: 'Srushti',
         lastName: 'Savaliya',
+        organizationId: orgId,
       }));
     } else {
       await userRepo.update(srushtiUser.id, {
         password: await bcrypt.hash('Srushti@123', 10),
         status: UserStatus.ACTIVE,
-        roles: [UserRole.DOCTOR],
+        roles: [doctorRole],
+        organizationId: orgId,
       });
       srushtiUser = await userRepo.findOne({ where: { email: srushtiEmail } });
     }
@@ -246,9 +357,10 @@ async function seedData() {
         doctorId: 'DOC-SRU-004',
         specialization: 'Neurologist',
         licenseNumber: 'DOC-SRU-888',
-        yearsOfExperience: 6,
-        consultationFee: 1800,
+        yearsOfExperience: 5,
+        consultationFee: 1200,
         isActive: true,
+        organizationId: orgId,
       } as any));
     }
     console.log('✅ Srushti Savaliya account ready (srushtisavaliya@gmail.com / Srushti@123)\n');
@@ -333,12 +445,13 @@ async function seedData() {
           userId: `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
           email,
           password: await bcrypt.hash('Doctor@123', 10),
-          roles: [UserRole.DOCTOR],
+          roles: [doctorRole],
           status: UserStatus.ACTIVE,
           emailVerified: true,
           firstName: d.first,
           lastName: d.last,
           phoneNumber: d.phone,
+          organizationId: orgId,
         }));
       }
       let doctor: any = await doctorRepo.findOne({ where: { customUserId: user.userId } });
@@ -354,6 +467,7 @@ async function seedData() {
           yearsOfExperience: Math.floor(Math.random() * 20) + 3,
           consultationFee: d.fee,
           isActive: true,
+          organizationId: orgId,
         } as any));
       }
       doctors.push(doctor);
@@ -385,12 +499,13 @@ async function seedData() {
           userId: `PAT-${Math.floor(1000 + Math.random() * 9000)}`,
           email: p.email,
           password: await bcrypt.hash('Patient@123', 10),
-          roles: [UserRole.PATIENT],
+          roles: [patientRole],
           status: UserStatus.ACTIVE,
           emailVerified: true,
           firstName: p.first,
           lastName: p.last,
           phoneNumber: p.phone,
+          organizationId: orgId,
         }));
       }
       let patient: any = await patientRepo.findOne({ where: { customUserId: user.userId } });
@@ -413,6 +528,7 @@ async function seedData() {
           occupation: rand(['Engineer', 'Teacher', 'Doctor', 'Businessman', 'Homemaker']),
           allergies: rand([['Penicillin'], ['Dust'], ['Pollen'], []]),
           chronicDiseases: rand([['Diabetes'], ['Hypertension'], ['Asthma'], []]),
+          organizationId: orgId,
         } as any));
       }
       patients.push(patient);
@@ -445,6 +561,7 @@ async function seedData() {
         attachmentUrls: [],
         visitDate: daysOffset(-(i * 7)),
         isConfidential: i % 3 === 0,
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Medical records created\n');
@@ -470,6 +587,7 @@ async function seedData() {
         notes: 'Patient arrived on time. Consultation completed satisfactorily.',
         isVirtual: i % 4 === 0,
         meetingLink: i % 4 === 0 ? 'https://meet.Aarogentix.in/room-' + i : null,
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Appointments created\n');
@@ -516,6 +634,7 @@ async function seedData() {
         ],
         notes: `Prescription for ${diagnosisList[i]}. Patient advised to follow up in 2 weeks.`,
         pharmacyNotified: [],
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Prescriptions created\n');
@@ -553,6 +672,7 @@ async function seedData() {
           isActive: true,
           sideEffects: rand([['Nausea', 'Headache'], ['Dizziness'], ['Rash'], []]),
           contraindications: rand([['Pregnancy'], ['Renal failure'], []]),
+          organizationId: orgId,
         }));
       }
     }
@@ -596,6 +716,7 @@ async function seedData() {
         interpretation: isCompleted ? 'Results within acceptable limits. Follow up recommended.' : null,
         reportedBy: isCompleted ? 'Lab Technician Arun Kumar' : null,
         notes: 'Collected at main laboratory.',
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Lab tests created\n');
@@ -630,6 +751,7 @@ async function seedData() {
         ],
         payments: [],
         notes: 'Thank you for choosing Aarogentix Hospital.',
+        organizationId: orgId,
       } as any));
     }
     console.log('✅ 10 Invoices created\n');
@@ -695,12 +817,13 @@ async function seedData() {
           userId: crypto.randomUUID(),
           email,
           password: await bcrypt.hash('Staff@123', 10),
-          roles: [s.userRole],
+          roles: [roleMap[s.userRole]],
           status: UserStatus.ACTIVE,
           emailVerified: true,
           firstName: s.first,
           lastName: s.last,
           phoneNumber: s.phone,
+          organizationId: orgId,
         }));
       }
       if (!(await staffRepo.findOne({ where: { userId: user.id } }))) {
@@ -736,6 +859,7 @@ async function seedData() {
           theatreName: `Theater ${String.fromCharCode(64 + i)}`,
           isAvailable: i % 4 !== 0,
           facilities: 'HD monitors, anesthesia machine, surgical lights, sterilisation unit',
+          organizationId: orgId,
         }));
       }
       theaters.push(theater);
@@ -756,6 +880,7 @@ async function seedData() {
         anesthetist: 'Dr. Anand Verma',
         diagnosis: diagnosisList[i % 10],
         estimatedCost: Math.floor(Math.random() * 100000) + 25000,
+        organizationId: orgId,
       } as any));
     }
     console.log('✅ 10 Operation theaters and 10 surgeries created\n');
@@ -781,6 +906,7 @@ async function seedData() {
         paidDate: daysOffset(-i * 3 + 2),
         approvedBy: 'ADM-888888',
         remarks: 'Approved and processed successfully.',
+        organizationId: orgId,
       }));
 
       await revenueRepo.save(revenueRepo.create({
@@ -790,7 +916,8 @@ async function seedData() {
         date: daysOffset(-i * 2),
         patientId: patients[i % 10].id,
         invoiceId: null,
-        remarks: 'Revenue collected and recorded.',
+        remarks: i % 3 === 0 ? 'Urgent reorder recommended.' : null,
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Expenses and 10 Revenue entries created\n');
@@ -826,6 +953,7 @@ async function seedData() {
         findings: i % 2 === 0 ? 'No critical findings. Minor recommendations noted.' : null,
         actionItems: i % 3 === 0 ? 'Update privacy policy. Conduct staff training.' : null,
         remarks: 'Compliance review completed as scheduled.',
+        organizationId: orgId,
       }));
 
       await dataLogRepo.save(dataLogRepo.create({
@@ -837,6 +965,7 @@ async function seedData() {
         ipAddress: `192.168.1.${10 + i}`,
         reason: rand(['Routine patient care', 'Follow-up visit', 'Emergency access', 'Insurance processing']),
         status: 'success',
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Compliance records and 10 Data access logs created\n');
@@ -865,6 +994,7 @@ async function seedData() {
           facilities: JSON.stringify(['AC', 'Nursing Station', 'Monitor', 'Oxygen Supply']),
           remarks: 'Operational',
           pricePerDay: wardPrices[i],
+          organizationId: orgId,
         }));
       } else {
         // Update price for existing wards
@@ -883,6 +1013,7 @@ async function seedData() {
         assignedPatientId: status === BedStatus.OCCUPIED ? patients[i % 10].id : null,
         assignedDate: status === BedStatus.OCCUPIED ? daysOffset(-i) : null,
         remarks: status === BedStatus.MAINTENANCE ? 'Under repair' : null,
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Wards and 10 Beds created\n');
@@ -922,6 +1053,7 @@ async function seedData() {
             spO2: 98,
             recordedBy: 'Nurse Maria'
           }] : [],
+          organizationId: orgId,
         }));
       }
       admissions.push(admission);
@@ -969,6 +1101,7 @@ async function seedData() {
         radiologistId: isCompleted ? doctors[(i + 2) % 10].id : null,
         reportNotes: isCompleted ? 'Imaging completed. Report generated and sent to referring physician.' : null,
         cost: Math.floor(Math.random() * 3000) + 500,
+        organizationId: orgId,
       }));
     }
     console.log('✅ 10 Radiology requests created\n');
