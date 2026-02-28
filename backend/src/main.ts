@@ -24,16 +24,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Enable CORS
-  const frontendUrl = sanitize(process.env.FRONTEND_URL);
-  const origins = [
-    frontendUrl?.replace(/\/$/, ''),
-    'http://localhost:3000',
-    'http://localhost:3001',
-  ].filter(Boolean) as string[];
-
-  console.log(`🛡️  CORS allowed origins: ${origins.join(', ')}`);
-
-  app.enableCors({
+      app.enableCors({
     origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
