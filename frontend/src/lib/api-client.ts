@@ -1,6 +1,16 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const getApiUrl = () => {
+  const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+  // If URL doesn't have a protocol and isn't a relative path (starting with /),
+  // prepend https:// so it's treated as an absolute URL by the browser.
+  if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+    return `https://${url}`;
+  }
+  return url;
+};
+
+const API_URL = getApiUrl();
 
 export const apiClient = axios.create({
   baseURL: API_URL,
