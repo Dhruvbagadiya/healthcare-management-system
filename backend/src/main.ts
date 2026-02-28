@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
@@ -15,32 +16,26 @@ const sanitize = (val: any): any => {
 };
 
 async function bootstrap() {
-  console.log('🚀 Starting Aarogentix API - Version: 1.0.2 (CORS & Helmet Optimization)');
+  console.log('🚀 Starting Aarogentix API - Version: 1.0.3 (Permissive CORS Debug Mode)');
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS first
-  const frontendUrl = sanitize(process.env.FRONTEND_URL);
-  const origins = [
-    frontendUrl?.replace(/\/$/, ''),
-    'https://healthcare-management-system-psi.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001',
-  ].filter(Boolean) as string[];
+  // Request logging middleware for CORS debugging
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const origin = req.headers.origin;
+    const method = req.method;
+    const url = req.url;
+    if (origin) {
+      console.log(`� [${method}] ${url} - Incoming Origin: ${origin}`);
+    }
+    next();
+  });
 
-  console.log(`🛡️  CORS allowed origins: ${origins.join(', ')}`);
-
+  // Enable CORS first - Mirror any origin to debug connectivity
   app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin || origins.includes(origin.replace(/\/$/, ''))) {
-        callback(null, true);
-      } else {
-        console.warn(`⚠️  CORS blocked request from origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin', 'Access-Control-Allow-Origin'],
     exposedHeaders: ['Set-Cookie'],
   });
 
