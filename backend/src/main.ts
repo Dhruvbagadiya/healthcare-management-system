@@ -10,6 +10,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
+  console.log('🚀 Starting Aarogentix API - Version: 1.0.1 (with DB SSL & Sanitization Fixes)');
   const app = await NestFactory.create(AppModule);
 
   // Security Middleware

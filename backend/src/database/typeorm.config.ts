@@ -27,109 +27,103 @@ const sanitize = (val: any): any => {
   return val.replace(/^["']|["']$/g, '').trim();
 };
 
-export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
-  const env = sanitize(configService.get<string>('NODE_ENV'));
-  const databaseUrl = sanitize(configService.get<string>('DATABASE_URL'));
+const ENTITIES = [
+  User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
+  Invoice, LabTest, Medicine, AuditLog, Staff, Inventory,
+  Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
+  Expense, Revenue, ComplianceRecord, DataAccessLog,
+];
 
-  const commonOptions = {
-    entities: [
-      User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
-      Invoice, LabTest, Medicine, AuditLog, Staff, Inventory,
-      Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
-      Expense, Revenue, ComplianceRecord, DataAccessLog,
-    ],
+export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
+  const getVal = (key: string, fallback?: any) => {
+    const val = configService.get(key) || process.env[key] || fallback;
+    return sanitize(val);
+  };
+
+  const env = getVal('NODE_ENV', 'development');
+  const databaseUrl = getVal('DATABASE_URL');
+
+  console.log(`🔍 Checking configuration: NODE_ENV=${env}, has DATABASE_URL=${!!databaseUrl}`);
+
+  const commonOptions: Partial<DataSourceOptions> = {
+    entities: ENTITIES,
     migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
     migrationsTableName: 'typeorm_migrations',
     synchronize: true,
     logging: env === 'development',
   };
 
+  let config: DataSourceOptions;
+
   if (databaseUrl) {
-    console.log(`🔌 Configuring TypeORM with DATABASE_URL (length: ${databaseUrl.length})`);
-    return {
+    console.log(`🔌 Configuring TypeORM with DATABASE_URL`);
+    const useSsl =
+      env === 'production' ||
+      databaseUrl.includes('neon.tech') ||
+      databaseUrl.includes('supabase');
+
+    config = {
       type: 'postgres',
       url: databaseUrl,
       ...commonOptions,
-      ssl:
-        env === 'production' ||
-          databaseUrl.includes('neon.tech') ||
-          databaseUrl.includes('supabase')
-          ? { rejectUnauthorized: false }
-          : false,
-    };
+      ssl: useSsl ? { rejectUnauthorized: false } : false,
+    } as DataSourceOptions;
+  } else {
+    const host = getVal('DATABASE_HOST', getVal('PGHOST', 'localhost'));
+    const port = Number(getVal('DATABASE_PORT', getVal('PGPORT', 5432)));
+    const username = getVal('DATABASE_USER', getVal('PGUSER'));
+    const password = getVal('DATABASE_PASSWORD', getVal('PGPASSWORD'));
+    const database = getVal('DATABASE_NAME', getVal('PGDATABASE'));
+
+    console.log(`🔌 Configuring TypeORM with parameters: host=${host}, port=${port}, user=${username}, db=${database}`);
+
+    const useSsl =
+      env === 'production' ||
+      host.includes('neon.tech') ||
+      host.includes('supabase');
+
+    if (useSsl) {
+      console.log('🔒 SSL enabled for database connection (rejectUnauthorized: false)');
+    } else if (host === 'localhost' || host === '127.0.0.1') {
+      console.warn('⚠️  Connecting to localhost. This may fail on Railway if you intended to use an external DB.');
+    }
+
+    config = {
+      type: 'postgres',
+      host,
+      port,
+      username,
+      password,
+      database,
+      ...commonOptions,
+      ssl: useSsl ? { rejectUnauthorized: false } : false,
+    } as DataSourceOptions;
   }
 
-  const host = sanitize(configService.get<string>('DATABASE_HOST') || configService.get<string>('PGHOST') || 'localhost');
-  const port = Number(sanitize(configService.get<string>('DATABASE_PORT') || configService.get<string>('PGPORT') || 5432));
-  const username = sanitize(configService.get<string>('DATABASE_USER') || configService.get<string>('PGUSER'));
-  const password = sanitize(configService.get<string>('DATABASE_PASSWORD') || configService.get<string>('PGPASSWORD'));
-  const database = sanitize(configService.get<string>('DATABASE_NAME') || configService.get<string>('PGDATABASE'));
-
-  console.log(`🔌 Configuring TypeORM with parameters: host=${host}, port=${port}, user=${username}, db=${database}, env=${env}`);
-
-  const useSsl =
-    env === 'production' ||
-    host.includes('neon.tech') ||
-    host.includes('supabase');
-
-  if (useSsl) {
-    console.log('🔒 SSL enabled for database connection (rejectUnauthorized: false)');
-  }
-
-  return {
-    type: 'postgres',
-    host,
-    port,
-    username,
-    password,
-    database,
-    ...commonOptions,
-    ssl: useSsl ? { rejectUnauthorized: false } : false,
-  };
+  return config;
 };
+
+// For TypeORM CLI
+const env = sanitize(process.env.NODE_ENV);
+const databaseUrl = sanitize(process.env.DATABASE_URL);
+const host = sanitize(process.env.DATABASE_HOST || process.env.PGHOST || 'localhost');
+const useSsl =
+  env === 'production' ||
+  (databaseUrl && (databaseUrl.includes('neon.tech') || databaseUrl.includes('supabase'))) ||
+  (host && (host.includes('neon.tech') || host.includes('supabase')));
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: sanitize(process.env.DATABASE_URL),
-  host: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_HOST || process.env.PGHOST || 'localhost') : undefined,
-  port: !process.env.DATABASE_URL ? Number(sanitize(process.env.DATABASE_PORT || process.env.PGPORT || '5432')) : undefined,
-  username: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_USER || process.env.PGUSER) : undefined,
-  password: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_PASSWORD || process.env.PGPASSWORD) : undefined,
-  database: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_NAME || process.env.PGDATABASE) : undefined,
-  entities: [
-    User,
-    Patient,
-    Doctor,
-    Appointment,
-    Prescription,
-    MedicalRecord,
-    Invoice,
-    LabTest,
-    Medicine,
-    AuditLog,
-    Staff,
-    Inventory,
-    Ward,
-    Bed,
-    Admission,
-    OperationTheater,
-    Surgery,
-    RadiologyRequest,
-    Expense,
-    Revenue,
-    ComplianceRecord,
-    DataAccessLog,
-  ],
+  url: databaseUrl,
+  host: !databaseUrl ? host : undefined,
+  port: !databaseUrl ? Number(sanitize(process.env.DATABASE_PORT || process.env.PGPORT || '5432')) : undefined,
+  username: !databaseUrl ? sanitize(process.env.DATABASE_USER || process.env.PGUSER) : undefined,
+  password: !databaseUrl ? sanitize(process.env.DATABASE_PASSWORD || process.env.PGPASSWORD) : undefined,
+  database: !databaseUrl ? sanitize(process.env.DATABASE_NAME || process.env.PGDATABASE) : undefined,
+  entities: ENTITIES,
   migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
   migrationsTableName: 'typeorm_migrations',
   synchronize: true,
-  logging: process.env.NODE_ENV === 'development',
-  ssl:
-    process.env.NODE_ENV === 'production' ||
-      process.env.DATABASE_HOST?.includes('neon.tech') ||
-      process.env.DATABASE_HOST?.includes('supabase') ||
-      process.env.DATABASE_URL?.includes('neon.tech') ||
-      process.env.DATABASE_URL?.includes('supabase')
-      ? { rejectUnauthorized: false }
-      : false,
+  logging: env === 'development',
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
 } as DataSourceOptions);
