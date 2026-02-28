@@ -4,22 +4,25 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { apiClient } from '@/lib/api-client';
+import { useSubscription } from '@/hooks/use-subscription';
 import {
   Users,
   Calendar,
   Heart,
   DollarSign,
-  Package,
-  Bed,
-  Stethoscope,
-  AlertCircle,
   TrendingUp,
-  CheckCircle2,
+  Bed,
+  AlertCircle,
   Clock,
-  Building2
+  Package,
+  Stethoscope,
+  Building2,
+  CheckCircle2,
+  Crown
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const { hasFeature } = useSubscription();
   const [stats, setStats] = useState<any>(null);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [moduleMetrics, setModuleMetrics] = useState<any>({});
@@ -125,9 +128,10 @@ export default function DashboardPage() {
       value: `₹${(moduleMetrics.financial?.netProfit || 0).toLocaleString()}`,
       icon: TrendingUp,
       color: 'indigo',
-      trend: moduleMetrics.financial?.netProfit >= 0 ? '+' : '-'
+      trend: moduleMetrics.financial?.netProfit >= 0 ? '+' : '-',
+      feature: 'accounts'
     },
-  ];
+  ].filter(m => !m.feature || hasFeature(m.feature));
 
   const colorMap: any = {
     blue: { bg: 'bg-blue-50', icon: 'text-blue-600', border: 'border-blue-100' },
@@ -376,6 +380,61 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Analytics (Enterprise Only) */}
+      {hasFeature('analytics') && (
+        <div className="card border-0 bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 -m-20 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl"></div>
+          <div className="relative z-10">
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold font-display">Revenue Growth & Projections</h2>
+                <p className="text-slate-400 text-sm mt-1">Enterprise Analytics Portal</p>
+              </div>
+              <div className="flex items-center gap-2 rounded-full bg-blue-500/20 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-400 ring-1 ring-blue-500/30">
+                <Crown className="h-3 w-3" />
+                Enterprise Feature
+              </div>
+            </div>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={[
+                  { name: 'Jan', revenue: 4500, projection: 4200 },
+                  { name: 'Feb', revenue: 5200, projection: 4800 },
+                  { name: 'Mar', revenue: 4800, projection: 5100 },
+                  { name: 'Apr', revenue: 6100, projection: 5500 },
+                  { name: 'May', revenue: 5900, projection: 6000 },
+                  { name: 'Jun', revenue: 7200, projection: 6800 },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1E293B" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '12px' }}
+                    itemStyle={{ color: '#F1F5F9' }}
+                  />
+                  <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, fill: '#3B82F6' }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="projection" stroke="#94A3B8" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-6 flex items-center gap-6 border-t border-slate-800 pt-6">
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400 font-medium">Monthly Retention</span>
+                <span className="text-lg font-bold text-emerald-400">98.2%</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400 font-medium">Growth Rate</span>
+                <span className="text-lg font-bold text-blue-400">+24.5%</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400 font-medium">Patient LTV</span>
+                <span className="text-lg font-bold text-purple-400">₹12,450</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       {recentActivity && recentActivity.length > 0 && (

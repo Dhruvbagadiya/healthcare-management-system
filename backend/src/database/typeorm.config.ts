@@ -21,6 +21,9 @@ import { OperationTheater, Surgery } from '../modules/operation-theater/entities
 import { RadiologyRequest } from '../modules/radiology/entities/radiology.entity';
 import { Expense, Revenue } from '../modules/accounts/entities/accounts.entity';
 import { ComplianceRecord, DataAccessLog } from '../modules/compliance/entities/compliance.entity';
+import { Organization } from '../modules/organizations/entities/organization.entity';
+import { Role } from '../modules/rbac/entities/role.entity';
+import { Permission } from '../modules/rbac/entities/permission.entity';
 
 const sanitize = (val: any): any => {
   if (typeof val !== 'string') return val;
@@ -32,6 +35,7 @@ const ENTITIES = [
   Invoice, LabTest, Medicine, AuditLog, Staff, Inventory,
   Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
   Expense, Revenue, ComplianceRecord, DataAccessLog,
+  Organization, Role, Permission,
 ];
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
@@ -49,7 +53,7 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     entities: ENTITIES,
     migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
     migrationsTableName: 'typeorm_migrations',
-    synchronize: true,
+    synchronize: env === 'development', // Only sync in dev if specifically needed, but we prefer migrations
     logging: env === 'development',
   };
 
@@ -123,7 +127,7 @@ export const AppDataSource = new DataSource({
   entities: ENTITIES,
   migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
   migrationsTableName: 'typeorm_migrations',
-  synchronize: true,
+  synchronize: false, // For CLI always false to avoid side effects during migration generation
   logging: env === 'development',
   ssl: useSsl ? { rejectUnauthorized: false } : false,
 } as DataSourceOptions);

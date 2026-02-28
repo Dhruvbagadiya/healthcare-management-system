@@ -72,11 +72,11 @@ async function seedData() {
     // ─────────────────────────────────────────────────────────────────────────
     console.log('🏢 Setting up initial organization and RBAC...');
 
-    let org = await orgRepo.findOne({ where: { slug: 'aarogentix-main' } });
+    let org = await orgRepo.findOne({ where: { slug: 'aarogentix-health' } });
     if (!org) {
       org = await orgRepo.save(orgRepo.create({
         name: 'Aarogentix Hospital',
-        slug: 'aarogentix-main',
+        slug: 'aarogentix-health',
         subscriptionPlan: SubscriptionPlan.PREMIUM,
         status: OrganizationStatus.ACTIVE,
       }));
@@ -158,14 +158,13 @@ async function seedData() {
       }));
     } else {
       // Always ensure admin and doctor roles are set and password is correct
-      await userRepo.update(adminUser.id, {
-        userId: adminUserId,
-        password: await bcrypt.hash(adminPassword, 10),
-        roles: [adminRole, doctorRole],
-        status: UserStatus.ACTIVE,
-        organizationId: orgId
-      });
-      adminUser = await userRepo.findOne({ where: { id: adminUser.id } });
+      adminUser.userId = adminUserId;
+      adminUser.password = await bcrypt.hash(adminPassword, 10);
+      adminUser.roles = [adminRole, doctorRole];
+      adminUser.status = UserStatus.ACTIVE;
+      adminUser.organizationId = orgId;
+      await userRepo.save(adminUser);
+      adminUser = await userRepo.findOne({ where: { id: adminUser.id }, relations: ['roles'] });
     }
 
     // Create doctor record for Admin Dhruv
@@ -206,13 +205,12 @@ async function seedData() {
       }));
     } else {
       // Update password in case it changed
-      await userRepo.update(shrutiUser.id, {
-        password: await bcrypt.hash('Shruti@1530', 10),
-        status: UserStatus.ACTIVE,
-        roles: [doctorRole],
-        organizationId: orgId,
-      });
-      shrutiUser = await userRepo.findOne({ where: { email: shrutiEmail } });
+      shrutiUser.password = await bcrypt.hash('Shruti@1530', 10);
+      shrutiUser.status = UserStatus.ACTIVE;
+      shrutiUser.roles = [doctorRole];
+      shrutiUser.organizationId = orgId;
+      await userRepo.save(shrutiUser);
+      shrutiUser = await userRepo.findOne({ where: { email: shrutiEmail }, relations: ['roles'] });
     }
 
     // Create doctor record for Shruti if not already there
@@ -251,13 +249,12 @@ async function seedData() {
         organizationId: orgId,
       }));
     } else {
-      await userRepo.update(dharmiUser.id, {
-        password: await bcrypt.hash('Dharmi@2704', 10),
-        status: UserStatus.ACTIVE,
-        roles: [doctorRole],
-        organizationId: orgId,
-      });
-      dharmiUser = await userRepo.findOne({ where: { email: dharmiEmail } });
+      dharmiUser.password = await bcrypt.hash('Dharmi@2704', 10);
+      dharmiUser.status = UserStatus.ACTIVE;
+      dharmiUser.roles = [doctorRole];
+      dharmiUser.organizationId = orgId;
+      await userRepo.save(dharmiUser);
+      dharmiUser = await userRepo.findOne({ where: { email: dharmiEmail }, relations: ['roles'] });
     }
 
     const dharmiDoc = await doctorRepo.findOne({ where: { customUserId: dharmiUser!.userId } });
@@ -295,13 +292,12 @@ async function seedData() {
         organizationId: orgId,
       }));
     } else {
-      await userRepo.update(chintanUser.id, {
-        password: await bcrypt.hash('Chintan@123', 10),
-        status: UserStatus.ACTIVE,
-        roles: [doctorRole],
-        organizationId: orgId,
-      });
-      chintanUser = await userRepo.findOne({ where: { email: chintanEmail } });
+      chintanUser.password = await bcrypt.hash('Chintan@123', 10);
+      chintanUser.status = UserStatus.ACTIVE;
+      chintanUser.roles = [doctorRole];
+      chintanUser.organizationId = orgId;
+      await userRepo.save(chintanUser);
+      chintanUser = await userRepo.findOne({ where: { email: chintanEmail }, relations: ['roles'] });
     }
 
     const chintanDoc = await doctorRepo.findOne({ where: { customUserId: chintanUser!.userId } });
@@ -317,6 +313,7 @@ async function seedData() {
         yearsOfExperience: 8,
         consultationFee: 2000,
         isActive: true,
+        organizationId: orgId,
       } as any));
     }
     console.log('✅ Chintan Mangukiya account ready (chintanmangukiya@gmail.com / Chintan@123)\n');
@@ -338,13 +335,12 @@ async function seedData() {
         organizationId: orgId,
       }));
     } else {
-      await userRepo.update(srushtiUser.id, {
-        password: await bcrypt.hash('Srushti@123', 10),
-        status: UserStatus.ACTIVE,
-        roles: [doctorRole],
-        organizationId: orgId,
-      });
-      srushtiUser = await userRepo.findOne({ where: { email: srushtiEmail } });
+      srushtiUser.password = await bcrypt.hash('Srushti@123', 10);
+      srushtiUser.status = UserStatus.ACTIVE;
+      srushtiUser.roles = [doctorRole];
+      srushtiUser.organizationId = orgId;
+      await userRepo.save(srushtiUser);
+      srushtiUser = await userRepo.findOne({ where: { email: srushtiEmail }, relations: ['roles'] });
     }
 
     const srushtiDoc = await doctorRepo.findOne({ where: { customUserId: srushtiUser!.userId } });
