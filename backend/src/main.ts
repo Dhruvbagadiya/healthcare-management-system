@@ -16,27 +16,26 @@ const sanitize = (val: any): any => {
 };
 
 async function bootstrap() {
-  console.log('🚀 Starting Aarogentix API - Version: 1.0.3 (Permissive CORS Debug Mode)');
+  console.log('🚀 Starting Aarogentix API - Version: 1.0.5 (Explicit Host Binding & Health Check)');
   const app = await NestFactory.create(AppModule);
 
-  // Request logging middleware for CORS debugging
+  // Mandatory Request Logger
   app.use((req: Request, res: Response, next: NextFunction) => {
-    const origin = req.headers.origin;
-    const method = req.method;
-    const url = req.url;
-    if (origin) {
-      console.log(`� [${method}] ${url} - Incoming Origin: ${origin}`);
-    }
+    console.log(`📥 [${req.method}] ${req.url} | Origin: ${req.headers.origin || 'unset'} | UA: ${req.headers['user-agent']?.substring(0, 50)}...`);
     next();
   });
 
-  // Enable CORS first - Mirror any origin to debug connectivity
+  // Explicit CORS handling
   app.enableCors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow any origin, but mirror it to support credentials
+      callback(null, true);
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin', 'Access-Control-Allow-Origin'],
-    exposedHeaders: ['Set-Cookie'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Accept,Authorization,X-Requested-With,Origin',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // Security Middleware (Configured for Cross-Origin)
@@ -86,9 +85,9 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`✅ Aarogentix API running on http://localhost:${port}`);
+  console.log(`✅ Aarogentix API running on http://0.0.0.0:${port}`);
   console.log(`📚 Swagger docs available at http://localhost:${port}/api/docs`);
 }
 

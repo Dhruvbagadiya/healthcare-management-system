@@ -26,9 +26,5 @@ RUN npm ci --omit=dev
 # Copy the built application from the builder stage
 COPY --from=builder /usr/src/app/dist ./dist
 
-# The port the application will be exposed on.
-# Railway will automatically map its internal port to this.
-EXPOSE 3001
-
 # Command to run the application
 CMD [ "npm", "run", "start:prod" ]
