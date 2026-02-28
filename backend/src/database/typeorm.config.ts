@@ -22,43 +22,36 @@ import { RadiologyRequest } from '../modules/radiology/entities/radiology.entity
 import { Expense, Revenue } from '../modules/accounts/entities/accounts.entity';
 import { ComplianceRecord, DataAccessLog } from '../modules/compliance/entities/compliance.entity';
 
+const sanitize = (val: any): any => {
+  if (typeof val !== 'string') return val;
+  return val.replace(/^["']|["']$/g, '').trim();
+};
+
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
-  const databaseUrl = configService.get<string>('DATABASE_URL');
+  const env = sanitize(configService.get<string>('NODE_ENV'));
+  const databaseUrl = sanitize(configService.get<string>('DATABASE_URL'));
+
+  const commonOptions = {
+    entities: [
+      User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
+      Invoice, LabTest, Medicine, AuditLog, Staff, Inventory,
+      Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
+      Expense, Revenue, ComplianceRecord, DataAccessLog,
+    ],
+    migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
+    migrationsTableName: 'typeorm_migrations',
+    synchronize: true,
+    logging: env === 'development',
+  };
 
   if (databaseUrl) {
+    console.log(`🔌 Configuring TypeORM with DATABASE_URL (length: ${databaseUrl.length})`);
     return {
       type: 'postgres',
       url: databaseUrl,
-      entities: [
-        User,
-        Patient,
-        Doctor,
-        Appointment,
-        Prescription,
-        MedicalRecord,
-        Invoice,
-        LabTest,
-        Medicine,
-        AuditLog,
-        Staff,
-        Inventory,
-        Ward,
-        Bed,
-        Admission,
-        OperationTheater,
-        Surgery,
-        RadiologyRequest,
-        Expense,
-        Revenue,
-        ComplianceRecord,
-        DataAccessLog,
-      ],
-      migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
-      migrationsTableName: 'typeorm_migrations',
-      synchronize: true, // Should be false in production, but keeping as per current project state
-      logging: configService.get<string>('NODE_ENV') === 'development',
+      ...commonOptions,
       ssl:
-        configService.get<string>('NODE_ENV') === 'production' ||
+        env === 'production' ||
           databaseUrl.includes('neon.tech') ||
           databaseUrl.includes('supabase')
           ? { rejectUnauthorized: false }
@@ -66,58 +59,43 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     };
   }
 
+  const host = sanitize(configService.get<string>('DATABASE_HOST') || configService.get<string>('PGHOST') || 'localhost');
+  const port = Number(sanitize(configService.get<string>('DATABASE_PORT') || configService.get<string>('PGPORT') || 5432));
+  const username = sanitize(configService.get<string>('DATABASE_USER') || configService.get<string>('PGUSER'));
+  const password = sanitize(configService.get<string>('DATABASE_PASSWORD') || configService.get<string>('PGPASSWORD'));
+  const database = sanitize(configService.get<string>('DATABASE_NAME') || configService.get<string>('PGDATABASE'));
+
+  console.log(`🔌 Configuring TypeORM with parameters: host=${host}, port=${port}, user=${username}, db=${database}, env=${env}`);
+
+  const useSsl =
+    env === 'production' ||
+    host.includes('neon.tech') ||
+    host.includes('supabase');
+
+  if (useSsl) {
+    console.log('🔒 SSL enabled for database connection (rejectUnauthorized: false)');
+  }
+
   return {
     type: 'postgres',
-    host: configService.get<string>('DATABASE_HOST') || configService.get<string>('PGHOST') || 'localhost',
-    port: configService.get<number>('DATABASE_PORT') || configService.get<number>('PGPORT') || 5432,
-    username: configService.get<string>('DATABASE_USER') || configService.get<string>('PGUSER'),
-    password: configService.get<string>('DATABASE_PASSWORD') || configService.get<string>('PGPASSWORD'),
-    database: configService.get<string>('DATABASE_NAME') || configService.get<string>('PGDATABASE'),
-    entities: [
-      User,
-      Patient,
-      Doctor,
-      Appointment,
-      Prescription,
-      MedicalRecord,
-      Invoice,
-      LabTest,
-      Medicine,
-      AuditLog,
-      Staff,
-      Inventory,
-      Ward,
-      Bed,
-      Admission,
-      OperationTheater,
-      Surgery,
-      RadiologyRequest,
-      Expense,
-      Revenue,
-      ComplianceRecord,
-      DataAccessLog,
-    ],
-    migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
-    migrationsTableName: 'typeorm_migrations',
-    synchronize: true,
-    logging: configService.get<string>('NODE_ENV') === 'development',
-    ssl:
-      configService.get<string>('DATABASE_HOST')?.includes('neon.tech') ||
-        configService.get<string>('DATABASE_HOST')?.includes('supabase') ||
-        configService.get<string>('NODE_ENV') === 'production'
-        ? { rejectUnauthorized: false }
-        : false,
+    host,
+    port,
+    username,
+    password,
+    database,
+    ...commonOptions,
+    ssl: useSsl ? { rejectUnauthorized: false } : false,
   };
 };
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
-  host: !process.env.DATABASE_URL ? (process.env.DATABASE_HOST || process.env.PGHOST || 'localhost') : undefined,
-  port: !process.env.DATABASE_URL ? parseInt(process.env.DATABASE_PORT || process.env.PGPORT || '5432') : undefined,
-  username: !process.env.DATABASE_URL ? (process.env.DATABASE_USER || process.env.PGUSER) : undefined,
-  password: !process.env.DATABASE_URL ? (process.env.DATABASE_PASSWORD || process.env.PGPASSWORD) : undefined,
-  database: !process.env.DATABASE_URL ? (process.env.DATABASE_NAME || process.env.PGDATABASE) : undefined,
+  url: sanitize(process.env.DATABASE_URL),
+  host: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_HOST || process.env.PGHOST || 'localhost') : undefined,
+  port: !process.env.DATABASE_URL ? Number(sanitize(process.env.DATABASE_PORT || process.env.PGPORT || '5432')) : undefined,
+  username: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_USER || process.env.PGUSER) : undefined,
+  password: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_PASSWORD || process.env.PGPASSWORD) : undefined,
+  database: !process.env.DATABASE_URL ? sanitize(process.env.DATABASE_NAME || process.env.PGDATABASE) : undefined,
   entities: [
     User,
     Patient,

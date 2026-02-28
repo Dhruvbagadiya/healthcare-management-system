@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { typeormConfig } from './database/typeorm.config';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -53,4 +54,11 @@ import { AdmissionsModule } from './modules/admissions/admissions.module';
     AdmissionsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {
+  constructor(private dataSource: DataSource) { }
+
+  onModuleInit() {
+    const options = this.dataSource.options as any;
+    console.log(`📡 Database connected successfully to: ${options.host || options.url || 'unknown host'}`);
+  }
+}
