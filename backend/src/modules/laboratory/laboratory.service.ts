@@ -5,18 +5,23 @@ import { LabTest } from './entities/lab-test.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreateLabTestDto, UpdateLabTestDto } from './dto/create-lab-test.dto';
 
+import { TenantService } from '../../common/services/tenant.service';
+
 @Injectable()
 export class LaboratoryService {
     constructor(
         @InjectRepository(LabTest)
         private readonly labTestRepo: Repository<LabTest>,
+        private readonly tenantService: TenantService,
     ) { }
 
     async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<LabTest>> {
         const { page = 1, limit = 10 } = query;
         const skip = (page - 1) * limit;
 
+        const organizationId = this.tenantService.getTenantId();
         const [data, total] = await this.labTestRepo.findAndCount({
+            where: { organizationId },
             relations: ['patient', 'patient.user'],
             order: { createdAt: 'DESC' },
             take: limit,
@@ -35,8 +40,9 @@ export class LaboratoryService {
     }
 
     async findOne(id: string) {
+        const organizationId = this.tenantService.getTenantId();
         const labTest = await this.labTestRepo.findOne({
-            where: { id },
+            where: { id, organizationId },
             relations: ['patient', 'patient.user'],
         });
 
@@ -48,7 +54,11 @@ export class LaboratoryService {
     }
 
     async create(createLabTestDto: CreateLabTestDto) {
-        const labTest = this.labTestRepo.create(createLabTestDto);
+        const organizationId = this.tenantService.getTenantId();
+        const labTest = this.labTestRepo.create({
+            ...createLabTestDto,
+            organizationId,
+        });
         return this.labTestRepo.save(labTest);
     }
 

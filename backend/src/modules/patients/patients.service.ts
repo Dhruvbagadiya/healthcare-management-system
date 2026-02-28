@@ -2,10 +2,13 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Patient } from './entities/patient.entity';
+import { MedicalRecord } from './entities/medical-record.entity';
 import { User, UserRole, UserStatus } from '../users/entities/user.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import * as bcrypt from 'bcrypt';
+
+import { TenantService } from '../../common/services/tenant.service';
 
 @Injectable()
 export class PatientsService {
@@ -14,19 +17,21 @@ export class PatientsService {
     private readonly patientRepo: Repository<Patient>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly tenantService: TenantService,
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Patient>> {
     const { page = 1, limit = 10, search } = query;
     const skip = (page - 1) * limit;
 
-    const where = search
+    const organizationId = this.tenantService.getTenantId();
+    const where: any = search
       ? [
-        { patientId: Like(`%${search}%`) },
-        { user: { firstName: Like(`%${search}%`) } },
-        { user: { lastName: Like(`%${search}%`) } },
+        { patientId: Like(`%${search}%`), organizationId },
+        { user: { firstName: Like(`%${search}%`), organizationId } },
+        { user: { lastName: Like(`%${search}%`), organizationId } },
       ]
-      : {};
+      : { organizationId };
 
     const [data, total] = await this.patientRepo.findAndCount({
       where,
@@ -48,8 +53,9 @@ export class PatientsService {
   }
 
   async findOne(id: string) {
+    const organizationId = this.tenantService.getTenantId();
     const patient = await this.patientRepo.findOne({
-      where: { id },
+      where: { id, organizationId },
       relations: ['user', 'medicalRecords', 'appointments', 'prescriptions'],
     });
 
@@ -63,10 +69,12 @@ export class PatientsService {
   async create(createPatientDto: CreatePatientDto) {
     const { email, firstName, lastName, phoneNumber, dateOfBirth, gender, ...patientData } = createPatientDto;
 
-    // Check if user already exists
-    const existingUser = await this.userRepo.findOne({ where: { email } });
+    const organizationId = this.tenantService.getTenantId();
+
+    // Check if user already exists in this organization
+    const existingUser = await this.userRepo.findOne({ where: { email, organizationId } });
     if (existingUser) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException('Email already registered for this organization');
     }
 
     // Create User record
@@ -79,10 +87,11 @@ export class PatientsService {
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       gender: gender ? gender.toLowerCase() as any : null,
       password: hashedPassword,
-      roles: [UserRole.PATIENT],
+      roles: [] as any, // Will be handled by RBAC if needed, or set default role entity
       status: UserStatus.ACTIVE,
       userId: `PAT-${Date.now().toString().slice(-6)}`,
       emailVerified: true,
+      organizationId,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -92,8 +101,31 @@ export class PatientsService {
       ...patientData,
       user: savedUser,
       customUserId: savedUser.userId,
+      organizationId,
     });
 
     return this.patientRepo.save(patient);
+  }
+
+  // Medical Records Handlers
+  async addMedicalRecord(patientId: string, recordData: any) {
+    const organizationId = this.tenantService.getTenantId();
+    const patient = await this.findOne(patientId);
+
+    const record = this.patientRepo.manager.getRepository(MedicalRecord).create({
+      ...recordData,
+      patient,
+      organizationId,
+    });
+
+    return this.patientRepo.manager.getRepository(MedicalRecord).save(record);
+  }
+
+  async getMedicalRecords(patientId: string) {
+    const organizationId = this.tenantService.getTenantId();
+    return this.patientRepo.manager.getRepository(MedicalRecord).find({
+      where: { patient: { id: patientId }, organizationId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

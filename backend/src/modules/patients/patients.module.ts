@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CommonModule } from '../../common/common.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Patient } from './entities/patient.entity';
 import { MedicalRecord } from './entities/medical-record.entity';
@@ -7,7 +8,7 @@ import { PatientsController } from './patients.controller';
 import { PatientsService } from './patients.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Patient, MedicalRecord, User])],
+  imports: [CommonModule, TypeOrmModule.forFeature([Patient, MedicalRecord, User])],
   controllers: [PatientsController],
   providers: [PatientsService],
 })

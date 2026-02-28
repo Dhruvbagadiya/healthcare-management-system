@@ -5,18 +5,23 @@ import { Prescription } from './entities/prescription.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreatePrescriptionDto, UpdatePrescriptionDto } from './dto/create-prescription.dto';
 
+import { TenantService } from '../../common/services/tenant.service';
+
 @Injectable()
 export class PrescriptionsService {
   constructor(
     @InjectRepository(Prescription)
     private readonly prescriptionRepo: Repository<Prescription>,
+    private readonly tenantService: TenantService,
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Prescription>> {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
+    const organizationId = this.tenantService.getTenantId();
     const [data, total] = await this.prescriptionRepo.findAndCount({
+      where: { organizationId },
       relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
       order: { issuedDate: 'DESC' },
       take: limit,
@@ -35,8 +40,9 @@ export class PrescriptionsService {
   }
 
   async findOne(id: string) {
+    const organizationId = this.tenantService.getTenantId();
     const prescription = await this.prescriptionRepo.findOne({
-      where: { id },
+      where: { id, organizationId },
       relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
     });
 
@@ -48,7 +54,11 @@ export class PrescriptionsService {
   }
 
   async create(createPrescriptionDto: CreatePrescriptionDto) {
-    const prescription = this.prescriptionRepo.create(createPrescriptionDto);
+    const organizationId = this.tenantService.getTenantId();
+    const prescription = this.prescriptionRepo.create({
+      ...createPrescriptionDto,
+      organizationId,
+    });
     return this.prescriptionRepo.save(prescription);
   }
 
