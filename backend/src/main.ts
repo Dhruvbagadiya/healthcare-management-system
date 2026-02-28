@@ -9,6 +9,11 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
+const sanitize = (val: any): any => {
+  if (typeof val !== 'string') return val;
+  return val.replace(/^["']|["']$/g, '').trim();
+};
+
 async function bootstrap() {
   console.log('🚀 Starting Aarogentix API - Version: 1.0.1 (with DB SSL & Sanitization Fixes)');
   const app = await NestFactory.create(AppModule);
@@ -19,14 +24,20 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Enable CORS
+  const frontendUrl = sanitize(process.env.FRONTEND_URL);
+  const origins = [
+    frontendUrl?.replace(/\/$/, ''),
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ].filter(Boolean) as string[];
+
+  console.log(`🛡️  CORS allowed origins: ${origins.join(', ')}`);
+
   app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL?.replace(/\/$/, ''),
-      'http://localhost:3000',
-    ].filter(Boolean) as string[],
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   // Global pipes and filters
