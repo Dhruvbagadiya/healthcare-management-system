@@ -53,7 +53,7 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     entities: ENTITIES,
     migrations: [path.join(__dirname, '../database/migrations/*.{ts,js}')],
     migrationsTableName: 'typeorm_migrations',
-    synchronize: env === 'development', // Only sync in dev if specifically needed, but we prefer migrations
+    synchronize: false, // We use migrations now to handle data preservation
     logging: env === 'development',
   };
 
