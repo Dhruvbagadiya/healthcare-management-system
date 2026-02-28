@@ -101,7 +101,7 @@ async function seedDatabase() {
         userId: crypto.randomUUID(),
         email: `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@hospital.com`,
         password: await bcrypt.hash('DoctorPass123!', 10),
-        roles: [UserRole.DOCTOR],
+        roles: [UserRole.DOCTOR] as any,
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: doctorData.name.split(' ')[0],
@@ -112,7 +112,7 @@ async function seedDatabase() {
 
       const doctor = doctorRepo.create({
         user: savedUser,
-        customUserId: savedUser.userId,
+        customUserId: (savedUser as any).userId,
         firstName: doctorData.name.split(' ')[0],
         lastName: doctorData.name.split(' ').slice(1).join(' '),
         specialization: doctorData.specialization,
@@ -134,7 +134,7 @@ async function seedDatabase() {
         userId: crypto.randomUUID(),
         email: patientData.email,
         password: await bcrypt.hash('PatientPass123!', 10),
-        roles: [UserRole.PATIENT],
+        roles: [UserRole.PATIENT] as any,
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: patientData.name.split(' ')[0],
@@ -147,7 +147,7 @@ async function seedDatabase() {
 
       const patient = patientRepo.create({
         user: savedUser,
-        customUserId: savedUser.userId,
+        customUserId: (savedUser as any).userId,
         firstName: patientData.name.split(' ')[0],
         lastName: patientData.name.split(' ').slice(1).join(' '),
         bloodType: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'][Math.floor(Math.random() * 8)] as any,
@@ -236,7 +236,7 @@ async function seedDatabase() {
         userId: crypto.randomUUID(),
         email: `${staffData.name.toLowerCase().replace(/\s+/g, '.')}@hospital.com`,
         password: await bcrypt.hash('StaffPass123!', 10),
-        roles: [staffData.role === StaffRole.NURSE ? UserRole.NURSE : staffData.role === StaffRole.RECEPTIONIST ? UserRole.RECEPTIONIST : UserRole.LAB_TECHNICIAN],
+        roles: [staffData.role === StaffRole.NURSE ? UserRole.NURSE : staffData.role === StaffRole.RECEPTIONIST ? UserRole.RECEPTIONIST : UserRole.LAB_TECHNICIAN] as any,
         status: UserStatus.ACTIVE,
         emailVerified: true,
         firstName: staffData.name.split(' ')[0],
@@ -247,7 +247,7 @@ async function seedDatabase() {
 
       const staff = staffRepo.create({
         user: savedUser,
-        userId: savedUser.id,
+        userId: (savedUser as any).id,
         firstName: staffData.name.split(' ')[0],
         lastName: staffData.name.split(' ').slice(1).join(' '),
         staffId: `STAFF${crypto.randomUUID().substring(0, 8).toUpperCase()}`,

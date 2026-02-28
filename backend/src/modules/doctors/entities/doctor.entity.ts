@@ -17,9 +17,11 @@ import { Appointment } from '../../appointments/entities/appointment.entity';
 import { Prescription } from '../../prescriptions/entities/prescription.entity';
 
 @Entity('doctors')
-@Index(['customUserId'])
-@Index(['specialization'])
-@Index(['licenseNumber'])
+@Index(['organizationId', 'id'])
+@Index(['organizationId', 'customUserId'])
+@Index(['organizationId', 'specialization'])
+@Index(['organizationId', 'licenseNumber'])
+@Index(['organizationId', 'isActive'])
 export class Doctor {
   @PrimaryGeneratedColumn('uuid')
   id: string;

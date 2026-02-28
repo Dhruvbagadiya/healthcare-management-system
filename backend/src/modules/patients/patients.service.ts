@@ -1,63 +1,33 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Patient } from './entities/patient.entity';
 import { MedicalRecord } from './entities/medical-record.entity';
-import { User, UserRole, UserStatus } from '../users/entities/user.entity';
+import { User, UserStatus } from '../users/entities/user.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { PatientRepository } from './repositories/patient.repository';
 import * as bcrypt from 'bcrypt';
-
 import { TenantService } from '../../common/services/tenant.service';
 
 @Injectable()
 export class PatientsService {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientRepo: Repository<Patient>,
+    private readonly patientRepository: PatientRepository,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(MedicalRecord)
+    private readonly medicalRecordRepo: Repository<MedicalRecord>,
     private readonly tenantService: TenantService,
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Patient>> {
-    const { page = 1, limit = 10, search } = query;
-    const skip = (page - 1) * limit;
-
-    const organizationId = this.tenantService.getTenantId();
-    const where: any = search
-      ? [
-        { patientId: Like(`%${search}%`), organizationId },
-        { user: { firstName: Like(`%${search}%`), organizationId } },
-        { user: { lastName: Like(`%${search}%`), organizationId } },
-      ]
-      : { organizationId };
-
-    const [data, total] = await this.patientRepo.findAndCount({
-      where,
-      relations: ['user'],
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip,
-    });
-
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    const searchFields = ['patientId', 'customUserId'];
+    return this.patientRepository.findPaginated(query, ['user'], searchFields);
   }
 
   async findOne(id: string) {
-    const organizationId = this.tenantService.getTenantId();
-    const patient = await this.patientRepo.findOne({
-      where: { id, organizationId },
-      relations: ['user', 'medicalRecords', 'appointments', 'prescriptions'],
-    });
+    const patient = await this.patientRepository.findById(id);
 
     if (!patient) {
       throw new NotFoundException(`Patient with ID ${id} not found`);
@@ -68,18 +38,15 @@ export class PatientsService {
 
   async create(createPatientDto: CreatePatientDto) {
     const { email, firstName, lastName, phoneNumber, dateOfBirth, gender, ...patientData } = createPatientDto;
-
     const organizationId = this.tenantService.getTenantId();
 
-    // Check if user already exists in this organization
     const existingUser = await this.userRepo.findOne({ where: { email, organizationId } });
     if (existingUser) {
       throw new ConflictException('Email already registered for this organization');
     }
 
-    // Create User record
-    const hashedPassword = await bcrypt.hash('Patient@123', 10); // Default password
-    const user = this.userRepo.create({
+    const hashedPassword = await bcrypt.hash('Patient@123', 10);
+    const userEntity = this.userRepo.create({
       email,
       firstName,
       lastName,
@@ -87,44 +54,42 @@ export class PatientsService {
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       gender: gender ? gender.toLowerCase() as any : null,
       password: hashedPassword,
-      roles: [] as any, // Will be handled by RBAC if needed, or set default role entity
+      roles: [] as any,
       status: UserStatus.ACTIVE,
       userId: `PAT-${Date.now().toString().slice(-6)}`,
       emailVerified: true,
       organizationId,
     });
 
-    const savedUser = await this.userRepo.save(user);
+    const savedUser = await this.userRepo.save(userEntity);
 
-    // Create Patient record
-    const patient = this.patientRepo.create({
-      ...patientData,
-      user: savedUser,
-      customUserId: savedUser.userId,
+    const patient = this.patientRepository.create({
+      ...(patientData as any),
+      user: savedUser as any,
+      customUserId: (savedUser as any).userId,
       organizationId,
     });
 
-    return this.patientRepo.save(patient);
+    return this.patientRepository.save(patient);
   }
 
-  // Medical Records Handlers
   async addMedicalRecord(patientId: string, recordData: any) {
     const organizationId = this.tenantService.getTenantId();
     const patient = await this.findOne(patientId);
 
-    const record = this.patientRepo.manager.getRepository(MedicalRecord).create({
+    const record = this.medicalRecordRepo.create({
       ...recordData,
       patient,
       organizationId,
     });
 
-    return this.patientRepo.manager.getRepository(MedicalRecord).save(record);
+    return this.medicalRecordRepo.save(record);
   }
 
   async getMedicalRecords(patientId: string) {
     const organizationId = this.tenantService.getTenantId();
-    return this.patientRepo.manager.getRepository(MedicalRecord).find({
-      where: { patient: { id: patientId }, organizationId },
+    return this.medicalRecordRepo.find({
+      where: { patient: { id: patientId } as any, organizationId },
       order: { createdAt: 'DESC' },
     });
   }

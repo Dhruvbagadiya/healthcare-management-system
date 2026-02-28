@@ -1,44 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Invoice } from './entities/invoice.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreateInvoiceDto, UpdateInvoiceDto } from './dto/create-invoice.dto';
+import { InvoiceRepository } from './repositories/invoice.repository';
+import { TenantService } from '../../common/services/tenant.service';
 
 @Injectable()
 export class BillingService {
     constructor(
-        @InjectRepository(Invoice)
-        private readonly invoiceRepo: Repository<Invoice>,
+        private readonly invoiceRepository: InvoiceRepository,
+        private readonly tenantService: TenantService,
     ) { }
 
     async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Invoice>> {
-        const { page = 1, limit = 10 } = query;
-        const skip = (page - 1) * limit;
-
-        const [data, total] = await this.invoiceRepo.findAndCount({
-            relations: ['patient', 'patient.user'],
-            order: { createdAt: 'DESC' },
-            take: limit,
-            skip,
-        });
-
-        return {
-            data,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+        const searchFields = ['invoiceNumber'];
+        return this.invoiceRepository.findPaginated(query, ['patient', 'patient.user'], searchFields);
     }
 
     async findOne(id: string) {
-        const invoice = await this.invoiceRepo.findOne({
-            where: { id },
-            relations: ['patient', 'patient.user'],
-        });
+        const invoice = await this.invoiceRepository.findById(id);
 
         if (!invoice) {
             throw new NotFoundException(`Invoice with ID ${id} not found`);
@@ -48,21 +28,23 @@ export class BillingService {
     }
 
     async create(createInvoiceDto: CreateInvoiceDto) {
-        const invoice = this.invoiceRepo.create({
+        const organizationId = this.tenantService.getTenantId();
+        const invoice = this.invoiceRepository.create({
             ...createInvoiceDto,
             dueAmount: createInvoiceDto.totalAmount, // Initially, full amount is due
+            organizationId,
         });
-        return this.invoiceRepo.save(invoice);
+        return this.invoiceRepository.save(invoice);
     }
 
     async update(id: string, updateInvoiceDto: UpdateInvoiceDto) {
         const invoice = await this.findOne(id);
         Object.assign(invoice, updateInvoiceDto);
-        return this.invoiceRepo.save(invoice);
+        return this.invoiceRepository.save(invoice);
     }
 
     async remove(id: string) {
         const invoice = await this.findOne(id);
-        return this.invoiceRepo.remove(invoice);
+        return this.invoiceRepository.remove(invoice);
     }
 }

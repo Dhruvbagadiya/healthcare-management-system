@@ -48,7 +48,7 @@ export async function seedUsers(count: number = 150) {
         dhruvUser.userId = dhruvUserId;
         dhruvUser.password = hashedDhruv;
         dhruvUser.status = UserStatus.ACTIVE;
-        dhruvUser.roles = [UserRole.ADMIN, UserRole.DOCTOR];
+        dhruvUser.roles = [UserRole.ADMIN, UserRole.DOCTOR] as any;
         await userRepo.save(dhruvUser);
         console.log(`Updated specific admin user: ${dhruvEmail}`);
     } else {
@@ -59,7 +59,7 @@ export async function seedUsers(count: number = 150) {
             firstName: 'Dhruv',
             lastName: 'Bagdiya',
             password: hashedDhruv,
-            roles: [UserRole.ADMIN, UserRole.DOCTOR],
+            roles: [UserRole.ADMIN, UserRole.DOCTOR] as any,
             status: UserStatus.ACTIVE,
             emailVerified: true,
             phoneNumber: '+91 9876543210',
@@ -94,7 +94,7 @@ export async function seedUsers(count: number = 150) {
             firstName,
             lastName,
             password: hashedDefault,
-            roles: role,
+            roles: role as any,
             status: UserStatus.ACTIVE,
             emailVerified: true,
             phoneNumber: faker.phone.number(),

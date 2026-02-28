@@ -34,10 +34,11 @@ export enum PaymentMethod {
 }
 
 @Entity('invoices')
-@Index(['patientId'])
-@Index(['invoiceNumber'])
-@Index(['status'])
-@Index(['dueDate'])
+@Index(['organizationId', 'id'])
+@Index(['organizationId', 'patientId'])
+@Index(['organizationId', 'invoiceNumber'])
+@Index(['organizationId', 'status'])
+@Index(['organizationId', 'dueDate'])
 export class Invoice {
   @PrimaryGeneratedColumn('uuid')
   id: string;

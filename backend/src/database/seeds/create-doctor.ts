@@ -26,7 +26,7 @@ async function run() {
     firstName: 'Seed',
     lastName: 'Doctor',
     password: hashed,
-    roles: [UserRole.DOCTOR],
+    roles: [UserRole.DOCTOR] as any,
     status: UserStatus.ACTIVE,
     emailVerified: true,
   });

@@ -76,7 +76,7 @@ export class StaffService {
       lastName,
       phoneNumber,
       password: hashedPassword,
-      roles: [staffData.role as unknown as UserRole],
+      roles: [] as any,
       status: UserStatus.ACTIVE,
       userId: staffData.staffId,
       emailVerified: true,

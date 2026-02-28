@@ -24,10 +24,11 @@ export enum AppointmentStatus {
 }
 
 @Entity('appointments')
-@Index(['patientId'])
-@Index(['doctorId'])
-@Index(['appointmentDate'])
-@Index(['status'])
+@Index(['organizationId', 'id'])
+@Index(['organizationId', 'patientId'])
+@Index(['organizationId', 'doctorId'])
+@Index(['organizationId', 'appointmentDate'])
+@Index(['organizationId', 'status'])
 export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id: string;

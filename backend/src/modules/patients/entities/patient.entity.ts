@@ -29,9 +29,10 @@ export enum BloodType {
 }
 
 @Entity('patients')
-@Index(['customUserId'])
-@Index(['bloodType'])
-@Index(['createdAt'])
+@Index(['organizationId', 'id'])
+@Index(['organizationId', 'customUserId'])
+@Index(['organizationId', 'createdAt'])
+@Index(['organizationId', 'bloodType'])
 export class Patient {
   @PrimaryGeneratedColumn('uuid')
   id: string;

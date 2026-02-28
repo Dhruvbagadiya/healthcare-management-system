@@ -28,6 +28,14 @@ export class PaginationQueryDto {
     @ApiPropertyOptional()
     @IsOptional()
     search?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    sortBy?: string = 'createdAt';
+
+    @ApiPropertyOptional({ enum: ['ASC', 'DESC'], default: 'DESC' })
+    @IsOptional()
+    sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }
 
 export interface PaginatedResponse<T> {
