@@ -57,9 +57,11 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
   migrationsTableName: 'typeorm_migrations',
   synchronize: true,
   logging: configService.get<string>('NODE_ENV') === 'development',
-  ssl: configService.get<string>('NODE_ENV') === 'production' && {
-    rejectUnauthorized: false,
-  },
+  ssl:
+    configService.get<string>('DATABASE_HOST')?.includes('neon.tech') ||
+    (configService.get<string>('NODE_ENV') === 'production' && {
+      rejectUnauthorized: false,
+    }),
 });
 
 export const AppDataSource = new DataSource({
@@ -97,5 +99,9 @@ export const AppDataSource = new DataSource({
   migrationsTableName: 'typeorm_migrations',
   synchronize: true,
   logging: process.env.NODE_ENV === 'development',
-  ssl: process.env.DATABASE_HOST?.includes('supabase') ? { rejectUnauthorized: false } : false,
+  ssl:
+    process.env.DATABASE_HOST?.includes('neon.tech') ||
+    (process.env.DATABASE_HOST?.includes('supabase')
+      ? { rejectUnauthorized: false }
+      : false),
 } as DataSourceOptions);

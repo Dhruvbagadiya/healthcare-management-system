@@ -12,14 +12,12 @@ export interface User {
 
 export interface UIState {
   isMobileMenuOpen: boolean;
-  toggleMobileMenu: () => void;
-  closeMobileMenu: () => void;
+  setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   isMobileMenuOpen: false,
-  toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
-  closeMobileMenu: () => set({ isMobileMenuOpen: false }),
+  setIsMobileMenuOpen: (isOpen) => set({ isMobileMenuOpen: isOpen }),
 }));
 
 export interface AuthState {

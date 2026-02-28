@@ -6,9 +6,9 @@ import { useUIStore } from '@/lib/store';
 
 export function useMobileNavigation() {
   const pathname = usePathname();
-  const closeMobileMenu = useUIStore((state) => state.closeMobileMenu);
+  const { setIsMobileMenuOpen } = useUIStore();
 
   useEffect(() => {
-    closeMobileMenu();
-  }, [pathname, closeMobileMenu]);
+    setIsMobileMenuOpen(false);
+  }, [pathname, setIsMobileMenuOpen]);
 }

@@ -19,6 +19,11 @@ export function useRequireAuth() {
   return { user, isLoading: !isHydrated || isLoading };
 }
 
+export function useAuth() {
+  const { user, logout, isLoading, isHydrated } = useAuthStore();
+  return { user, logout, isLoading, isHydrated };
+}
+
 export function useRequireRole(...roles: string[]) {
   const router = useRouter();
   const { user, isHydrated } = useAuthStore();
