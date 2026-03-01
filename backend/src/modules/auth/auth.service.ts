@@ -99,8 +99,8 @@ export class AuthService {
     }
 
     const { accessToken, refreshToken } = this.generateTokens(user);
-
-    user.refreshToken = refreshToken;
+    const salt = await bcrypt.genSalt(10);
+    user.refreshTokenHash = await bcrypt.hash(refreshToken, salt);
     user.lastLoginAt = new Date();
     await this.usersRepository.save(user);
 
@@ -136,7 +136,9 @@ export class AuthService {
         relations: ['roles'],
       });
 
-      if (!user || user.refreshToken !== refreshToken) {
+      const isRefreshTokenValid = user?.refreshTokenHash && (await bcrypt.compare(refreshToken, user.refreshTokenHash));
+
+      if (!user || !isRefreshTokenValid) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
@@ -145,7 +147,8 @@ export class AuthService {
       }
 
       const tokens = this.generateTokens(user);
-      user.refreshToken = tokens.refreshToken;
+      const salt = await bcrypt.genSalt(10);
+      user.refreshTokenHash = await bcrypt.hash(tokens.refreshToken, salt);
       await this.usersRepository.save(user);
 
       this.logger.log(`Tokens refreshed for user: ${user.email}`);
@@ -156,7 +159,7 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    await this.usersRepository.update(userId, { refreshToken: null });
+    await this.usersRepository.update(userId, { refreshTokenHash: null });
     return { message: 'Logged out successfully' };
   }
 
@@ -170,7 +173,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    const { password, refreshToken, ...userWithoutSensitiveData } = user;
+    const { password, refreshTokenHash, ...userWithoutSensitiveData } = user;
     return userWithoutSensitiveData;
   }
 

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';

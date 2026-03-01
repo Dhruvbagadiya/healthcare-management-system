@@ -112,7 +112,7 @@ export class User {
 
   @Column({ nullable: true })
   @Exclude()
-  refreshToken: string;
+  refreshTokenHash: string;
 
   @Column({ nullable: true })
   @Exclude()
