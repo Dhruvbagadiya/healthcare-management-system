@@ -10,7 +10,7 @@ export class ComplianceService {
     private complianceRepository: Repository<ComplianceRecord>,
     @InjectRepository(DataAccessLog)
     private accessLogRepository: Repository<DataAccessLog>,
-  ) {}
+  ) { }
 
   async getComplianceRecords(skip = 0, take = 10) {
     const [records, total] = await this.complianceRepository.findAndCount({
@@ -49,6 +49,7 @@ export class ComplianceService {
 
   async logDataAccess(
     userId: string,
+    organizationId: string,
     action: string,
     entityType: string,
     entityId: string,
@@ -56,6 +57,7 @@ export class ComplianceService {
   ) {
     const log = this.accessLogRepository.create({
       userId,
+      organizationId,
       action,
       entityType,
       entityId,

@@ -35,6 +35,8 @@ import { MailModule } from './modules/mail/mail.module';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { TenantGuard } from './guards/tenant.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -96,6 +98,14 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
     },
   ],
 })

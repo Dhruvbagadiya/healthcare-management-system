@@ -6,12 +6,11 @@ import {
     Patch,
     Param,
     Delete,
-    UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto/organization.dto';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Organizations')
 @Controller('organizations')
@@ -25,7 +24,6 @@ export class OrganizationsController {
     }
 
     @Get()
-    @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Get all organizations' })
     findAll() {
@@ -33,7 +31,6 @@ export class OrganizationsController {
     }
 
     @Get(':id')
-    @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Get organization by ID' })
     findOne(@Param('id') id: string) {
@@ -41,13 +38,13 @@ export class OrganizationsController {
     }
 
     @Get('slug/:slug')
+    @Public()
     @ApiOperation({ summary: 'Get organization by slug' })
     findBySlug(@Param('slug') slug: string) {
         return this.organizationsService.findBySlug(slug);
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Update organization' })
     update(
@@ -58,7 +55,6 @@ export class OrganizationsController {
     }
 
     @Delete(':id')
-    @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Delete organization' })
     remove(@Param('id') id: string) {

@@ -43,6 +43,7 @@ export class AuditInterceptor implements NestInterceptor {
 
                     await this.complianceService.logDataAccess(
                         user.id,
+                        user.organizationId,
                         action,
                         entityType,
                         entityId,

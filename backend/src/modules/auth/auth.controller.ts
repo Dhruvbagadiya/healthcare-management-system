@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Request } from '@nestjs/common';
+import { Public } from '../../common/decorators/public.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
@@ -15,6 +16,7 @@ export class AuthController {
     private emailVerificationService: EmailVerificationService,
   ) { }
 
+  @Public()
   @Post('register')
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Register a new user (requires valid organizationId)' })
@@ -22,6 +24,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Public()
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Authenticate and receive JWT tokens' })
@@ -29,6 +32,7 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   async refreshToken(@Body() body: { refreshToken: string }) {
@@ -41,6 +45,7 @@ export class AuthController {
    * Public endpoint — no JWT required.
    * Validates the token, activates the account, and deletes the token.
    */
+  @Public()
   @Get('verify-email')
   @ApiOperation({ summary: 'Verify email address via one-time token link' })
   @ApiQuery({ name: 'token', required: true, description: 'One-time verification token from email' })
@@ -54,13 +59,13 @@ export class AuthController {
    * Public endpoint — accepts email, re-issues a token.
    * Response is intentionally vague to prevent email enumeration.
    */
+  @Public()
   @Post('resend-verification')
   @ApiOperation({ summary: 'Resend email verification link' })
   async resendVerification(@Body() body: { email: string }) {
     return this.emailVerificationService.resendVerificationEmail(body.email);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current authenticated user profile' })
   @Get('profile')
@@ -68,7 +73,6 @@ export class AuthController {
     return this.authService.getProfile(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Log out and invalidate refresh token' })
   @Post('logout')
