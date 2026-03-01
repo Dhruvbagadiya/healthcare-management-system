@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { LoginDto } from './dto/login.dto';
@@ -15,12 +16,14 @@ export class AuthController {
   ) { }
 
   @Post('register')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Register a new user (requires valid organizationId)' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Authenticate and receive JWT tokens' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);

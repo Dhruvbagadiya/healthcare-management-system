@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
@@ -17,7 +18,8 @@ const sanitize = (val: any): any => {
 
 async function bootstrap() {
   console.log('🚀 Starting Aarogentix API - Version: 1.0.5 (Explicit Host Binding & Health Check)');
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  app.set('trust proxy', 1);
 
   // Mandatory Request Logger
   app.use((req: Request, res: Response, next: NextFunction) => {

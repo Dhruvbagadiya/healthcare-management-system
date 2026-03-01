@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { DataSource } from 'typeorm';
 import { typeormConfig } from './database/typeorm.config';
 import { CommonModule } from './common/common.module';
@@ -71,6 +72,13 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     OnboardingModule,
     NotificationsModule,
     MailModule,
+    // Rate Limiting
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
   ],
   providers: [
     {
@@ -84,6 +92,10 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
