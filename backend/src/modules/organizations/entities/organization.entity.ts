@@ -12,6 +12,8 @@ export enum OrganizationStatus {
     ACTIVE = 'active',
     SUSPENDED = 'suspended',
     PENDING = 'pending',
+    TRIAL = 'trial',
+    EXPIRED = 'expired',
 }
 
 export enum SubscriptionPlan {
