@@ -29,7 +29,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> extends Repository
         relations: string[] = [],
         searchFields: string[] = [],
     ): Promise<PaginatedResponse<T>> {
-        const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'DESC' } = queryDto;
+        const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'DESC' } = queryDto;
         const skip = (page - 1) * limit;
         const organizationId = this.tenantService.getTenantId();
 

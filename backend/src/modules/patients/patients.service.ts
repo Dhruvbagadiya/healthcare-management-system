@@ -121,7 +121,7 @@ export class PatientsService {
     // findPaginated doesn't easily support dynamic where clauses beyond organizationId,
     // let's do a custom paginated query using queryBuilder on medicalRecordRepo.
 
-    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
     const skip = (page - 1) * limit;
     const organizationId = this.tenantService.getTenantId();
 

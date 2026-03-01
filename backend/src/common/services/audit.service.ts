@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditLog, AuditAction } from '../entities/audit-log.entity';
 import { Request } from 'express';
+import { PaginationQueryDto, PaginatedResponse } from '../dto/pagination.dto';
 
 @Injectable()
 export class AuditService {
@@ -45,43 +46,37 @@ export class AuditService {
     }
   }
 
-  async getAuditLogs(filters?: {
-    userId?: string;
-    action?: AuditAction;
-    entityType?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<AuditLog[]> {
-    let query = this.auditRepository.createQueryBuilder('audit');
+  async getAuditLogs(
+    organizationId: string,
+    queryDto: PaginationQueryDto
+  ): Promise<PaginatedResponse<AuditLog>> {
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'DESC', search } = queryDto;
+    const skip = (page - 1) * limit;
 
-    if (filters?.userId) {
-      query = query.where('audit.userId = :userId', { userId: filters.userId });
+    let query = this.auditRepository.createQueryBuilder('audit')
+      .where('audit.organizationId = :organizationId', { organizationId });
+
+    if (search) {
+      query = query.andWhere(
+        '(audit.userEmail ILIKE :search OR audit.entityType ILIKE :search OR audit.description ILIKE :search)',
+        { search: `%${search}%` }
+      );
     }
 
-    if (filters?.action) {
-      query = query.andWhere('audit.action = :action', {
-        action: filters.action,
-      });
-    }
+    const [data, total] = await query
+      .orderBy(`audit.${sortBy}`, sortOrder)
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
-    if (filters?.entityType) {
-      query = query.andWhere('audit.entityType = :entityType', {
-        entityType: filters.entityType,
-      });
-    }
-
-    if (filters?.startDate) {
-      query = query.andWhere('audit.createdAt >= :startDate', {
-        startDate: filters.startDate,
-      });
-    }
-
-    if (filters?.endDate) {
-      query = query.andWhere('audit.createdAt <= :endDate', {
-        endDate: filters.endDate,
-      });
-    }
-
-    return query.orderBy('audit.createdAt', 'DESC').take(1000).getMany();
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

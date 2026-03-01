@@ -16,7 +16,7 @@ export class PrescriptionsService {
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Prescription>> {
-    const { page = 1, limit = 10 } = query;
+    const { page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
     const organizationId = this.tenantService.getTenantId();

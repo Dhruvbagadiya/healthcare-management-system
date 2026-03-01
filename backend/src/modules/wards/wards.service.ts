@@ -15,7 +15,7 @@ export class WardsService {
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Ward>> {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 20, search } = query;
     const skip = (page - 1) * limit;
 
     const where = search

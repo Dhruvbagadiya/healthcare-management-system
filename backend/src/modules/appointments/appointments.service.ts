@@ -21,6 +21,8 @@ export class AppointmentsService {
   async findAll(query: AppointmentPaginationDto): Promise<PaginatedResponse<Appointment>> {
     const { patientId, doctorId } = query;
     const organizationId = this.tenantService.getTenantId();
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const skip = (page - 1) * limit;
 
     // Create query builder to handle selective filters
     const queryBuilder = this.appointmentRepository.createQueryBuilder('appointment');
@@ -33,12 +35,27 @@ export class AppointmentsService {
       queryBuilder.andWhere('appointment.doctorId = :doctorId', { doctorId });
     }
 
-    // Reuse findPaginated logic but we might need more control if searching on relations
-    // For now, using the base findPaginated if no specific filters, or manual pagination here
+    // Join relations
+    queryBuilder
+      .leftJoinAndSelect('appointment.patient', 'patient')
+      .leftJoinAndSelect('patient.user', 'user')
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'docUser')
+      .orderBy(`appointment.${sortBy}`, sortOrder)
+      .skip(skip)
+      .take(limit);
 
-    // Let's use the repository methods
-    const relations = ['patient', 'patient.user', 'doctor', 'doctor.user'];
-    return this.appointmentRepository.findPaginated(query, relations);
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
