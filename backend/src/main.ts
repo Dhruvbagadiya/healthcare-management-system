@@ -33,7 +33,7 @@ async function bootstrap() {
     },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Accept,Authorization,X-Requested-With,Origin',
+    allowedHeaders: 'Content-Type,Accept,Authorization,X-Requested-With,Origin,x-tenant-id,x-organization-id',
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
