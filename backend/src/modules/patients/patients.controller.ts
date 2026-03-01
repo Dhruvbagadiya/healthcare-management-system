@@ -9,10 +9,12 @@ import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { PermissionsGuard } from '../rbac/guards/permissions.guard';
 import { Permissions } from '../rbac/decorators/permissions.decorator';
 import { Audit } from '../../common/decorators/audit.decorator';
+import { PlanValidationGuard } from '../subscriptions/guards/plan-validation.guard';
+import { RequireFeatureLimit } from '../subscriptions/decorators/feature-limit.decorator';
 
 @ApiTags('Patients')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, PlanValidationGuard)
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) { }
@@ -36,6 +38,7 @@ export class PatientsController {
   @Post()
   @ApiOperation({ summary: 'Create a new patient' })
   @Permissions('patients:create')
+  @RequireFeatureLimit('MAX_PATIENTS')
   @Audit({ action: 'Create Patient', entityType: 'Patient' })
   async create(@Body() createPatientDto: CreatePatientDto) {
     return this.patientsService.create(createPatientDto);

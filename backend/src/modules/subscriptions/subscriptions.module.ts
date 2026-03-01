@@ -8,6 +8,7 @@ import { Organization } from '../organizations/entities/organization.entity';
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionCronService } from './subscription-cron.service';
+import { UsageService } from './usage.service';
 import { PlanValidationGuard } from './guards/plan-validation.guard';
 import { FeatureLimitGuard } from './guards/feature-limit.guard';
 
@@ -22,7 +23,7 @@ import { FeatureLimitGuard } from './guards/feature-limit.guard';
         ]),
     ],
     controllers: [SubscriptionsController],
-    providers: [SubscriptionsService, SubscriptionCronService, PlanValidationGuard, FeatureLimitGuard],
-    exports: [TypeOrmModule, SubscriptionsService, SubscriptionCronService, PlanValidationGuard, FeatureLimitGuard],
+    providers: [SubscriptionsService, SubscriptionCronService, UsageService, PlanValidationGuard, FeatureLimitGuard],
+    exports: [TypeOrmModule, SubscriptionsService, SubscriptionCronService, UsageService, PlanValidationGuard, FeatureLimitGuard],
 })
 export class SubscriptionsModule { }

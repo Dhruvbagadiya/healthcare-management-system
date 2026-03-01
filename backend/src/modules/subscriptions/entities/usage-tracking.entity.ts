@@ -6,7 +6,7 @@ import {
     Index,
 } from 'typeorm';
 
-@Entity('usage_tracking')
+@Entity('organization_usage')
 @Index(['organizationId', 'featureKey'], { unique: true })
 export class UsageTracking {
     @PrimaryGeneratedColumn('uuid')

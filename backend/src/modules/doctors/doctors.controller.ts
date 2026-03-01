@@ -4,16 +4,19 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateDoctorDto, UpdateDoctorDto } from './dto/create-doctor.dto';
+import { PlanValidationGuard } from '../subscriptions/guards/plan-validation.guard';
+import { RequireFeatureLimit } from '../subscriptions/decorators/feature-limit.decorator';
 
 @ApiTags('Doctors')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PlanValidationGuard)
 @Controller('doctors')
 export class DoctorsController {
   constructor(private readonly doctorsService: DoctorsService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new doctor' })
+  @RequireFeatureLimit('MAX_DOCTORS')
   async create(@Body() createDoctorDto: CreateDoctorDto) {
     return this.doctorsService.create(createDoctorDto);
   }

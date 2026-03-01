@@ -7,10 +7,12 @@ import { CreateAppointmentDto, UpdateAppointmentDto } from './dto/create-appoint
 import { PermissionsGuard } from '../rbac/guards/permissions.guard';
 import { Permissions } from '../rbac/decorators/permissions.decorator';
 import { Audit } from '../../common/decorators/audit.decorator';
+import { PlanValidationGuard } from '../subscriptions/guards/plan-validation.guard';
+import { RequireFeatureLimit } from '../subscriptions/decorators/feature-limit.decorator';
 
 @ApiTags('Appointments')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, PlanValidationGuard)
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) { }
@@ -18,6 +20,7 @@ export class AppointmentsController {
   @Post()
   @ApiOperation({ summary: 'Create a new appointment' })
   @Permissions('appointments:create')
+  @RequireFeatureLimit('MAX_APPOINTMENTS')
   @Audit({ action: 'Create Appointment', entityType: 'Appointment' })
   async create(@Body() createAppointmentDto: CreateAppointmentDto) {
     return this.appointmentsService.create(createAppointmentDto);

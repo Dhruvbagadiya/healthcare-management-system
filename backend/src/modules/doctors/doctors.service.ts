@@ -8,6 +8,8 @@ import { CreateDoctorDto, UpdateDoctorDto } from './dto/create-doctor.dto';
 import { DoctorRepository } from './repositories/doctor.repository';
 import * as bcrypt from 'bcrypt';
 import { TenantService } from '../../common/services/tenant.service';
+import { UsageService } from '../subscriptions/usage.service';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DoctorsService {
@@ -16,6 +18,8 @@ export class DoctorsService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly tenantService: TenantService,
+    private readonly usageService: UsageService,
+    private readonly dataSource: DataSource,
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Doctor>> {
@@ -37,35 +41,42 @@ export class DoctorsService {
     const { email, firstName, lastName, phoneNumber, ...doctorData } = createDoctorDto;
     const organizationId = this.tenantService.getTenantId();
 
-    const existingUser = await this.userRepo.findOne({ where: { email, organizationId } });
-    if (existingUser) {
-      throw new ConflictException('Email already registered for this organization');
-    }
+    return await this.dataSource.transaction(async (manager) => {
+      const existingUser = await manager.findOne(User, { where: { email, organizationId } });
+      if (existingUser) {
+        throw new ConflictException('Email already registered for this organization');
+      }
 
-    const hashedPassword = await bcrypt.hash('Doctor@123', 10);
-    const userEntity = this.userRepo.create({
-      email,
-      firstName,
-      lastName,
-      phoneNumber,
-      password: hashedPassword,
-      roles: [] as any,
-      status: UserStatus.ACTIVE,
-      userId: doctorData.doctorId,
-      emailVerified: true,
-      organizationId,
+      const hashedPassword = await bcrypt.hash('Doctor@123', 10);
+      const userEntity = manager.create(User, {
+        email,
+        firstName,
+        lastName,
+        phoneNumber,
+        password: hashedPassword,
+        roles: [] as any,
+        status: UserStatus.ACTIVE,
+        userId: doctorData.doctorId,
+        emailVerified: true,
+        organizationId,
+      });
+
+      const savedUser = await manager.save(userEntity);
+
+      const doctor = manager.create(Doctor, {
+        ...(doctorData as any),
+        user: savedUser as any,
+        customUserId: (savedUser as any).userId,
+        organizationId,
+      });
+
+      const savedDoctor = await manager.save(doctor);
+
+      // Increment usage
+      await this.usageService.increment(organizationId, 'MAX_DOCTORS', manager);
+
+      return savedDoctor;
     });
-
-    const savedUser = await this.userRepo.save(userEntity);
-
-    const doctor = this.doctorRepository.create({
-      ...(doctorData as any),
-      user: savedUser as any,
-      customUserId: (savedUser as any).userId,
-      organizationId,
-    });
-
-    return this.doctorRepository.save(doctor);
   }
 
   async update(id: string, updateDoctorDto: UpdateDoctorDto) {

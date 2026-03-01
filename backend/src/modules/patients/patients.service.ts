@@ -11,6 +11,8 @@ import { PatientRepository } from './repositories/patient.repository';
 import { MedicalRecordRepository } from './repositories/medical-record.repository';
 import * as bcrypt from 'bcrypt';
 import { TenantService } from '../../common/services/tenant.service';
+import { UsageService } from '../subscriptions/usage.service';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PatientsService {
@@ -20,6 +22,8 @@ export class PatientsService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly tenantService: TenantService,
+    private readonly usageService: UsageService,
+    private readonly dataSource: DataSource,
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Patient>> {
@@ -41,37 +45,44 @@ export class PatientsService {
     const { email, firstName, lastName, phoneNumber, dateOfBirth, gender, ...patientData } = createPatientDto;
     const organizationId = this.tenantService.getTenantId();
 
-    const existingUser = await this.userRepo.findOne({ where: { email, organizationId } });
-    if (existingUser) {
-      throw new ConflictException('Email already registered for this organization');
-    }
+    return await this.dataSource.transaction(async (manager) => {
+      const existingUser = await manager.findOne(User, { where: { email, organizationId } });
+      if (existingUser) {
+        throw new ConflictException('Email already registered for this organization');
+      }
 
-    const hashedPassword = await bcrypt.hash('Patient@123', 10);
-    const userEntity = this.userRepo.create({
-      email,
-      firstName,
-      lastName,
-      phoneNumber,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-      gender: gender ? gender.toLowerCase() as any : null,
-      password: hashedPassword,
-      roles: [] as any,
-      status: UserStatus.ACTIVE,
-      userId: `PAT-${Date.now().toString().slice(-6)}`,
-      emailVerified: true,
-      organizationId,
+      const hashedPassword = await bcrypt.hash('Patient@123', 10);
+      const userEntity = manager.create(User, {
+        email,
+        firstName,
+        lastName,
+        phoneNumber,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        gender: gender ? gender.toLowerCase() as any : null,
+        password: hashedPassword,
+        roles: [] as any,
+        status: UserStatus.ACTIVE,
+        userId: `PAT-${Date.now().toString().slice(-6)}`,
+        emailVerified: true,
+        organizationId,
+      });
+
+      const savedUser = await manager.save(userEntity);
+
+      const patient = manager.create(Patient, {
+        ...(patientData as any),
+        user: savedUser as any,
+        customUserId: (savedUser as any).userId,
+        organizationId,
+      });
+
+      const savedPatient = await manager.save(patient);
+
+      // Increment usage
+      await this.usageService.increment(organizationId, 'MAX_PATIENTS', manager);
+
+      return savedPatient;
     });
-
-    const savedUser = await this.userRepo.save(userEntity);
-
-    const patient = this.patientRepository.create({
-      ...(patientData as any),
-      user: savedUser as any,
-      customUserId: (savedUser as any).userId,
-      organizationId,
-    });
-
-    return this.patientRepository.save(patient);
   }
 
   async update(id: string, updatePatientDto: UpdatePatientDto) {

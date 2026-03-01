@@ -5,6 +5,8 @@ import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { TenantService } from '../../common/services/tenant.service';
 import { MailService } from '../mail/mail.service';
+import { UsageService } from '../subscriptions/usage.service';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class AppointmentsService {
@@ -12,6 +14,8 @@ export class AppointmentsService {
     private readonly appointmentRepository: AppointmentRepository,
     private readonly tenantService: TenantService,
     private readonly mailService: MailService,
+    private readonly usageService: UsageService,
+    private readonly dataSource: DataSource,
   ) { }
 
   async findAll(query: AppointmentPaginationDto): Promise<PaginatedResponse<Appointment>> {
@@ -51,24 +55,38 @@ export class AppointmentsService {
     const { doctorId, appointmentDate } = createAppointmentDto;
     const organizationId = this.tenantService.getTenantId();
 
-    const todayCount = await this.appointmentRepository.countForDoctorOnDate(doctorId, new Date(appointmentDate));
-    const tokenNumber = todayCount + 1;
+    return await this.dataSource.transaction(async (manager) => {
+      const todayCount = await manager.count(Appointment, {
+        where: {
+          doctorId,
+          appointmentDate: new Date(appointmentDate),
+          organizationId,
+        },
+      });
+      const tokenNumber = todayCount + 1;
 
-    const appointment = this.appointmentRepository.create({
-      ...createAppointmentDto,
-      tokenNumber,
-      organizationId,
+      const appointment = manager.create(Appointment, {
+        ...createAppointmentDto,
+        tokenNumber,
+        organizationId,
+      });
+      const savedAppointment = await manager.save(appointment);
+      const appointmentId = (savedAppointment as any).id;
+
+      // Increment usage
+      await this.usageService.increment(organizationId, 'MAX_APPOINTMENTS', manager);
+
+      // Fetch details for email
+      const detailedAppointment = await manager.findOne(Appointment, {
+        where: { id: appointmentId },
+        relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+      });
+      if (detailedAppointment) {
+        await this.mailService.sendAppointmentConfirmation(detailedAppointment);
+      }
+
+      return savedAppointment;
     });
-    const savedAppointment = await this.appointmentRepository.save(appointment);
-    const appointmentId = (savedAppointment as any).id;
-
-    // Fetch details for email
-    const detailedAppointment = await this.appointmentRepository.findById(appointmentId);
-    if (detailedAppointment) {
-      await this.mailService.sendAppointmentConfirmation(detailedAppointment);
-    }
-
-    return savedAppointment;
   }
 
   async update(id: string, updateAppointmentDto: any) {
