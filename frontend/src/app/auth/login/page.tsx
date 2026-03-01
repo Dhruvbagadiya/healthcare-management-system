@@ -43,8 +43,20 @@ export default function LoginPage() {
       toast.success('Login successful!');
       router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      // Diagnostic: show exact failure reason to help debug mobile issues
+      const isNetworkError = !error.response;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api (fallback)';
+      const statusCode = error.response?.status;
+      const serverMessage = error.response?.data?.message;
+
+      if (isNetworkError) {
+        toast.error(`Network error: cannot reach API (${apiUrl}). Check your connection.`, { duration: 6000 });
+      } else {
+        toast.error(serverMessage || `Server error ${statusCode || ''}: Login failed`, { duration: 5000 });
+      }
+      console.error('[Login] Error:', { isNetworkError, apiUrl, statusCode, message: error.message, serverMessage });
     } finally {
+
       setIsLoading(false);
     }
   };
