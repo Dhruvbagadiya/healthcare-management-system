@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../../modules/users/entities/user.entity';
+import { Organization } from '../../modules/organizations/entities/organization.entity';
 
 export enum AuditAction {
   CREATE = 'CREATE',
@@ -17,12 +19,27 @@ export enum AuditAction {
 @Index(['entityType'])
 @Index(['createdAt'])
 @Index(['ipAddress'])
+@Index(['organizationId', 'createdAt'])
+@Index(['organizationId', 'userId'])
 export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ nullable: true })
+  @Index()
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'organizationId' })
+  organization: Organization;
+
   @Column()
+  @Index()
   userId: string;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @Column()
   userEmail: string;

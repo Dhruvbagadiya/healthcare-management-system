@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Subscription } from '../entities/subscription.entity';
 import { FeatureLimit } from '../entities/feature-limit.entity';
-import { UsageTracking } from '../entities/usage-tracking.entity';
+import { OrganizationUsage } from '../entities/organization-usage.entity';
 import { FEATURE_LIMIT_KEY } from '../decorators/feature-limit.decorator';
 
 @Injectable()
@@ -22,8 +22,8 @@ export class FeatureLimitGuard implements CanActivate {
         private subscriptionRepository: Repository<Subscription>,
         @InjectRepository(FeatureLimit)
         private featureLimitRepository: Repository<FeatureLimit>,
-        @InjectRepository(UsageTracking)
-        private usageTrackingRepository: Repository<UsageTracking>,
+        @InjectRepository(OrganizationUsage)
+        private readonly organizationUsageRepository: Repository<OrganizationUsage>,
     ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -74,11 +74,11 @@ export class FeatureLimitGuard implements CanActivate {
         }
 
         // 4. Usage check against Limit
-        const usage = await this.usageTrackingRepository.findOne({
+        const usage = await this.organizationUsageRepository.findOne({
             where: { organizationId, featureKey },
         });
 
-        const currentUsage = usage?.currentUsage || 0;
+        const currentUsage = usage?.usedCount || 0;
 
         if (currentUsage >= featureLimit.limitValue) {
             throw new HttpException(

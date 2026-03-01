@@ -42,11 +42,8 @@ export class PlanValidationGuard implements CanActivate {
             throw new HttpException('No active subscription found for this organization', HttpStatus.PAYMENT_REQUIRED);
         }
 
-        // Allow ACTIVE or TRIAL plans to proceed
-        if (
-            subscription.status === SubscriptionStatus.ACTIVE ||
-            subscription.status === SubscriptionStatus.TRIAL
-        ) {
+        // Strictly allow only ACTIVE plans to proceed
+        if (subscription.status === SubscriptionStatus.ACTIVE) {
             // Check Feature Limits if decorator is present
             const featureKey = this.reflector.getAllAndOverride<string>(FEATURE_LIMIT_KEY, [
                 context.getHandler(),

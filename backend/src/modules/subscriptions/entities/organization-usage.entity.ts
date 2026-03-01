@@ -8,23 +8,23 @@ import {
 
 @Entity('organization_usage')
 @Index(['organizationId', 'featureKey'], { unique: true })
-export class UsageTracking {
+export class OrganizationUsage {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'uuid' })
+    @Column({ name: 'organization_id', type: 'uuid' })
     @Index()
     organizationId: string;
 
-    @Column()
+    @Column({ name: 'feature_key' })
     featureKey: string;
 
-    @Column({ type: 'int', default: 0 })
-    currentUsage: number;
+    @Column({ name: 'used_count', type: 'int', default: 0 })
+    usedCount: number;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'last_reset_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     lastResetAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 }

@@ -3,8 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Plan } from './entities/plan.entity';
 import { Subscription } from './entities/subscription.entity';
 import { FeatureLimit } from './entities/feature-limit.entity';
-import { UsageTracking } from './entities/usage-tracking.entity';
+import { OrganizationUsage } from './entities/organization-usage.entity';
 import { Organization } from '../organizations/entities/organization.entity';
+import { User } from '../users/entities/user.entity';
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionCronService } from './subscription-cron.service';
@@ -18,8 +19,9 @@ import { FeatureLimitGuard } from './guards/feature-limit.guard';
             Plan,
             Subscription,
             FeatureLimit,
-            UsageTracking,
+            OrganizationUsage,
             Organization,
+            User,
         ]),
     ],
     controllers: [SubscriptionsController],

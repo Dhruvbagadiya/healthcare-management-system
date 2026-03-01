@@ -40,6 +40,8 @@ export enum UserStatus {
 @Index(['email'])
 @Index(['userId'])
 @Index(['status'])
+@Index(['organizationId', 'status'])
+@Index(['organizationId', 'createdAt'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;

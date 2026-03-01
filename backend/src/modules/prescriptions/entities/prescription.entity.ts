@@ -27,6 +27,8 @@ export enum PrescriptionStatus {
 @Index(['doctorId'])
 @Index(['status'])
 @Index(['issuedDate'])
+@Index(['organizationId', 'status'])
+@Index(['organizationId', 'createdAt'])
 export class Prescription {
   @PrimaryGeneratedColumn('uuid')
   id: string;

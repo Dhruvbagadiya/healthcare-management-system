@@ -25,6 +25,8 @@ export enum AdmissionStatus {
 @Index(['admissionId'])
 @Index(['status'])
 @Index(['admissionDate'])
+@Index(['organizationId', 'status'])
+@Index(['organizationId', 'createdAt'])
 export class Admission {
     @PrimaryGeneratedColumn('uuid')
     id: string;

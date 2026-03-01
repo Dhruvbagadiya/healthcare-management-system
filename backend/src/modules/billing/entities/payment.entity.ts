@@ -18,6 +18,8 @@ import {
 import { Subscription } from '../../subscriptions/entities/subscription.entity';
 
 @Entity('payments')
+@Index(['organizationId', 'status'])
+@Index(['organizationId', 'createdAt'])
 export class Payment {
     @PrimaryGeneratedColumn('uuid')
     id: string;

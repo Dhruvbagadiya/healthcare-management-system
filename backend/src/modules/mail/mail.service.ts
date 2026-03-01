@@ -100,4 +100,24 @@ export class MailService {
             );
         }
     }
+
+    async sendPaymentFailedNotification(adminUser: any, organization: any) {
+        const billingUrl = `${this.configService.get('FRONTEND_URL')}/dashboard/billing`;
+
+        try {
+            await this.mailerService.sendMail({
+                to: adminUser.email,
+                subject: 'Action Required: Payment Failed for Your Subscription',
+                template: './payment-failed',
+                context: {
+                    name: `${adminUser.firstName} ${adminUser.lastName}`,
+                    organizationName: organization.name,
+                    billingUrl,
+                },
+            });
+            this.logger.log(`Payment failure notification sent to ${adminUser.email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send payment failure notification to ${adminUser.email}: ${error.message}`);
+        }
+    }
 }

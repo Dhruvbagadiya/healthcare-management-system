@@ -11,10 +11,11 @@ export class AuditService {
   constructor(
     @InjectRepository(AuditLog)
     private auditRepository: Repository<AuditLog>,
-  ) {}
+  ) { }
 
   async logAction(
     userId: string,
+    organizationId: string,
     userEmail: string,
     action: AuditAction,
     entityType: string,
@@ -26,6 +27,7 @@ export class AuditService {
     try {
       const auditLog = new AuditLog({
         userId,
+        organizationId,
         userEmail,
         action,
         entityType,

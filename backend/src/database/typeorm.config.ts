@@ -34,7 +34,7 @@ const sanitize = (val: any): any => {
 import { Plan } from '../modules/subscriptions/entities/plan.entity';
 import { Subscription } from '../modules/subscriptions/entities/subscription.entity';
 import { FeatureLimit } from '../modules/subscriptions/entities/feature-limit.entity';
-import { UsageTracking } from '../modules/subscriptions/entities/usage-tracking.entity';
+import { OrganizationUsage } from '../modules/subscriptions/entities/organization-usage.entity';
 import { Payment } from '../modules/billing/entities/payment.entity';
 import { EmailVerificationToken } from '../modules/auth/entities/email-verification-token.entity';
 
@@ -44,7 +44,7 @@ const ENTITIES = [
   Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
   Expense, Revenue, ComplianceRecord, DataAccessLog,
   Organization, Role, Permission,
-  Plan, Subscription, FeatureLimit, UsageTracking, Payment,
+  Plan, Subscription, FeatureLimit, OrganizationUsage, Payment,
   EmailVerificationToken,
 ];
 

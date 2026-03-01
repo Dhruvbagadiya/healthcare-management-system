@@ -5,10 +5,14 @@ import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { Plan } from './entities/plan.entity';
 import { Subscription } from './entities/subscription.entity';
-import { UsageTracking } from './entities/usage-tracking.entity';
+import { OrganizationUsage } from './entities/organization-usage.entity';
 import { FeatureLimit } from './entities/feature-limit.entity';
 import { UpgradePlanDto, CancelSubscriptionDto } from './dto/subscription.dto';
 import { BillingCycle, SubscriptionStatus } from './enums/subscription.enum';
+
+import { MailService } from '../mail/mail.service';
+import { Organization } from '../organizations/entities/organization.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class SubscriptionsService {
@@ -19,11 +23,16 @@ export class SubscriptionsService {
         private readonly plansRepository: Repository<Plan>,
         @InjectRepository(Subscription)
         private readonly subscriptionsRepository: Repository<Subscription>,
-        @InjectRepository(UsageTracking)
-        private readonly usageTrackingRepository: Repository<UsageTracking>,
+        @InjectRepository(OrganizationUsage)
+        private readonly organizationUsageRepository: Repository<OrganizationUsage>,
         @InjectRepository(FeatureLimit)
         private readonly featureLimitsRepository: Repository<FeatureLimit>,
+        @InjectRepository(Organization)
+        private readonly organizationRepository: Repository<Organization>,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
         private readonly configService: ConfigService,
+        private readonly mailService: MailService,
     ) {
         const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || 'sk_test_mock';
         this.stripe = new Stripe(stripeSecret, {
@@ -53,7 +62,7 @@ export class SubscriptionsService {
         });
 
         // Fetch actual usage
-        const usage = await this.usageTrackingRepository.find({
+        const usage = await this.organizationUsageRepository.find({
             where: { organizationId },
         });
 
@@ -63,7 +72,7 @@ export class SubscriptionsService {
             return {
                 featureKey: limit.featureKey,
                 limit: limit.limitValue,
-                used: current ? current.currentUsage : 0,
+                used: current ? current.usedCount : 0,
                 isEnabled: limit.isEnabled,
             };
         });
@@ -156,7 +165,35 @@ export class SubscriptionsService {
                 break;
             }
             case 'invoice.payment_failed': {
-                // Future Implementation: Set Subscription PAST_DUE and email user
+                const invoice = event.data.object as any;
+                const gatewaySubscriptionId = invoice.subscription as string;
+
+                if (gatewaySubscriptionId) {
+                    const sub = await this.subscriptionsRepository.findOne({
+                        where: { gatewaySubscriptionId },
+                    });
+
+                    if (sub) {
+                        sub.status = SubscriptionStatus.PAST_DUE;
+                        await this.subscriptionsRepository.save(sub);
+
+                        // Find organization and admin to notify
+                        const org = await this.organizationRepository.findOne({
+                            where: { id: sub.organizationId },
+                        });
+
+                        // Find first user with organizationId who has 'admin' role
+                        const admin = await this.userRepository.createQueryBuilder('user')
+                            .leftJoinAndSelect('user.roles', 'role')
+                            .where('user.organization_id = :orgId OR user.organizationId = :orgId', { orgId: sub.organizationId })
+                            .andWhere('role.name = :roleName', { roleName: 'admin' })
+                            .getOne();
+
+                        if (org && admin) {
+                            await this.mailService.sendPaymentFailedNotification(admin, org);
+                        }
+                    }
+                }
                 break;
             }
             case 'customer.subscription.deleted': {

@@ -48,3 +48,55 @@ The system correctly rejects the creation of a third patient when the plan limit
 ## How to Verify
 1.  **Run Build**: Ensure `npm run build` passes in both `backend` and `frontend`.
 2.  **Try Exceeding Limits**: Create an organization, assign a plan with a low limit (e.g., 2 patients), and attempt to create more than that number of patients via the API.
+
+## Changes Made - Phase 2: Stripe Webhook & Strict Access
+
+### Webhook Handling
+- **Payment Failure Handling**: Implemented logic in `SubscriptionsService.handleStripeWebhook` to handle `invoice.payment_failed`.
+    - Automatically sets subscription status to `PAST_DUE`.
+    - Correctly finds the organization and admin user to notify.
+- **Signature Validation**: Verified that `stripe.webhooks.constructEvent` is used with the `STRIPE_WEBHOOK_SECRET`.
+- **Email Notifications**: Added `sendPaymentFailedNotification` to `MailService` and created a new responsive HTML template `payment-failed.hbs`.
+- **Dependency Injection**: Updated `SubscriptionsModule` to include `User` and `Organization` entities and injected `MailService`.
+
+### Strict Access Control
+- **`PlanValidationGuard`**: Updated to strictly require `SubscriptionStatus.ACTIVE`. Any other status (including `PAST_DUE`, `TRIAL`, `CANCELLED`) will now block access to protected routes with a `402 Payment Required` or `403 Forbidden` response.
+
+## Updated Verification Results
+
+### Webhook Logic Simulation
+Verified that receiving a payment failure event updates the database:
+1. Subscription for test organization set to `ACTIVE`.
+2. Mock `invoice.payment_failed` logic triggered.
+3. Subscription status changed to `PAST_DUE` in DB.
+4. Log entry: `Payment failure notification sent to admin@test.com`.
+
+### Guard Verification
+1. Attempted access with `ACTIVE` status: `200 OK`.
+2. Attempted access with `PAST_DUE` status: `402 Payment Required` with message "Subscription is past due. Please update your payment method."
+3. Attempted access with `TRIAL` status: `403 Forbidden` (as per strict "ACTIVE" only requirement).
+
+## Changes Made - Phase 3: Entity Audit & Optimization
+
+### Entity Enhancements
+- **`AuditLog`**: Added `organizationId` column and formal `ManyToOne` relationships to both `Organization` and `User` entities with `ON DELETE SET NULL` constraints.
+- **`Subscription`**: Formalized the relationship to `Organization` using a `ManyToOne` decorator with `ON DELETE CASCADE`.
+
+### Performance Optimization (Composite Indexes)
+Added the following composite indexes to optimize common multi-tenant queries:
+- **`AuditLog`**:
+    - `(organizationId, createdAt)` - For historical audit trail reports.
+    - `(organizationId, userId)` - For per-user activity monitoring.
+- **`Subscription`**:
+    - `(organizationId, status)` - For subscription lifecycle validation in guards.
+- **`Doctor`**:
+    - `(organizationId, createdAt)` - For chronological staff listings.
+- **`Patient` & `Appointment`**: Verified existing composite indexes cover `(organizationId, createdAt)` and `(organizationId, status)` respectively.
+
+### Database Migration
+- Generated and executed migration `AuditEntitiesAndIndexes`.
+- **Safety**: Verified the `audit_logs` table was empty before performing schema changes that involved type modifications (`userId` from `varchar` to `uuid`), ensuring no data loss occurred.
+
+## How to Verify
+1. **Schema Check**: Run `psql $DATABASE_URL -c "\d audit_logs"` and verify foreign keys and indexes.
+2. **Access Patterns**: Verify that queries filtered by `organizationId` and `status`/`createdAt` use the new indexes via `EXPLAIN ANALYZE`.
