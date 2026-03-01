@@ -3,7 +3,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './guards/throttler.guard';
 import { DataSource } from 'typeorm';
 import { typeormConfig } from './database/typeorm.config';
 import { CommonModule } from './common/common.module';
@@ -76,11 +77,17 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     OnboardingModule,
     NotificationsModule,
     MailModule,
-    // Rate Limiting
+    // Rate Limiting — named throttlers allow per-route overrides via @Throttle({ name: ... })
     ThrottlerModule.forRoot([
       {
-        ttl: 60000,
+        name: 'global',   // Default: 100 requests per minute per IP
+        ttl: 60_000,
         limit: 100,
+      },
+      {
+        name: 'auth-strict', // Used by auth endpoints via @Throttle({ 'auth-strict': { ... } })
+        ttl: 60_000,
+        limit: 5,
       },
     ]),
   ],
@@ -99,7 +106,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,  // Swagger-bypass + proxy-aware IP
     },
     {
       provide: APP_GUARD,

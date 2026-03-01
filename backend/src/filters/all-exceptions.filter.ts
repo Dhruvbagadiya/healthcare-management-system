@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { ThrottlerException } from '@nestjs/throttler';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -20,6 +21,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: any = null;
+
+    if (exception instanceof ThrottlerException) {
+      // Return a rich 429 JSON with Retry-After guidance
+      const retryAfterSeconds = 60;
+      response
+        .status(HttpStatus.TOO_MANY_REQUESTS)
+        .header('Retry-After', String(retryAfterSeconds))
+        .json({
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          error: 'Too Many Requests',
+          message: 'You have exceeded the request rate limit. Please wait 60 seconds and try again.',
+          retryAfter: retryAfterSeconds,
+          timestamp: new Date().toISOString(),
+          path: request.url,
+        });
+      return;
+    }
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();

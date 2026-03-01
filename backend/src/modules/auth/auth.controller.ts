@@ -19,7 +19,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle({ 'auth-strict': { limit: 3, ttl: 60_000 } })
   @ApiOperation({ summary: 'Register a new user (requires valid organizationId)' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -27,7 +27,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Authenticate and receive JWT tokens' })
   async login(
     @Body() loginDto: LoginDto,
