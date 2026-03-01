@@ -1,12 +1,14 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Patient } from './entities/patient.entity';
-import { MedicalRecord } from './entities/medical-record.entity';
 import { User, UserStatus } from '../users/entities/user.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { UpdatePatientDto } from './dto/update-patient.dto';
+import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { PatientRepository } from './repositories/patient.repository';
+import { MedicalRecordRepository } from './repositories/medical-record.repository';
 import * as bcrypt from 'bcrypt';
 import { TenantService } from '../../common/services/tenant.service';
 
@@ -14,10 +16,9 @@ import { TenantService } from '../../common/services/tenant.service';
 export class PatientsService {
   constructor(
     private readonly patientRepository: PatientRepository,
+    private readonly medicalRecordRepo: MedicalRecordRepository,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(MedicalRecord)
-    private readonly medicalRecordRepo: Repository<MedicalRecord>,
     private readonly tenantService: TenantService,
   ) { }
 
@@ -73,24 +74,63 @@ export class PatientsService {
     return this.patientRepository.save(patient);
   }
 
-  async addMedicalRecord(patientId: string, recordData: any) {
+  async update(id: string, updatePatientDto: UpdatePatientDto) {
+    const patient = await this.findOne(id);
+    Object.assign(patient, updatePatientDto);
+    return this.patientRepository.save(patient);
+  }
+
+  async remove(id: string) {
+    const patient = await this.findOne(id);
+    await this.patientRepository.softDelete(patient.id);
+    return { message: 'Patient successfully deleted' };
+  }
+
+  async addMedicalRecord(patientId: string, recordData: CreateMedicalRecordDto) {
     const organizationId = this.tenantService.getTenantId();
     const patient = await this.findOne(patientId);
 
     const record = this.medicalRecordRepo.create({
       ...recordData,
       patient,
+      patientId: patient.id,
       organizationId,
     });
 
     return this.medicalRecordRepo.save(record);
   }
 
-  async getMedicalRecords(patientId: string) {
+  async getMedicalRecords(patientId: string, query: PaginationQueryDto) {
+    // Add patientId filter to the query
+    const patientQuery = {
+      ...query,
+    };
+
+    // We can use a custom findPaginated setup if needed, but since BaseRepository 
+    // findPaginated doesn't easily support dynamic where clauses beyond organizationId,
+    // let's do a custom paginated query using queryBuilder on medicalRecordRepo.
+
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const skip = (page - 1) * limit;
     const organizationId = this.tenantService.getTenantId();
-    return this.medicalRecordRepo.find({
-      where: { patient: { id: patientId } as any, organizationId },
-      order: { createdAt: 'DESC' },
-    });
+
+    const qb = this.medicalRecordRepo.createQueryBuilder('record')
+      .where('record.organizationId = :organizationId', { organizationId })
+      .andWhere('record.patientId = :patientId', { patientId })
+      .orderBy(`record.${sortBy}`, sortOrder)
+      .skip(skip)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

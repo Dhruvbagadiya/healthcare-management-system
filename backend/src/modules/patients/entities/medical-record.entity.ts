@@ -12,6 +12,7 @@ import { Patient } from './patient.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('medical_records')
+@Index(['organizationId', 'patientId'])
 @Index(['organizationId'])
 @Index(['patientId'])
 @Index(['recordType'])
