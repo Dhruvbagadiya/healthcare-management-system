@@ -27,7 +27,7 @@ export class PermissionsGuard implements CanActivate {
         }
 
         const userPermissions = await this.rbacService.getPermissionsForRoles(
-            user.roles,
+            user.roles.map((r: string) => r.toLowerCase()),
             user.organizationId,
         );
 
