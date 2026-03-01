@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { LogOut, Bell } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { MobileMenuToggle } from '@/components/layout/mobile-menu-toggle';
 import { useAuth } from '@/hooks/auth';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export function Header() {
   const { logout } = useAuth();
@@ -16,12 +17,7 @@ export function Header() {
         </Link>
       </div>
       <div className="flex items-center gap-2">
-        <Link
-          href="/notifications"
-          className="group flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all hover:bg-blue-50 hover:text-blue-600"
-        >
-          <Bell className="h-5 w-5" />
-        </Link>
+        <NotificationBell />
         <button
           onClick={logout}
           className="group flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all hover:bg-rose-50 hover:text-rose-600"
@@ -32,3 +28,4 @@ export function Header() {
     </header>
   );
 }
+

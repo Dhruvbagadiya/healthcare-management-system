@@ -26,6 +26,9 @@ import { ComplianceModule } from './modules/compliance/compliance.module';
 import { AdmissionsModule } from './modules/admissions/admissions.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+// Phase 6: Product Polish & Growth Engine
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
@@ -63,6 +66,9 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     AdmissionsModule,
     RbacModule,
     SubscriptionsModule,
+    // Phase 6
+    OnboardingModule,
+    NotificationsModule,
   ],
   providers: [
     {
