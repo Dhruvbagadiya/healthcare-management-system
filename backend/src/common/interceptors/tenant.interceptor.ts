@@ -6,13 +6,14 @@ import {
     BadRequestException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { ModuleRef, ContextIdFactory } from '@nestjs/core';
 import { TenantService } from '../services/tenant.service';
 
 @Injectable()
 export class TenantInterceptor implements NestInterceptor {
-    constructor(private readonly tenantService: TenantService) { }
+    constructor(private readonly moduleRef: ModuleRef) { }
 
-    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const request = context.switchToHttp().getRequest();
 
         // 1. Extract from JWT (if already authenticated)
@@ -24,16 +25,18 @@ export class TenantInterceptor implements NestInterceptor {
             organizationId = request.headers['x-tenant-id'] || request.headers['x-organization-id'];
         }
 
-        // 3. Optional: Extract from query/body if needed
-        // if (!organizationId) { organizationId = request.query.organizationId; }
-
         if (!organizationId && this.isTenantRequired(request)) {
             throw new BadRequestException('Organization context (x-tenant-id) is required');
         }
 
         if (organizationId) {
-            this.tenantService.setTenantId(organizationId);
+            // Lazy resolve the Request-Scoped TenantService to bypass Global Interceptor DI bugs
+            const contextId = ContextIdFactory.getByRequest(request);
+            const tenantService = await this.moduleRef.resolve(TenantService, contextId, { strict: false });
+
+            tenantService.setTenantId(organizationId);
             request.organizationId = organizationId;
+            request.tenantId = organizationId; // Also set tenantId for convenience based on previous usages
         }
 
         return next.handle();
