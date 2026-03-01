@@ -246,15 +246,21 @@ export default function PrescriptionsPage() {
       </div>
 
       {!isLoading && prescriptions.length === 0 && (
-        <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200 shadow-sm">
-          <p className="text-slate-500 font-medium font-display">No prescriptions found matches your search.</p>
+        <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200 shadow-sm space-y-3">
+          <div className="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+            <FileText size={24} className="text-slate-400" />
+          </div>
+          <p className="font-semibold text-slate-700">No prescriptions found</p>
+          <p className="text-sm text-slate-500">
+            {search ? `No results for "${search}".` : 'Issue your first digital prescription to get started.'}
+          </p>
         </div>
       )}
 
       {/* New Prescription Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">New Digital Prescription</h2>
@@ -268,8 +274,8 @@ export default function PrescriptionsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreatePrescription} className="flex-1 overflow-y-auto p-8 space-y-8">
-              <div className="grid gap-6 md:grid-cols-2">
+            <form onSubmit={handleCreatePrescription} className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Patient</label>
                   <select required className="input h-11" value={formData.patientId} onChange={e => setFormData({ ...formData, patientId: e.target.value })}>
@@ -314,52 +320,36 @@ export default function PrescriptionsPage() {
                   </button>
                 </div>
 
-                <div className="overflow-x-auto -mx-8 px-8">
-                  <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="py-3 pr-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Medicine Name</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-32">Dosage</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-32">Freq.</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-32">Dur.</th>
-                        <th className="py-3 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Instruction</th>
-                        <th className="py-3 pl-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-10"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {formData.medicines.map((med, idx) => (
-                        <tr key={idx}>
-                          <td className="py-3 pr-4">
-                            <input required className="input text-sm h-10" placeholder="e.g. Paracetamol" value={med.medicineName} onChange={e => updateMedicine(idx, 'medicineName', e.target.value)} />
-                          </td>
-                          <td className="py-3 px-4">
-                            <input required className="input text-sm h-10" placeholder="e.g. 500mg" value={med.dosage} onChange={e => updateMedicine(idx, 'dosage', e.target.value)} />
-                          </td>
-                          <td className="py-3 px-4">
-                            <input required className="input text-sm h-10" placeholder="e.g. 1-0-1" value={med.frequency} onChange={e => updateMedicine(idx, 'frequency', e.target.value)} />
-                          </td>
-                          <td className="py-3 px-4">
-                            <input required className="input text-sm h-10" placeholder="e.g. 5 Days" value={med.duration} onChange={e => updateMedicine(idx, 'duration', e.target.value)} />
-                          </td>
-                          <td className="py-3 px-4">
-                            <input className="input text-sm h-10" placeholder="After meal" value={med.instructions} onChange={e => updateMedicine(idx, 'instructions', e.target.value)} />
-                          </td>
-                          <td className="py-3 pl-4">
-                            {formData.medicines.length > 1 && (
-                              <button type="button" onClick={() => removeMedicineRow(idx)} className="p-1.5 text-slate-300 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors">
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-3">
+                  {formData.medicines.map((med, idx) => (
+                    <div key={idx} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                      <div className="sm:col-span-2 lg:col-span-1">
+                        <input required className="input text-sm h-10 w-full" placeholder="Medicine name" value={med.medicineName} onChange={e => updateMedicine(idx, 'medicineName', e.target.value)} />
+                      </div>
+                      <div>
+                        <input required className="input text-sm h-10 w-full" placeholder="Dosage" value={med.dosage} onChange={e => updateMedicine(idx, 'dosage', e.target.value)} />
+                      </div>
+                      <div>
+                        <input required className="input text-sm h-10 w-full" placeholder="1-0-1" value={med.frequency} onChange={e => updateMedicine(idx, 'frequency', e.target.value)} />
+                      </div>
+                      <div>
+                        <input required className="input text-sm h-10 w-full" placeholder="5 Days" value={med.duration} onChange={e => updateMedicine(idx, 'duration', e.target.value)} />
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <input className="input text-sm h-10 flex-1" placeholder="After meal" value={med.instructions} onChange={e => updateMedicine(idx, 'instructions', e.target.value)} />
+                        {formData.medicines.length > 1 && (
+                          <button type="button" onClick={() => removeMedicineRow(idx)} className="p-2 text-slate-300 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors shrink-0">
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </form>
 
-            <div className="px-8 py-6 border-t border-slate-100 bg-slate-50/50 flex gap-4 shrink-0">
+            <div className="px-6 sm:px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex gap-3 shrink-0">
               <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1 h-12 font-bold">Cancel</button>
               <button
                 type="submit"

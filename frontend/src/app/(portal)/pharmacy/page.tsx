@@ -99,7 +99,7 @@ export default function PharmacyPage() {
     }, [page, fetchMedicines]);
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Pharmacy</h1>
@@ -199,11 +199,19 @@ export default function PharmacyPage() {
             </div>
 
             {!isLoading && medicines.length === 0 && (
-                <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm">
-                    <p className="text-slate-500 font-medium font-display">No medicines found matches your search.</p>
-                    <button className="mt-4 text-indigo-600 font-bold hover:underline" onClick={() => setSearch('')}>
-                        Clear Search
-                    </button>
+                <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm space-y-3">
+                    <div className="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+                        <Pill size={24} className="text-slate-400" />
+                    </div>
+                    <p className="font-semibold text-slate-700">No medicines found</p>
+                    <p className="text-sm text-slate-500">
+                        {search ? `No results for "${search}".` : 'Add your first medicine to get started.'}
+                    </p>
+                    {search && (
+                        <button className="mt-1 text-indigo-600 font-bold hover:underline text-sm" onClick={() => setSearch('')}>
+                            Clear Search
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -221,8 +229,8 @@ export default function PharmacyPage() {
 
             {/* Add Medicine Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
                         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900">Add New Medicine</h2>
@@ -232,58 +240,54 @@ export default function PharmacyPage() {
                                 <X size={20} />
                             </button>
                         </div>
-                        <form onSubmit={handleAddMedicine} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                            <div className="grid gap-6 md:grid-cols-2">
+                        <form onSubmit={handleAddMedicine} className="px-6 sm:px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                            <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Medicine Name</label>
-                                    <input required type="text" className="input" placeholder="e.g. Paracetamol" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                    <input required type="text" className="input h-11" placeholder="e.g. Paracetamol" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Medicine Code</label>
-                                    <input required type="text" className="input bg-slate-50" readOnly value={formData.medicineCode} />
+                                    <input required type="text" className="input h-11 bg-slate-50" readOnly value={formData.medicineCode} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Generic Name</label>
-                                    <input type="text" className="input" placeholder="e.g. Acetaminophen" value={formData.genericName} onChange={e => setFormData({ ...formData, genericName: e.target.value })} />
+                                    <input type="text" className="input h-11" placeholder="e.g. Acetaminophen" value={formData.genericName} onChange={e => setFormData({ ...formData, genericName: e.target.value })} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Strength</label>
-                                        <input required type="text" className="input" placeholder="e.g. 500mg" value={formData.strength} onChange={e => setFormData({ ...formData, strength: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Formulation</label>
-                                        <select className="input" value={formData.formulation} onChange={e => setFormData({ ...formData, formulation: e.target.value })}>
-                                            <option>Tablet</option>
-                                            <option>Capsule</option>
-                                            <option>Syrup</option>
-                                            <option>Injection</option>
-                                            <option>Ointment</option>
-                                        </select>
-                                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Strength</label>
+                                    <input required type="text" className="input h-11" placeholder="e.g. 500mg" value={formData.strength} onChange={e => setFormData({ ...formData, strength: e.target.value })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Formulation</label>
+                                    <select className="input h-11" value={formData.formulation} onChange={e => setFormData({ ...formData, formulation: e.target.value })}>
+                                        <option>Tablet</option>
+                                        <option>Capsule</option>
+                                        <option>Syrup</option>
+                                        <option>Injection</option>
+                                        <option>Ointment</option>
+                                    </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Stock Quantity</label>
-                                    <input required type="number" className="input" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) })} />
+                                    <input required type="number" className="input h-11" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) })} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Purchase Price</label>
-                                        <input required type="number" step="0.01" className="input" value={formData.purchasePrice} onChange={e => setFormData({ ...formData, purchasePrice: parseFloat(e.target.value) })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Selling Price</label>
-                                        <input required type="number" step="0.01" className="input" value={formData.sellingPrice} onChange={e => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) })} />
-                                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Purchase Price</label>
+                                    <input required type="number" step="0.01" className="input h-11" value={formData.purchasePrice} onChange={e => setFormData({ ...formData, purchasePrice: parseFloat(e.target.value) })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Selling Price</label>
+                                    <input required type="number" step="0.01" className="input h-11" value={formData.sellingPrice} onChange={e => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) })} />
                                 </div>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 sm:col-span-2">
                                 <label className="text-sm font-bold text-slate-700">Description</label>
-                                <textarea className="input min-h-[100px]" placeholder="Add medicine details, indications..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
+                                <textarea className="input h-11 min-h-[90px] py-3" placeholder="Add medicine details, indications..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
                             </div>
-                            <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn btn-secondary flex-1">Cancel</button>
-                                <button type="submit" className="btn btn-primary flex-1">Save Medicine</button>
+                            <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-1">
+                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn btn-secondary flex-1 h-12">Cancel</button>
+                                <button type="submit" className="btn btn-primary flex-1 h-12">Save Medicine</button>
                             </div>
                         </form>
                     </div>

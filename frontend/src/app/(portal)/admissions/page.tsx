@@ -191,56 +191,56 @@ export default function AdmissionsPage() {
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Admission ID / Bed</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient Details</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Admitted By</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Vitals Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Admission / Bed</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient</th>
+                                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Admitted By</th>
+                                <th className="hidden lg:table-cell px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Vitals</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th className="px-4 sm:px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td className="px-6 py-6"><div className="h-10 w-32 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-10 w-48 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-6 w-32 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-8 w-24 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-6 w-20 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-10 w-10 bg-slate-100 rounded-lg float-right" /></td>
+                                        <td className="px-4 sm:px-6 py-5"><div className="h-10 w-32 bg-slate-100 rounded-lg" /></td>
+                                        <td className="px-4 sm:px-6 py-5"><div className="h-10 w-40 bg-slate-100 rounded-lg" /></td>
+                                        <td className="hidden md:table-cell px-6 py-5"><div className="h-6 w-28 bg-slate-100 rounded-lg" /></td>
+                                        <td className="hidden lg:table-cell px-6 py-5"><div className="h-8 w-20 bg-slate-100 rounded-lg" /></td>
+                                        <td className="px-4 sm:px-6 py-5"><div className="h-6 w-20 bg-slate-100 rounded-lg" /></td>
+                                        <td className="px-4 sm:px-6 py-5"><div className="h-10 w-24 bg-slate-100 rounded-lg float-right" /></td>
                                     </tr>
                                 ))
                             ) : (
                                 admissions.map((adm) => (
                                     <tr key={adm.id} className="group hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-6 whitespace-nowrap">
+                                        <td className="px-4 sm:px-6 py-5 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                                                    <Building2 size={20} />
+                                                <div className="h-9 w-9 shrink-0 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                                                    <Building2 size={18} />
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{adm.admissionId}</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm">{adm.admissionId}</p>
                                                     <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                                                        <span className="font-medium text-slate-700">{adm.ward?.wardName || 'Ward A'}</span>
-                                                        <span className="h-1 w-1 rounded-full bg-slate-300" />
-                                                        <span>Bed {adm.bed?.bedNumber || 'B-01'}</span>
+                                                        <span className="font-medium text-slate-700 truncate">{adm.ward?.wardName || 'Ward A'}</span>
+                                                        <span className="h-1 w-1 rounded-full bg-slate-300 shrink-0" />
+                                                        <span className="shrink-0">Bed {adm.bed?.bedNumber || 'B-01'}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                                        <td className="px-4 sm:px-6 py-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-8 w-8 shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
                                                     {adm.patient?.user?.firstName?.[0]}{adm.patient?.user?.lastName?.[0]}
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold text-slate-900">{adm.patient?.user?.firstName} {adm.patient?.user?.lastName}</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-900 text-sm truncate">{adm.patient?.user?.firstName} {adm.patient?.user?.lastName}</p>
                                                     <p className="text-xs text-slate-500">{adm.patient?.patientId}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-6">
+                                        <td className="hidden md:table-cell px-6 py-5">
                                             <p className="text-sm font-medium text-slate-700 leading-none">Dr. {adm.doctor?.user?.lastName || 'Consultant'}</p>
                                             <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
                                                 <Calendar size={12} />
@@ -264,13 +264,13 @@ export default function AdmissionsPage() {
                                                 </button>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-6">
-                                            <span className={`badge ${adm.status === 'admitted' ? 'badge-primary' : 'badge-success'}`}>
+                                        <td className="px-4 sm:px-6 py-5">
+                                            <span className={`badge ${adm.status === 'admitted' ? 'badge-primary' : 'badge-success'} font-bold text-[10px]`}>
                                                 {adm.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-6 text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="px-4 sm:px-6 py-5 text-right">
+                                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
                                                 <button
                                                     onClick={() => {
                                                         setSelectedAdmission(adm);
@@ -321,11 +321,11 @@ export default function AdmissionsPage() {
 
             {/* New Admission Modal */}
             {isAdmitModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+                        <div className="px-6 sm:px-8 py-5 border-b border-slate-100 flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-900">New IPD Admission</h2>
+                                <h2 className="text-xl font-bold text-slate-900 font-display">New IPD Admission</h2>
                                 <p className="text-sm text-slate-500">Record a patient admission and assign a bed</p>
                             </div>
                             <button onClick={() => setIsAdmitModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full text-slate-400">
@@ -333,8 +333,8 @@ export default function AdmissionsPage() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleAdmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                            <div className="grid gap-6 md:grid-cols-2">
+                        <form onSubmit={handleAdmit} className="px-6 sm:px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                            <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Patient</label>
                                     <select
@@ -395,7 +395,7 @@ export default function AdmissionsPage() {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="md:col-span-2 space-y-2">
+                                <div className="sm:col-span-2 space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Diagnosis / Reason for Admission</label>
                                     <textarea
                                         className="input min-h-[100px] py-3"
@@ -416,8 +416,8 @@ export default function AdmissionsPage() {
 
             {/* Update Vitals Modal */}
             {isVitalsModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-md overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
                         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900">Record Vitals</h2>
@@ -428,8 +428,8 @@ export default function AdmissionsPage() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleUpdateVitals} className="p-8 space-y-5">
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleUpdateVitals} className="px-6 sm:px-8 py-6 space-y-5">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Blood Pressure</label>
                                     <input
@@ -492,7 +492,7 @@ export default function AdmissionsPage() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleDischarge} className="p-8 space-y-6">
+                        <form onSubmit={handleDischarge} className="px-6 sm:px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
                             <div className="grid gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Discharge Date</label>

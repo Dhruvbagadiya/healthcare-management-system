@@ -270,8 +270,14 @@ export default function OperationTheaterPage() {
           </table>
 
           {!isLoading && surgeries.length === 0 && (
-            <div className="py-20 text-center bg-white">
-              <p className="text-slate-500 font-medium font-display text-sm">No surgeries scheduled matches your search.</p>
+            <div className="py-20 text-center bg-white space-y-3">
+              <div className="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+                <Stethoscope size={24} className="text-slate-400" />
+              </div>
+              <p className="font-semibold text-slate-700">No surgeries scheduled</p>
+              <p className="text-sm text-slate-500">
+                {search ? `No results for "${search}".` : 'Schedule your first surgical procedure to get started.'}
+              </p>
             </div>
           )}
         </div>
@@ -292,8 +298,8 @@ export default function OperationTheaterPage() {
 
       {/* Schedule Surgery Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Schedule New Surgery</h2>
@@ -307,8 +313,8 @@ export default function OperationTheaterPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateSurgery} className="flex-1 overflow-y-auto p-8 space-y-8">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <form onSubmit={handleCreateSurgery} className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Surgery ID</label>
                   <input className="input h-11 bg-slate-50 font-mono text-xs" readOnly value={formData.surgeryId} />
@@ -369,7 +375,7 @@ export default function OperationTheaterPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Pre-Op Diagnosis</label>
                   <textarea className="input min-h-[100px] py-3 text-sm" placeholder="Current patient diagnosis..." value={formData.diagnosis} onChange={e => setFormData({ ...formData, diagnosis: e.target.value })}></textarea>
@@ -381,7 +387,7 @@ export default function OperationTheaterPage() {
               </div>
             </form>
 
-            <div className="px-8 py-6 border-t border-slate-100 bg-white flex gap-4 shrink-0">
+            <div className="px-6 sm:px-8 py-5 border-t border-slate-100 bg-white flex gap-3 shrink-0">
               <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1 h-12 font-bold">Cancel</button>
               <button
                 type="submit"

@@ -31,7 +31,7 @@ export default function CompliancePage() {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Compliance & Audit</h1>
         <p className="mt-1 text-sm md:text-base text-slate-500">Monitor HIPAA, data security, and regulatory compliance</p>

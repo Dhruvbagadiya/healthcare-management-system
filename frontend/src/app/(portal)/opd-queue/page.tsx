@@ -76,7 +76,7 @@ export default function OPDQueuePage() {
             </div>
 
             {/* Queue Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                 <div className="card bg-white border-slate-200 shadow-sm p-6 flex items-center gap-4">
                     <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
                         <Clock size={24} />
@@ -131,11 +131,11 @@ export default function OPDQueuePage() {
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-slate-50">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Token</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient Details</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Token</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient Details</th>
+                                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
+                                <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th className="px-4 sm:px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -174,7 +174,7 @@ export default function OPDQueuePage() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-6 text-sm text-slate-600 font-medium">
+                                        <td className="hidden md:table-cell px-6 py-5 text-sm text-slate-600 font-medium">
                                             Dr. {app.doctor?.user?.lastName}
                                         </td>
                                         <td className="px-6 py-6">

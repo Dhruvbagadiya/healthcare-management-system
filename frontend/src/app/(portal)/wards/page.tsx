@@ -255,8 +255,14 @@ export default function WardsPage() {
           </table>
 
           {!isLoading && wards.length === 0 && (
-            <div className="py-20 text-center bg-white">
-              <p className="text-slate-500 font-medium font-display text-sm">No wards found matches your search.</p>
+            <div className="py-20 text-center bg-white space-y-3">
+              <div className="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+                <Building2 size={24} className="text-slate-400" />
+              </div>
+              <p className="font-semibold text-slate-700">No wards found</p>
+              <p className="text-sm text-slate-500">
+                {search ? `No results for "${search}".` : 'Add your first ward to get started.'}
+              </p>
             </div>
           )}
         </div>
@@ -277,8 +283,8 @@ export default function WardsPage() {
 
       {/* Add Ward Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Add New Ward</h2>
@@ -292,8 +298,8 @@ export default function WardsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateWard} className="p-8 space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
+            <form onSubmit={handleCreateWard} className="px-6 sm:px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Ward Name</label>
                   <input required className="input h-11" placeholder="e.g. ICU-North" value={formData.wardName} onChange={e => setFormData({ ...formData, wardName: e.target.value })} />

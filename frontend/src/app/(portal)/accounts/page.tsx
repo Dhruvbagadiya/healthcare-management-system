@@ -23,7 +23,7 @@ export default function AccountsPage() {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Accounts & Finance</h1>
         <p className="mt-1 text-sm md:text-base text-slate-500">Manage expenses, revenue, and financial reports</p>
