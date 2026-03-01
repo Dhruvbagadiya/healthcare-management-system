@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Query, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Request, Res, Req } from '@nestjs/common';
+import { Response, Request as ExpressRequest } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -28,15 +29,34 @@ export class AuthController {
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Authenticate and receive JWT tokens' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const result = await this.authService.login(loginDto);
+
+    // Set Cookies
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Don't return tokens in the body
+    const { accessToken, refreshToken, ...user } = result;
+    return user;
   }
 
   @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
-  async refreshToken(@Body() body: { refreshToken: string }) {
-    return this.authService.refreshToken(body.refreshToken);
+  async refreshToken(
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const refreshToken = req.cookies?.refreshToken;
+    const tokens = await this.authService.refreshToken(refreshToken);
+
+    // Update Cookies
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+    return { message: 'Token refreshed' };
   }
 
   /**
@@ -76,7 +96,31 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Log out and invalidate refresh token' })
   @Post('logout')
-  async logout(@Request() req: any) {
-    return this.authService.logout(req.user.id);
+  async logout(@Request() req: any, @Res({ passthrough: true }) res: Response) {
+    await this.authService.logout(req.user.id);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    return { message: 'Logged out successfully' };
+  }
+
+  private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    const commonOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict' as const,
+      path: '/',
+    };
+
+    res.cookie('accessToken', accessToken, {
+      ...commonOptions,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      ...commonOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
   }
 }
