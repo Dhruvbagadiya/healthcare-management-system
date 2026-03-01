@@ -87,6 +87,14 @@ apiClient.interceptors.response.use(
       }
     }
 
+    if (error.response?.status === 402) {
+      console.warn('Subscription expired (402). Redirecting to subscription-expired page.');
+      if (typeof window !== 'undefined') {
+        window.location.replace('/subscription-expired');
+      }
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   },
 );

@@ -21,7 +21,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!user) return;
-    // Check onboarding progress — redirect PENDING/incomplete orgs
+
+    // 1. Check onboarding progress
     apiClient.get('/onboarding/progress')
       .then(res => {
         if (!res.data.isCompleted) {
@@ -31,8 +32,23 @@ export default function DashboardLayout({
         }
       })
       .catch(() => {
-        // If endpoint fails (e.g. existing active org with no progress row), show portal
         setOnboardingChecked(true);
+      });
+
+    // 2. Check subscription status and sync with middleware cookie
+    apiClient.get('/subscriptions/current')
+      .then(res => {
+        const status = res.data.status;
+        if (status === 'expired' || status === 'past_due' || status === 'cancelled') {
+          document.cookie = `subscription-status=expired; path=/; max-age=${60 * 60 * 24 * 7}`; // 1 week
+          router.replace('/subscription-expired');
+        } else {
+          // Clear cookie if active
+          document.cookie = 'subscription-status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch subscription status', err);
       });
   }, [user, router]);
 
