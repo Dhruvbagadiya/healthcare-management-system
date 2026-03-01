@@ -22,7 +22,7 @@ export class PatientRepository extends BaseRepository<Patient> {
             .leftJoinAndSelect('patient.medicalRecords', 'medicalRecords')
             .leftJoinAndSelect('patient.appointments', 'appointments')
             .leftJoinAndSelect('patient.prescriptions', 'prescriptions')
-            .where('patient.id = :id', { id })
+            .andWhere('patient.id = :id', { id })
             .getOne();
     }
 }

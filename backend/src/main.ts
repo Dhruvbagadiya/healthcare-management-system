@@ -25,11 +25,19 @@ async function bootstrap() {
     next();
   });
 
-  // Explicit CORS handling
+  // Secure CORS handling
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(o => o !== '');
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow any origin, but mirror it to support credentials
-      callback(null, true);
+      // If no origin (like mobile apps or curl), or if origin is in the allowed list
+      if (!origin || allowedOrigins.indexOf(origin) !== -1 || (isDevelopment && !origin)) {
+        callback(null, true);
+      } else {
+        console.error(`🚫 CORS blocked for origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
     },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

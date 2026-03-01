@@ -24,11 +24,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     if (!payload || !payload.sub) {
-      console.error('Invalid JWT payload:', payload);
       throw new UnauthorizedException('Invalid token payload');
     }
 
-    console.log(`Validated token for user: ${payload.email} (sub: ${payload.sub})`);
+    // Hard requirement: every authenticated request must carry a verified org context.
+    if (!payload.organizationId) {
+      throw new UnauthorizedException(
+        'Token does not contain a valid organization context. Re-login required.',
+      );
+    }
 
     return {
       id: payload.sub,

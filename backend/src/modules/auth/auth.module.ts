@@ -6,12 +6,15 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { EmailVerificationService } from './email-verification.service';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RbacModule } from '../rbac/rbac.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, EmailVerificationToken]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -23,9 +26,10 @@ import { RbacModule } from '../rbac/rbac.module';
       }),
     }),
     RbacModule,
+    MailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtModule, PassportModule],
+  providers: [AuthService, EmailVerificationService, JwtStrategy],
+  exports: [AuthService, EmailVerificationService, JwtModule, PassportModule],
 })
 export class AuthModule { }

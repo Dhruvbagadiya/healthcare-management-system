@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,28 +8,45 @@ import { User, UserStatus, UserRole } from '../users/entities/user.entity';
 import { RbacService } from '../rbac/rbac.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { EmailVerificationService } from './email-verification.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private rbacService: RbacService,
+    @Inject(forwardRef(() => EmailVerificationService))
+    private emailVerificationService: EmailVerificationService,
   ) { }
 
   async register(registerDto: RegisterDto) {
+    // organizationId MUST come from a verified invite/org context, never defaulted.
+    // Public self-registration is currently disabled.
+    // This endpoint is reserved for super-admin seeding and org-specific invite flows.
+    if (!registerDto.organizationId) {
+      throw new UnauthorizedException(
+        'organization_id is required. Self-registration without an organization context is not permitted.',
+      );
+    }
+
     const existingUser = await this.usersRepository.findOne({
-      where: { email: registerDto.email },
+      where: { email: registerDto.email, organizationId: registerDto.organizationId },
     });
 
     if (existingUser) {
-      throw new UnauthorizedException('Email already registered');
+      throw new UnauthorizedException('Email already registered for this organization');
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    const userId = await this.generateUserId(registerDto.role);
+    const userId = await this.generateUserId(registerDto.role, registerDto.organizationId);
+
+    const roles = await this.rbacService.getOrganizationRoles(registerDto.organizationId);
+    const role = roles.find(r => r.name === (registerDto.role || UserRole.PATIENT));
 
     const user = new User({
       userId,
@@ -37,48 +54,48 @@ export class AuthService {
       firstName: registerDto.firstName,
       lastName: registerDto.lastName,
       password: hashedPassword,
+      roles: role ? [role] : [],
+      status: UserStatus.PENDING_VERIFICATION,
+      organizationId: registerDto.organizationId,
     });
 
-    // For now, in registration, we might need a default organization or handle it from DTO
-    // Assuming registerDto might be updated to include organizationId soon
-    const orgId = registerDto.organizationId || 'default-org-id';
-    const roles = await this.rbacService.getOrganizationRoles(orgId);
-    const role = roles.find(r => r.name === (registerDto.role || UserRole.PATIENT));
-
-    user.roles = role ? [role] : [];
-    user.status = UserStatus.PENDING_VERIFICATION;
-    user.organizationId = orgId;
-
     await this.usersRepository.save(user);
+    this.logger.log(`User registered: ${user.email} in org: ${user.organizationId}`);
+
+    // Send verification email asynchronously — do not let email failure block the response.
+    this.emailVerificationService.sendVerificationEmail(user).catch(err =>
+      this.logger.error(`Failed to dispatch verification email: ${err.message}`),
+    );
 
     return {
-      message: 'User registered successfully',
+      message: 'User registered successfully. Please check your email to verify your account.',
       userId: user.id,
     };
   }
 
   async login(loginDto: LoginDto) {
-    console.log(`Login attempt for email: ${loginDto.email}`);
     const user = await this.usersRepository.findOne({
       where: { email: loginDto.email },
       relations: ['roles'],
     });
 
     if (!user) {
-      console.warn(`User not found for email: ${loginDto.email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
-
     if (!isPasswordValid) {
-      console.warn(`Invalid password for email: ${loginDto.email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (user.status !== UserStatus.ACTIVE) {
-      console.warn(`User account is not active: ${loginDto.email}, status: ${user.status}`);
-      throw new UnauthorizedException('Account is not active or pending verification');
+      throw new UnauthorizedException('Account is not active. Please verify your email.');
+    }
+
+    // Enforce organization context before issuing any token.
+    if (!user.organizationId) {
+      this.logger.error(`Login blocked — user ${user.email} has no organizationId`);
+      throw new UnauthorizedException('User account is not associated with any organization.');
     }
 
     const { accessToken, refreshToken } = this.generateTokens(user);
@@ -87,7 +104,7 @@ export class AuthService {
     user.lastLoginAt = new Date();
     await this.usersRepository.save(user);
 
-    console.log(`User logged in successfully: ${loginDto.email}, ID: ${user.id}`);
+    this.logger.log(`Login OK: ${user.email} (org: ${user.organizationId})`);
 
     return {
       accessToken,
@@ -105,40 +122,35 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string) {
-    try {
-      if (!refreshToken) {
-        console.warn('Refresh token is null or undefined');
-        throw new UnauthorizedException('Refresh token is required');
-      }
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
 
-      console.log('Verifying refresh token...');
+    try {
       const payload = this.jwtService.verify(refreshToken, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      console.log(`Payload sub: ${payload.sub}`);
       const user = await this.usersRepository.findOne({
         where: { id: payload.sub },
+        relations: ['roles'],
       });
 
-      if (!user) {
-        console.warn(`User not found for sub: ${payload.sub}`);
+      if (!user || user.refreshToken !== refreshToken) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      if (user.refreshToken !== refreshToken) {
-        console.warn(`Refresh token mismatch for user: ${user.email}`);
-        throw new UnauthorizedException('Invalid refresh token');
+      if (!user.organizationId) {
+        throw new UnauthorizedException('User account has no organization context. Refresh denied.');
       }
 
       const tokens = this.generateTokens(user);
       user.refreshToken = tokens.refreshToken;
       await this.usersRepository.save(user);
 
-      console.log(`Tokens refreshed for user: ${user.email}`);
+      this.logger.log(`Tokens refreshed for user: ${user.email}`);
       return tokens;
     } catch (error) {
-      console.error(`Refresh token error: ${error.message}`);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -163,6 +175,13 @@ export class AuthService {
   }
 
   private generateTokens(user: User) {
+    // Hard requirement: organizationId must be present before issuing any token.
+    if (!user.organizationId) {
+      throw new UnauthorizedException(
+        'Cannot issue token: user has no organization context.',
+      );
+    }
+
     const payload = {
       sub: user.id,
       email: user.email,
@@ -183,8 +202,8 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async generateUserId(role: UserRole): Promise<string> {
-    const rolePrefix = {
+  private async generateUserId(role: UserRole, organizationId: string): Promise<string> {
+    const rolePrefix: Record<string, string> = {
       [UserRole.DOCTOR]: 'DOC',
       [UserRole.NURSE]: 'NUR',
       [UserRole.RECEPTIONIST]: 'REC',
@@ -195,7 +214,8 @@ export class AuthService {
     };
 
     const prefix = rolePrefix[role] || 'USR';
-    const count = await this.usersRepository.count();
+    // Scope count to the organization to prevent cross-org ID leakage.
+    const count = await this.usersRepository.count({ where: { organizationId } });
     return `${prefix}-${String(count + 1).padStart(6, '0')}`;
   }
 }

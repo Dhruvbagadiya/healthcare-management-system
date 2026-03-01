@@ -35,6 +35,7 @@ import { Subscription } from '../modules/subscriptions/entities/subscription.ent
 import { FeatureLimit } from '../modules/subscriptions/entities/feature-limit.entity';
 import { UsageTracking } from '../modules/subscriptions/entities/usage-tracking.entity';
 import { Payment } from '../modules/billing/entities/payment.entity';
+import { EmailVerificationToken } from '../modules/auth/entities/email-verification-token.entity';
 
 const ENTITIES = [
   User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
@@ -42,7 +43,8 @@ const ENTITIES = [
   Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
   Expense, Revenue, ComplianceRecord, DataAccessLog,
   Organization, Role, Permission,
-  Plan, Subscription, FeatureLimit, UsageTracking, Payment
+  Plan, Subscription, FeatureLimit, UsageTracking, Payment,
+  EmailVerificationToken,
 ];
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {

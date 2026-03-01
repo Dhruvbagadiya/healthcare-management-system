@@ -77,4 +77,27 @@ export class MailService {
             this.logger.error(`Failed to send invoice notification to ${patientEmail}: ${error.message}`);
         }
     }
+
+    async sendVerificationEmail(user: any, rawToken: string): Promise<void> {
+        const verifyUrl =
+            `${this.configService.get('FRONTEND_URL')}/auth/verify-email?token=${rawToken}`;
+
+        try {
+            await this.mailerService.sendMail({
+                to: user.email,
+                subject: 'Verify your Aarogentix account',
+                template: './verify-email',
+                context: {
+                    name: `${user.firstName} ${user.lastName}`,
+                    verifyUrl,
+                    expiryHours: 24,
+                },
+            });
+            this.logger.log(`Verification email sent to ${user.email}`);
+        } catch (error) {
+            this.logger.error(
+                `Failed to send verification email to ${user.email}: ${error.message}`,
+            );
+        }
+    }
 }
