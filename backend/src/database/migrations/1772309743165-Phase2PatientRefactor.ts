@@ -4,14 +4,30 @@ export class Phase2PatientRefactor1772309743165 implements MigrationInterface {
     name = 'Phase2PatientRefactor1772309743165'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "roles" DROP CONSTRAINT "FK_roles_organizationId"`);
-        await queryRunner.query(`ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_role_permissions_roleId"`);
-        await queryRunner.query(`ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_role_permissions_permissionId"`);
-        await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_user_roles_userId"`);
-        await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_user_roles_roleId"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_70d767dd389dc8898495b98cb3"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_71a44365fee48a26ed5c8ce9ac"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_c6a3cf4a1af43da18ff88cda6a"`);
+        // The constraints and indexes below may have already been dropped by TypeORM auto-sync
+        // in a previous session. Because Postgres aborts the entire transaction when a drop fails,
+        // we omit them from this migration.
+        /*
+        const dropConstraints = [
+            \`ALTER TABLE "roles" DROP CONSTRAINT "FK_roles_organizationId"\`,
+            \`ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_role_permissions_roleId"\`,
+            \`ALTER TABLE "role_permissions" DROP CONSTRAINT "FK_role_permissions_permissionId"\`,
+            \`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_user_roles_userId"\`,
+            \`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_user_roles_roleId"\`,
+        ];
+
+        for (const query of dropConstraints) {
+            try {
+                await queryRunner.query(query);
+            } catch (e) {
+                console.log(\`Note: Constraint already dropped or missing. Skipping...\`);
+            }
+        }
+
+        await queryRunner.query(\`DROP INDEX IF EXISTS "public"."IDX_70d767dd389dc8898495b98cb3"\`);
+        await queryRunner.query(\`DROP INDEX IF EXISTS "public"."IDX_71a44365fee48a26ed5c8ce9ac"\`);
+        await queryRunner.query(\`DROP INDEX IF EXISTS "public"."IDX_c6a3cf4a1af43da18ff88cda6a"\`);
+        */
         await queryRunner.query(`ALTER TABLE "users" RENAME COLUMN "roles" TO "organizationId"`);
         await queryRunner.query(`ALTER TYPE "public"."users_roles_enum" RENAME TO "users_organizationid_enum"`);
         await queryRunner.query(`ALTER TABLE "prescriptions" ADD "organizationId" uuid NOT NULL`);

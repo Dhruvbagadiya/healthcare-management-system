@@ -30,12 +30,19 @@ const sanitize = (val: any): any => {
   return val.replace(/^["']|["']$/g, '').trim();
 };
 
+import { Plan } from '../modules/subscriptions/entities/plan.entity';
+import { Subscription } from '../modules/subscriptions/entities/subscription.entity';
+import { FeatureLimit } from '../modules/subscriptions/entities/feature-limit.entity';
+import { UsageTracking } from '../modules/subscriptions/entities/usage-tracking.entity';
+import { Payment } from '../modules/billing/entities/payment.entity';
+
 const ENTITIES = [
   User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
   Invoice, LabTest, Medicine, AuditLog, Staff, Inventory,
   Ward, Bed, Admission, OperationTheater, Surgery, RadiologyRequest,
   Expense, Revenue, ComplianceRecord, DataAccessLog,
   Organization, Role, Permission,
+  Plan, Subscription, FeatureLimit, UsageTracking, Payment
 ];
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {

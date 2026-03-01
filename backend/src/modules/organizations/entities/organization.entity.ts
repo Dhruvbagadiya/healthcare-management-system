@@ -35,12 +35,8 @@ export class Organization {
     @Column({ nullable: true })
     logoUrl: string;
 
-    @Column({
-        type: 'enum',
-        enum: SubscriptionPlan,
-        default: SubscriptionPlan.BASIC,
-    })
-    subscriptionPlan: SubscriptionPlan;
+    // Replaced by SubscriptionsModule's true Subscription entity
+    // SubscriptionPlan column removed.
 
     @Column({
         type: 'enum',

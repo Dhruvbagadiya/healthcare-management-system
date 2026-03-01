@@ -17,7 +17,7 @@ const sanitize = (val: any): any => {
 
 async function bootstrap() {
   console.log('🚀 Starting Aarogentix API - Version: 1.0.5 (Explicit Host Binding & Health Check)');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Mandatory Request Logger
   app.use((req: Request, res: Response, next: NextFunction) => {

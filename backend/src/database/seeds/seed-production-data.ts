@@ -21,7 +21,7 @@ import { ComplianceRecord, ComplianceStatus, ComplianceType, DataAccessLog } fro
 import { RadiologyRequest, ImagingType, ImagingStatus } from '../../modules/radiology/entities/radiology.entity';
 import { Ward, Bed, BedStatus } from '../../modules/wards/entities/ward.entity';
 import { Admission, AdmissionStatus } from '../../modules/admissions/entities/admission.entity';
-import { Organization, OrganizationStatus, SubscriptionPlan } from '../../modules/organizations/entities/organization.entity';
+import { Organization, OrganizationStatus } from '../../modules/organizations/entities/organization.entity';
 import { Role } from '../../modules/rbac/entities/role.entity';
 import { Permission } from '../../modules/rbac/entities/permission.entity';
 
@@ -77,7 +77,6 @@ async function seedData() {
       org = await orgRepo.save(orgRepo.create({
         name: 'Aarogentix Hospital',
         slug: 'aarogentix-health',
-        subscriptionPlan: SubscriptionPlan.PREMIUM,
         status: OrganizationStatus.ACTIVE,
       }));
     }

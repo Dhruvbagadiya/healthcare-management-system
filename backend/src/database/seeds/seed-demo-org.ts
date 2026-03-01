@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcrypt';
 import { User, UserStatus } from '../../modules/users/entities/user.entity';
-import { Organization, OrganizationStatus, SubscriptionPlan } from '../../modules/organizations/entities/organization.entity';
+import { Organization, OrganizationStatus } from '../../modules/organizations/entities/organization.entity';
 import { Role } from '../../modules/rbac/entities/role.entity';
 import { Permission } from '../../modules/rbac/entities/permission.entity';
 
@@ -30,7 +30,6 @@ async function seedDemoOrg() {
             demoOrg = await orgRepo.save(orgRepo.create({
                 name: 'Premium Care Hospital',
                 slug: 'premium-care',
-                subscriptionPlan: SubscriptionPlan.ENTERPRISE,
                 status: OrganizationStatus.ACTIVE,
                 logoUrl: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=200&h=200',
             }));
