@@ -98,7 +98,7 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        roles: user.roles?.map((r: any) => r.name ?? r) ?? [],
+        roles: user.roles?.map((r: any) => (r.name ?? r).toLowerCase()) ?? [],
         organizationId: user.organizationId,
       },
     };
@@ -167,7 +167,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       userId: user.userId,
-      roles: (user.roles ?? []).map((r: any) => r.name ?? r),
+      roles: (user.roles ?? []).map((r: any) => (r.name ?? r).toLowerCase()),
       organizationId: user.organizationId,
     };
 
