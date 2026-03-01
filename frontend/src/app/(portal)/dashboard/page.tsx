@@ -152,11 +152,11 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-10">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Dashboard</h1>
-        <p className="mt-1 text-slate-500">Hospital Operations Overview</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Dashboard</h1>
+        <p className="mt-1 text-sm md:text-base text-slate-500">Hospital Operations Overview</p>
       </div>
 
       {/* Primary KPI Metrics Grid */}
@@ -418,7 +418,7 @@ export default function DashboardPage() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-6 flex items-center gap-6 border-t border-slate-800 pt-6">
+            <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-slate-800 pt-6">
               <div className="flex flex-col">
                 <span className="text-xs text-slate-400 font-medium">Monthly Retention</span>
                 <span className="text-lg font-bold text-emerald-400">98.2%</span>
@@ -446,18 +446,18 @@ export default function DashboardPage() {
           <div className="divide-y divide-slate-100">
             {recentActivity.slice(0, 5).map((activity, idx) => (
               <div key={idx} className="flex items-center justify-between py-4 group hover:bg-slate-50 rounded-xl px-2 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
                     {activity.patientName ? activity.patientName.charAt(0) : '•'}
                   </div>
-                  <div>
-                    <p className="font-bold text-slate-900">{activity.patientName || activity.description || 'Activity'}</p>
-                    <p className="text-sm text-slate-500 font-medium">
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 truncate">{activity.patientName || activity.description || 'Activity'}</p>
+                    <p className="text-sm text-slate-500 font-medium truncate">
                       {activity.doctorName || activity.timestamp || 'Recently'}
                     </p>
                   </div>
                 </div>
-                <span className={`badge ${activity.status === 'completed' ? 'badge-success' : activity.status === 'scheduled' ? 'badge-primary' : 'badge-warning'}`}>
+                <span className={`badge shrink-0 ml-2 ${activity.status === 'completed' ? 'badge-success' : activity.status === 'scheduled' ? 'badge-primary' : 'badge-warning'}`}>
                   {activity.status || 'pending'}
                 </span>
               </div>

@@ -196,7 +196,13 @@ export default function DoctorsPage() {
 
       {!isLoading && doctors.length === 0 && (
         <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-slate-200">
-          <p className="text-slate-500 font-medium font-display">No doctors found matches your search.</p>
+          <div className="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+            <UserCheck size={24} className="text-slate-400" />
+          </div>
+          <p className="font-semibold text-slate-700">No doctors found</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {search ? `No results for "${search}".` : 'Add your first doctor to get started.'}
+          </p>
         </div>
       )}
 
@@ -214,8 +220,8 @@ export default function DoctorsPage() {
 
       {/* Add Doctor Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Add New Doctor</h2>
@@ -229,8 +235,8 @@ export default function DoctorsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateDoctor} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-              <div className="grid gap-6 md:grid-cols-2">
+            <form onSubmit={handleCreateDoctor} className="px-6 sm:px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">First Name</label>
                   <input required className="input h-11" placeholder="Dr. First Name" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
@@ -275,15 +281,13 @@ export default function DoctorsPage() {
                   <input required className="input h-11" placeholder="e.g. MC12345" value={formData.licenseNumber} onChange={e => setFormData({ ...formData, licenseNumber: e.target.value })} />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">Experience (Yrs)</label>
-                    <input required type="number" className="input h-11" value={formData.yearsOfExperience} onChange={e => setFormData({ ...formData, yearsOfExperience: parseInt(e.target.value) })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">Fee ($)</label>
-                    <input required type="number" className="input h-11" value={formData.consultationFee} onChange={e => setFormData({ ...formData, consultationFee: parseInt(e.target.value) })} />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Experience (Yrs)</label>
+                  <input required type="number" className="input h-11" value={formData.yearsOfExperience} onChange={e => setFormData({ ...formData, yearsOfExperience: parseInt(e.target.value) })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Consultation Fee ($)</label>
+                  <input required type="number" className="input h-11" value={formData.consultationFee} onChange={e => setFormData({ ...formData, consultationFee: parseInt(e.target.value) })} />
                 </div>
               </div>
 

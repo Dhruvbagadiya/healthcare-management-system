@@ -252,18 +252,18 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
           <button
             onClick={() => setActiveTab('invoices')}
-            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'invoices' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+            className={`flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'invoices' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             Invoices
           </button>
           <button
             onClick={() => setActiveTab('admissions')}
-            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'admissions' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+            className={`flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'admissions' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             Active Admissions
@@ -274,8 +274,8 @@ export default function BillingPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder={activeTab === 'invoices' ? "Search invoices..." : "Search patients..."}
-            className="input pl-10 h-11"
+            placeholder={activeTab === 'invoices' ? 'Search invoices...' : 'Search patients...'}
+            className="input pl-10 h-11 w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -367,8 +367,14 @@ export default function BillingPage() {
             </table>
 
             {!isLoading && invoices.length === 0 && (
-              <div className="py-20 text-center bg-white">
-                <p className="text-slate-500 font-medium font-display">No invoices found matches your search.</p>
+              <div className="py-20 text-center bg-white space-y-3">
+                <div className="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center">
+                  <FileText size={24} className="text-slate-400" />
+                </div>
+                <p className="font-semibold text-slate-700">No invoices found</p>
+                <p className="text-sm text-slate-500">
+                  {search ? `No results for "${search}".` : 'Create your first invoice to get started.'}
+                </p>
               </div>
             )}
           </div>
@@ -452,8 +458,8 @@ export default function BillingPage() {
 
       {/* Create Invoice Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Create Invoice</h2>
@@ -467,7 +473,7 @@ export default function BillingPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateInvoice} className="flex-1 overflow-y-auto p-8 space-y-8">
+            <form onSubmit={handleCreateInvoice} className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-7">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Patient</label>
