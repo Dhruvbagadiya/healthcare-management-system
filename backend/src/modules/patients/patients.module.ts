@@ -8,9 +8,10 @@ import { PatientsController } from './patients.controller';
 import { PatientsService } from './patients.service';
 import { PatientRepository } from './repositories/patient.repository';
 import { MedicalRecordRepository } from './repositories/medical-record.repository';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
-  imports: [CommonModule, TypeOrmModule.forFeature([Patient, MedicalRecord, User])],
+  imports: [CommonModule, TypeOrmModule.forFeature([Patient, MedicalRecord, User]), SubscriptionsModule],
   controllers: [PatientsController],
   providers: [PatientsService, PatientRepository, MedicalRecordRepository],
   exports: [PatientsService],
