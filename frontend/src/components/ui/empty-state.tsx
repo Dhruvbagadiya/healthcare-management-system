@@ -56,8 +56,8 @@ export function EmptyState({
 }
 
 // ── Skeleton Variants ──────────────────────────────────────────────────
-export function SkeletonCard() {
-    return <div className="card animate-pulse bg-slate-100 h-28" />;
+export function SkeletonCard({ className = 'h-28' }: { className?: string }) {
+    return <div className={`card animate-pulse bg-slate-100 ${className}`} />;
 }
 
 export function SkeletonRow() {

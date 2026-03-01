@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { apiClient } from '@/lib/api-client';
 import { useSubscription } from '@/hooks/use-subscription';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
