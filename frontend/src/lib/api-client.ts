@@ -2,13 +2,21 @@ import axios from 'axios';
 import { useAuthStore } from './store';
 
 const getApiUrl = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-  // If URL doesn't have a protocol and isn't a relative path (starting with /),
-  // prepend https:// so it's treated as an absolute URL by the browser.
-  if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
-    return `https://${url}`;
+  const url = process.env.NEXT_PUBLIC_API_URL || '';
+
+  // If explicitly set to an absolute URL (local dev or custom backend), use it directly
+  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    return url;
   }
-  return url;
+
+  // In browser context on production (Vercel), use the proxy path so requests
+  // go through Vercel → Railway server-side. Mobile clients only need to reach Vercel.
+  if (typeof window !== 'undefined') {
+    return '/api-proxy';
+  }
+
+  // SSR fallback — call Railway directly from the server
+  return 'https://healthcare-management-system-production-5c2d.up.railway.app/api';
 };
 
 const API_URL = getApiUrl();
