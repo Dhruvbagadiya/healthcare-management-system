@@ -38,11 +38,15 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  // Security Middleware (Configured for Cross-Origin)
+  // Security Middleware (Configured for Cross-Origin JSON API)
+  // Disable HTML-specific headers that cause mobile browsers to block cross-origin XHR
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,       // CSP is for HTML pages, not JSON APIs
+      crossOriginOpenerPolicy: false,     // COOP blocks cross-origin requests on mobile browsers
+      referrerPolicy: false,              // Not needed for API responses
     }),
   );
   app.use(compression());
