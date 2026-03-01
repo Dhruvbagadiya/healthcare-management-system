@@ -18,12 +18,25 @@ import { MailModule } from '../mail/mail.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
-        signOptions: {
-          expiresIn: parseInt(configService.get<string>('JWT_EXPIRATION') || '86400'),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error(
+            '[FATAL] JWT_SECRET environment variable is not set. '
+            + 'Application cannot start without a secure JWT secret.',
+          );
+        }
+
+        const rawExpiry = configService.get<string>('JWT_EXPIRATION');
+        const expiresIn = rawExpiry ? parseInt(rawExpiry, 10) : undefined;
+        if (!expiresIn || isNaN(expiresIn)) {
+          throw new Error(
+            '[FATAL] JWT_EXPIRATION environment variable is missing or not a valid number.',
+          );
+        }
+
+        return { secret, signOptions: { expiresIn } };
+      },
     }),
     RbacModule,
     MailModule,

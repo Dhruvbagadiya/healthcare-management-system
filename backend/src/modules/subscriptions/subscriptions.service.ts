@@ -34,7 +34,13 @@ export class SubscriptionsService {
         private readonly configService: ConfigService,
         private readonly mailService: MailService,
     ) {
-        const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || 'sk_test_mock';
+        const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY');
+        if (!stripeSecret) {
+            throw new Error(
+                '[FATAL] STRIPE_SECRET_KEY environment variable is not set. '
+                + 'SubscriptionsService cannot be initialised without a valid Stripe secret.',
+            );
+        }
         this.stripe = new Stripe(stripeSecret, {
             apiVersion: '2024-12-18.acacia' as any,
         });
@@ -139,7 +145,13 @@ export class SubscriptionsService {
     }
 
     async handleStripeWebhook(payload: Buffer, signature: string) {
-        const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || 'whsec_mock';
+        const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+        if (!webhookSecret) {
+            throw new Error(
+                '[FATAL] STRIPE_WEBHOOK_SECRET environment variable is not set. '
+                + 'Webhook signature validation cannot proceed without it.',
+            );
+        }
         let event: Stripe.Event;
 
         try {
