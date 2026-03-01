@@ -1,13 +1,15 @@
-import { Controller, Post, Body, Get, Query, Request, Res, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Request, Res, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { Response, Request as ExpressRequest } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
+import { RegisterOrganizationService } from './register-organization.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterOrganizationDto } from './dto/register-organization.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiCreatedResponse } from '@nestjs/swagger';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -15,11 +17,33 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private emailVerificationService: EmailVerificationService,
+    private registerOrganizationService: RegisterOrganizationService,
   ) { }
 
+  /**
+   * PRIMARY CLINIC ONBOARDING ENDPOINT
+   *
+   * Atomically creates: Organization → Admin User → Roles → Trial Subscription
+   * → Usage Counters → Email Verification Token → Onboarding Progress.
+   *
+   * All steps run inside a single SERIALIZABLE transaction.
+   * A verification email is dispatched after the DB commit.
+   */
   @Public()
-  @Post('register')
-  @Throttle({ 'auth-strict': { limit: 3, ttl: 60_000 } })
+  @Post('register-organization')
+  @HttpCode(HttpStatus.CREATED)
+  @Throttle({ 'auth-strict': { limit: 2, ttl: 60_000 } }) // very strict — org creation is expensive
+  @ApiOperation({
+    summary: 'Register a new organization and its admin user in a single atomic transaction',
+  })
+  @ApiCreatedResponse({
+    description: 'Organization and admin user created. Verification email dispatched.',
+  })
+  async registerOrganization(@Body() dto: RegisterOrganizationDto) {
+    return this.registerOrganizationService.registerOrganization(dto);
+  }
+
+
   @ApiOperation({ summary: 'Register a new user (requires valid organizationId)' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);

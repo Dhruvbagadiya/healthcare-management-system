@@ -1,4 +1,5 @@
 export enum SubscriptionPlanTier {
+    TRIAL = 'trial',
     BASIC = 'basic',
     PRO = 'pro',
     ENTERPRISE = 'enterprise',
