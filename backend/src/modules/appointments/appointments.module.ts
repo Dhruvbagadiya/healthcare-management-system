@@ -5,9 +5,10 @@ import { Appointment } from './entities/appointment.entity';
 import { AppointmentsController } from './appointments.controller';
 import { AppointmentsService } from './appointments.service';
 import { AppointmentRepository } from './repositories/appointment.repository';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [CommonModule, TypeOrmModule.forFeature([Appointment])],
+  imports: [CommonModule, TypeOrmModule.forFeature([Appointment]), MailModule],
   controllers: [AppointmentsController],
   providers: [AppointmentsService, AppointmentRepository],
 })

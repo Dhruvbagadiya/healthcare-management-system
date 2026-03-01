@@ -4,12 +4,14 @@ import { AppointmentPaginationDto } from './dto/appointment-pagination.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { TenantService } from '../../common/services/tenant.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AppointmentsService {
   constructor(
     private readonly appointmentRepository: AppointmentRepository,
     private readonly tenantService: TenantService,
+    private readonly mailService: MailService,
   ) { }
 
   async findAll(query: AppointmentPaginationDto): Promise<PaginatedResponse<Appointment>> {
@@ -57,7 +59,16 @@ export class AppointmentsService {
       tokenNumber,
       organizationId,
     });
-    return this.appointmentRepository.save(appointment);
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+    const appointmentId = (savedAppointment as any).id;
+
+    // Fetch details for email
+    const detailedAppointment = await this.appointmentRepository.findById(appointmentId);
+    if (detailedAppointment) {
+      await this.mailService.sendAppointmentConfirmation(detailedAppointment);
+    }
+
+    return savedAppointment;
   }
 
   async update(id: string, updateAppointmentDto: any) {

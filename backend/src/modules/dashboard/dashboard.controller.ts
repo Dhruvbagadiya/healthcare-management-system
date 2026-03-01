@@ -8,7 +8,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 @UseGuards(JwtAuthGuard)
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) { }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get dashboard statistics' })
@@ -20,5 +20,17 @@ export class DashboardController {
   @ApiOperation({ summary: 'Get recent activity' })
   async getRecentActivity() {
     return this.dashboardService.getRecentActivity();
+  }
+
+  @Get('analytics/revenue')
+  @ApiOperation({ summary: 'Get revenue analytics' })
+  async getRevenueAnalytics() {
+    return this.dashboardService.getRevenueTrend();
+  }
+
+  @Get('analytics/volume')
+  @ApiOperation({ summary: 'Get patient volume analytics' })
+  async getPatientVolumeAnalytics() {
+    return this.dashboardService.getPatientVolume();
   }
 }

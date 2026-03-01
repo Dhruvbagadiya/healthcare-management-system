@@ -7,7 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OnboardingProgress, OnboardingStep } from './entities/onboarding-progress.entity';
 import { Organization, OrganizationStatus } from '../organizations/entities/organization.entity';
+import { User } from '../users/entities/user.entity';
 import { DemoDataService } from './demo-data.service';
+import { MailService } from '../mail/mail.service';
 import { UpdateOnboardingStepDto } from './dto/update-onboarding.dto';
 
 const STEP_ORDER: OnboardingStep[] = ['profile', 'team', 'demo', 'modules', 'complete'];
@@ -21,7 +23,10 @@ export class OnboardingService {
         private progressRepo: Repository<OnboardingProgress>,
         @InjectRepository(Organization)
         private orgRepo: Repository<Organization>,
+        @InjectRepository(User)
+        private userRepo: Repository<User>,
         private demoDataService: DemoDataService,
+        private mailService: MailService,
     ) { }
 
     async getProgress(organizationId: string): Promise<OnboardingProgress> {
@@ -78,7 +83,7 @@ export class OnboardingService {
         return result;
     }
 
-    async completeOnboarding(organizationId: string): Promise<{ success: boolean }> {
+    async completeOnboarding(organizationId: string, userId?: string): Promise<{ success: boolean }> {
         const progress = await this.getProgress(organizationId);
         progress.isCompleted = true;
         progress.currentStep = 5;
@@ -97,6 +102,20 @@ export class OnboardingService {
                 onboardingCompletedAt: new Date().toISOString(),
             };
             await this.orgRepo.save(org);
+
+            // Send Welcome Email
+            if (userId) {
+                const user = await this.userRepo.findOne({ where: { id: userId } });
+                if (user) {
+                    await this.mailService.sendWelcomeEmail(user, org);
+                }
+            } else {
+                // Fallback: find first admin user
+                const user = await this.userRepo.findOne({ where: { organizationId } });
+                if (user) {
+                    await this.mailService.sendWelcomeEmail(user, org);
+                }
+            }
         }
 
         this.logger.log(`Organization ${organizationId} completed onboarding and is now ACTIVE`);

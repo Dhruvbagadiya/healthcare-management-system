@@ -11,6 +11,7 @@ import { Patient } from '../patients/entities/patient.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { Ward } from '../wards/entities/ward.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { Inventory } from '../inventory/entities/inventory.entity';
             Ward,
             Inventory,
         ]),
+        MailModule,
     ],
     controllers: [OnboardingController],
     providers: [OnboardingService, DemoDataService],

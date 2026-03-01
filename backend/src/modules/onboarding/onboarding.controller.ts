@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { OnboardingService } from './onboarding.service';
+import { MailService } from '../mail/mail.service';
 import { UpdateOnboardingStepDto } from './dto/update-onboarding.dto';
 
 interface AuthRequest extends Request {
@@ -41,6 +42,6 @@ export class OnboardingController {
     @Post('complete')
     @HttpCode(HttpStatus.OK)
     async complete(@Request() req: AuthRequest) {
-        return this.onboardingService.completeOnboarding(req.user.organizationId);
+        return this.onboardingService.completeOnboarding(req.user.organizationId, req.user.sub);
     }
 }

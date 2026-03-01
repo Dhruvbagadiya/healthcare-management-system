@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { apiClient } from '@/lib/api-client';
 import { useSubscription } from '@/hooks/use-subscription';
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { PatientVolumeChart } from '@/components/dashboard/PatientVolumeChart';
 import {
   Users,
   Calendar,
@@ -258,27 +260,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Revenue Trend Chart */}
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Revenue vs Expenses Trend</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={[
-              { month: 'Jan', revenue: 45000, expenses: 32000 },
-              { month: 'Feb', revenue: 52000, expenses: 38000 },
-              { month: 'Mar', revenue: 48000, expenses: 35000 },
-              { month: 'Apr', revenue: 61000, expenses: 42000 },
-              { month: 'May', revenue: 55000, expenses: 40000 },
-              { month: 'Jun', revenue: 67000, expenses: 45000 },
-            ]}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-              <Tooltip
-                cursor={{ fill: '#F1F5F9' }}
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-              />
-              <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 5 }} />
-              <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444', r: 5 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Real-time Revenue Trend</h3>
+          <RevenueChart />
         </div>
 
         {/* Hospital Operations Metrics */}
@@ -331,29 +314,8 @@ export default function DashboardPage() {
       {/* Activity Charts Section */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <div className="card lg:col-span-2">
-          <h2 className="mb-6 text-lg font-bold text-slate-900">Activity Analytics (Last 6 Months)</h2>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[
-                { month: 'Jan', patients: Math.max(1, stats?.totalPatients ? Math.floor(stats.totalPatients * 0.12) : 8), appt: Math.max(1, Math.floor(Math.random() * 80) + 40) },
-                { month: 'Feb', patients: Math.max(1, stats?.totalPatients ? Math.floor(stats.totalPatients * 0.14) : 10), appt: Math.max(1, Math.floor(Math.random() * 80) + 40) },
-                { month: 'Mar', patients: Math.max(1, stats?.totalPatients ? Math.floor(stats.totalPatients * 0.11) : 7), appt: Math.max(1, Math.floor(Math.random() * 80) + 40) },
-                { month: 'Apr', patients: Math.max(1, stats?.totalPatients ? Math.floor(stats.totalPatients * 0.16) : 11), appt: Math.max(1, Math.floor(Math.random() * 80) + 40) },
-                { month: 'May', patients: Math.max(1, stats?.totalPatients ? Math.floor(stats.totalPatients * 0.13) : 9), appt: Math.max(1, recentActivity?.length || Math.floor(Math.random() * 80) + 40) },
-                { month: 'Jun', patients: Math.max(1, stats?.totalPatients ? Math.floor(stats.totalPatients * 0.10) : 7), appt: Math.max(1, recentActivity?.length || Math.floor(Math.random() * 80) + 40) },
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                <Tooltip
-                  cursor={{ fill: '#F1F5F9' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="patients" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={24} />
-                <Bar dataKey="appt" fill="#8B5CF6" radius={[4, 4, 0, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <h2 className="mb-6 text-lg font-bold text-slate-900">Patient Visit Volume (by Day)</h2>
+          <PatientVolumeChart />
         </div>
 
         <div className="card">

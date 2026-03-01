@@ -29,6 +29,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 // Phase 6: Product Polish & Growth Engine
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MailModule } from './modules/mail/mail.module';
 
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
@@ -69,6 +70,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     // Phase 6
     OnboardingModule,
     NotificationsModule,
+    MailModule,
   ],
   providers: [
     {
