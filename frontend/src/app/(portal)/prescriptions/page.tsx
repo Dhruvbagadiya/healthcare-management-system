@@ -4,17 +4,19 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { FileText, Plus, User, UserCheck, Pill, MoreHorizontal, Search, Filter, X, Trash2, PlusCircle } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Prescription, Patient, Doctor } from '@/types';
 
 export default function PrescriptionsPage() {
-  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [patients, setPatients] = useState<any[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -103,6 +105,7 @@ export default function PrescriptionsPage() {
     e.preventDefault();
     try {
       await apiClient.post('/prescriptions', formData);
+      toast.success('Prescription issued successfully');
       setIsModalOpen(false);
       setFormData({
         patientId: '',
@@ -113,8 +116,8 @@ export default function PrescriptionsPage() {
         medicines: [{ medicineName: '', dosage: '', frequency: '', duration: '', instructions: '' }]
       });
       fetchPrescriptions(search, page);
-    } catch (error) {
-      console.error('Failed to create prescription', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -122,9 +125,10 @@ export default function PrescriptionsPage() {
     if (!confirm('Are you sure you want to delete this prescription?')) return;
     try {
       await apiClient.delete(`/prescriptions/${id}`);
+      toast.success('Prescription deleted');
       fetchPrescriptions(search, page);
-    } catch (error) {
-      console.error('Failed to delete prescription', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 

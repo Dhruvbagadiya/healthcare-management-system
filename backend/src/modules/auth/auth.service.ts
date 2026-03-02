@@ -1,14 +1,17 @@
-import { Injectable, UnauthorizedException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { randomBytes, createHash } from 'crypto';
 import { User, UserStatus, UserRole } from '../users/entities/user.entity';
 import { RbacService } from '../rbac/rbac.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { EmailVerificationService } from './email-verification.service';
+import { MailService } from '../mail/mail.service';
+import { BCRYPT_ROUNDS } from '../../common/constants/security';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,7 @@ export class AuthService {
     private rbacService: RbacService,
     @Inject(forwardRef(() => EmailVerificationService))
     private emailVerificationService: EmailVerificationService,
+    private mailService: MailService,
   ) { }
 
   async register(registerDto: RegisterDto) {
@@ -42,7 +46,7 @@ export class AuthService {
       throw new UnauthorizedException('Email already registered for this organization');
     }
 
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    const hashedPassword = await bcrypt.hash(registerDto.password, BCRYPT_ROUNDS);
     const userId = await this.generateUserId(registerDto.role, registerDto.organizationId);
 
     const roles = await this.rbacService.getOrganizationRoles(registerDto.organizationId);
@@ -175,6 +179,61 @@ export class AuthService {
 
     const { password, refreshTokenHash, ...userWithoutSensitiveData } = user;
     return userWithoutSensitiveData;
+  }
+
+  async forgotPassword(email: string) {
+    // Always return the same message to prevent email enumeration
+    const safeResponse = {
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    };
+
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      return safeResponse;
+    }
+
+    const rawToken = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 1); // 1 hour expiry
+
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpires = expires;
+    await this.usersRepository.save(user);
+
+    // Send reset email asynchronously
+    this.mailService.sendPasswordResetEmail(user, rawToken).catch(err =>
+      this.logger.error(`Failed to send password reset email: ${err.message}`),
+    );
+
+    return safeResponse;
+  }
+
+  async resetPassword(rawToken: string, newPassword: string) {
+    if (!rawToken) {
+      throw new BadRequestException('Reset token is required.');
+    }
+
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+
+    const user = await this.usersRepository.findOne({
+      where: {
+        resetPasswordToken: tokenHash,
+        resetPasswordExpires: MoreThan(new Date()),
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token.');
+    }
+
+    user.password = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await this.usersRepository.save(user);
+
+    this.logger.log(`Password reset successfully for user: ${user.email}`);
+    return { message: 'Password has been reset successfully. You may now log in.' };
   }
 
   private generateTokens(user: User) {

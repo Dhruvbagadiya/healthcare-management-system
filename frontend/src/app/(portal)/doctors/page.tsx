@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { UserCheck, Star, Mail, Phone, MoreVertical, Search, Filter, X, Trash2 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Doctor } from '@/types';
 
 export default function DoctorsPage() {
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -68,6 +70,7 @@ export default function DoctorsPage() {
     e.preventDefault();
     try {
       await apiClient.post('/doctors', formData);
+      toast.success('Doctor registered successfully');
       setIsModalOpen(false);
       setFormData({
         firstName: '',
@@ -82,9 +85,8 @@ export default function DoctorsPage() {
         isActive: true
       });
       fetchDoctors(search, page);
-    } catch (error: any) {
-      console.error('Failed to create doctor', error);
-      alert(error.response?.data?.message || 'Failed to create doctor');
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -92,14 +94,15 @@ export default function DoctorsPage() {
     if (!confirm('Are you sure you want to remove this doctor from the portal?')) return;
     try {
       await apiClient.delete(`/doctors/${id}`);
+      toast.success('Doctor removed');
       fetchDoctors(search, page);
-    } catch (error: any) {
-      console.error('Failed to delete doctor', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Doctors</h1>
@@ -131,7 +134,7 @@ export default function DoctorsPage() {
         </button>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="card h-64 animate-pulse bg-slate-50 border-slate-100" />
@@ -222,7 +225,7 @@ export default function DoctorsPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+            <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Add New Doctor</h2>
                 <p className="text-sm text-slate-500">Register a new medical specialist</p>

@@ -70,6 +70,6 @@ export class PrescriptionsService {
 
   async remove(id: string) {
     const prescription = await this.findOne(id);
-    return this.prescriptionRepo.remove(prescription);
+    return this.prescriptionRepo.softRemove(prescription);
   }
 }

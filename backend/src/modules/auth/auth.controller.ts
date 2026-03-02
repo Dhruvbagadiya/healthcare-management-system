@@ -8,6 +8,8 @@ import { RegisterOrganizationService } from './register-organization.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterOrganizationDto } from './dto/register-organization.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiCreatedResponse } from '@nestjs/swagger';
 
@@ -44,6 +46,9 @@ export class AuthController {
   }
 
 
+  @Public()
+  @Post('register')
+  @Throttle({ 'auth-strict': { limit: 3, ttl: 60_000 } })
   @ApiOperation({ summary: 'Register a new user (requires valid organizationId)' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -59,28 +64,30 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto);
 
-    // Set Cookies
+    // Set cookies for SSR / cookie-based clients
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    // Don't return tokens in the body
-    const { accessToken, refreshToken, ...user } = result;
-    return user;
+    // Also return tokens in the body for SPA clients using localStorage + Authorization header
+    return result;
   }
 
   @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   async refreshToken(
+    @Body() body: { refreshToken?: string },
     @Req() req: ExpressRequest,
     @Res({ passthrough: true }) res: Response
   ) {
-    const refreshToken = req.cookies?.refreshToken;
+    // Accept refresh token from request body (SPA) or cookies (SSR)
+    const refreshToken = body?.refreshToken || req.cookies?.refreshToken;
     const tokens = await this.authService.refreshToken(refreshToken);
 
-    // Update Cookies
+    // Update cookies for SSR / cookie-based clients
     this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
-    return { message: 'Token refreshed' };
+    // Return tokens in body for SPA clients
+    return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
   }
 
   /**
@@ -125,6 +132,24 @@ export class AuthController {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     return { message: 'Logged out successfully' };
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ 'auth-strict': { limit: 3, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Request a password reset link via email' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ 'auth-strict': { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Reset password using token from email' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 
   private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {

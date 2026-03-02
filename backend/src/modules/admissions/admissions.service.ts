@@ -5,6 +5,7 @@ import { Admission, AdmissionStatus } from './entities/admission.entity';
 import { Ward, Bed, BedStatus } from '../wards/entities/ward.entity';
 import { CreateAdmissionDto, UpdateVitalsDto, AddNursingNoteDto, DischargeAdmissionDto } from './dto/create-admission.dto';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
+import { TenantService } from '../../common/services/tenant.service';
 
 @Injectable()
 export class AdmissionsService {
@@ -15,19 +16,21 @@ export class AdmissionsService {
         private readonly wardRepo: Repository<Ward>,
         @InjectRepository(Bed)
         private readonly bedRepo: Repository<Bed>,
+        private readonly tenantService: TenantService,
     ) { }
 
     async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Admission>> {
         const { page = 1, limit = 20, search } = query;
         const skip = (page - 1) * limit;
+        const organizationId = this.tenantService.getTenantId();
 
         const where = search
             ? [
-                { admissionId: Like(`%${search}%`) },
-                { patient: { firstName: Like(`%${search}%`) } },
-                { patient: { lastName: Like(`%${search}%`) } },
+                { admissionId: Like(`%${search}%`), organizationId },
+                { reason: Like(`%${search}%`), organizationId },
+                { diagnosis: Like(`%${search}%`), organizationId },
             ]
-            : {};
+            : { organizationId };
 
         const [data, total] = await this.admissionRepo.findAndCount({
             where,
@@ -49,8 +52,9 @@ export class AdmissionsService {
     }
 
     async findOne(id: string) {
+        const organizationId = this.tenantService.getTenantId();
         const admission = await this.admissionRepo.findOne({
-            where: { id },
+            where: { id, organizationId },
             relations: ['patient', 'doctor', 'ward', 'bed'],
         });
 
@@ -63,6 +67,22 @@ export class AdmissionsService {
 
     async create(createAdmissionDto: CreateAdmissionDto) {
         const { bedId, wardId } = createAdmissionDto;
+        const organizationId = this.tenantService.getTenantId();
+
+        // Validate admission date is not in the future
+        const admissionDate = new Date(createAdmissionDto.admissionDate);
+        if (admissionDate > new Date()) {
+            throw new BadRequestException('Admission date cannot be in the future');
+        }
+
+        // Check ward capacity
+        const ward = await this.wardRepo.findOne({ where: { id: wardId } });
+        if (!ward) throw new NotFoundException('Ward not found');
+        if (ward.occupiedBeds >= ward.totalBeds) {
+            throw new BadRequestException(
+                `Ward "${ward.wardName}" is at full capacity (${ward.occupiedBeds}/${ward.totalBeds} beds occupied)`,
+            );
+        }
 
         // Check bed availability
         const bed = await this.bedRepo.findOne({ where: { id: bedId } });
@@ -74,7 +94,8 @@ export class AdmissionsService {
         // Create admission
         const admission = this.admissionRepo.create({
             ...createAdmissionDto,
-            admissionDate: new Date(createAdmissionDto.admissionDate),
+            admissionDate,
+            organizationId,
         });
 
         const savedAdmission = await this.admissionRepo.save(admission);
@@ -86,11 +107,8 @@ export class AdmissionsService {
         await this.bedRepo.save(bed);
 
         // Update ward occupancy
-        const ward = await this.wardRepo.findOne({ where: { id: wardId } });
-        if (ward) {
-            ward.occupiedBeds += 1;
-            await this.wardRepo.save(ward);
-        }
+        ward.occupiedBeds += 1;
+        await this.wardRepo.save(ward);
 
         return savedAdmission;
     }

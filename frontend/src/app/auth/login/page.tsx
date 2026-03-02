@@ -67,7 +67,7 @@ export default function LoginPage() {
         <div className="mb-6 flex items-center justify-center">
           <img src="/logo.svg" alt="Aarogentix logo" className="h-20 w-auto" />
         </div>
-        <h1 className="mb-2 text-3xl font-bold text-primary-600">Welcome Back</h1>
+        <h1 className="mb-2 text-2xl font-bold text-primary-600 sm:text-3xl">Welcome Back</h1>
         <p className="mb-6 text-slate-600">Sign in to your Aarogentix account</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -126,6 +126,11 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-4 border-t border-slate-200 pt-4 text-center">
+          <p className="mb-2">
+            <Link href="/auth/forgot-password" className="text-sm font-medium text-primary-600 hover:underline">
+              Forgot your password?
+            </Link>
+          </p>
           <p className="text-slate-600">
             Don't have an account?{' '}
             <Link href="/auth/register" className="font-medium text-primary-600 hover:underline">

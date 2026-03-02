@@ -5,15 +5,19 @@ import { apiClient } from '@/lib/api-client';
 import { Search, UserPlus, Filter, MoreHorizontal, X, Users } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import toast from 'react-hot-toast';
+import type { Patient } from '@/types';
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [bloodTypeFilter, setBloodTypeFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -32,9 +36,10 @@ export default function PatientsPage() {
   const fetchPatients = useCallback(async (searchQuery = '', pageNumber = 1) => {
     setIsLoading(true);
     try {
-      const res = await apiClient.get('/patients', {
-        params: { search: searchQuery, page: pageNumber, limit }
-      });
+      const params: any = { search: searchQuery, page: pageNumber, limit };
+      if (bloodTypeFilter) params.bloodType = bloodTypeFilter;
+      if (genderFilter) params.gender = genderFilter;
+      const res = await apiClient.get('/patients', { params });
       setPatients(res.data.data);
       setTotalPages(res.data.meta.totalPages);
       setTotalItems(res.data.meta.total);
@@ -43,7 +48,7 @@ export default function PatientsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [bloodTypeFilter, genderFilter]);
 
   const handleAddPatient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,10 +73,8 @@ export default function PatientsPage() {
         insuranceProvider: ''
       });
       fetchPatients(search, page);
-    } catch (error: any) {
-      console.error('Failed to add patient', error);
-      const message = error.response?.data?.message || 'Failed to register patient';
-      toast.error(Array.isArray(message) ? message[0] : message);
+    } catch {
+      // handled by global interceptor
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +86,7 @@ export default function PatientsPage() {
       fetchPatients(search, 1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, fetchPatients]);
+  }, [search, bloodTypeFilter, genderFilter, fetchPatients]);
 
   useEffect(() => {
     if (page > 1) {
@@ -112,21 +115,73 @@ export default function PatientsPage() {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search patients by name or ID..."
-            className="input pl-10 h-11 w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search patients by name or ID..."
+              className="input pl-10 h-11 w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`btn btn-secondary gap-2 h-11 justify-center sm:px-6 ${showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : ''}`}
+          >
+            <Filter size={18} />
+            Filters
+            {(bloodTypeFilter || genderFilter) && (
+              <span className="h-2 w-2 rounded-full bg-indigo-600" />
+            )}
+          </button>
         </div>
-        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
-          <Filter size={18} />
-          Filters
-        </button>
+
+        {showFilters && (
+          <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in slide-in-from-top-2 duration-200">
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Blood Type</label>
+              <select
+                className="input h-10 text-sm"
+                value={bloodTypeFilter}
+                onChange={(e) => setBloodTypeFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gender</label>
+              <select
+                className="input h-10 text-sm"
+                value={genderFilter}
+                onChange={(e) => setGenderFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => { setBloodTypeFilter(''); setGenderFilter(''); }}
+                className="btn btn-secondary h-10 px-4 text-xs font-bold"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table Card */}

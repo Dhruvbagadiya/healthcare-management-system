@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api-client';
 import { useSubscription } from '@/hooks/use-subscription';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { PatientVolumeChart } from '@/components/dashboard/PatientVolumeChart';
+import type { DashboardStats, DashboardModuleMetrics, Appointment } from '@/types';
 import {
   Users,
   Calendar,
@@ -25,9 +26,9 @@ import {
 
 export default function DashboardPage() {
   const { hasFeature } = useSubscription();
-  const [stats, setStats] = useState<any>(null);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [moduleMetrics, setModuleMetrics] = useState<any>({});
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<Appointment[]>([]);
+  const [moduleMetrics, setModuleMetrics] = useState<DashboardModuleMetrics>({ lowStockItems: 0, staffCount: 0, nonCompliantItems: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -95,47 +96,41 @@ export default function DashboardPage() {
       value: stats?.totalPatients || 0,
       icon: Users,
       color: 'blue',
-      trend: '+12%'
     },
     {
       label: 'Appointments Today',
       value: stats?.totalAppointments || 0,
       icon: Calendar,
       color: 'purple',
-      trend: '+8%'
     },
     {
       label: 'Active Doctors',
       value: stats?.totalDoctors || 0,
       icon: Heart,
       color: 'red',
-      trend: '+2%'
     },
     {
       label: 'Monthly Revenue',
       value: `₹${(stats?.revenue || 0).toLocaleString()}`,
       icon: DollarSign,
       color: 'green',
-      trend: '+15%'
     },
     {
       label: 'Occupied Beds',
       value: moduleMetrics.wards?.occupiedBeds || 0,
       icon: Bed,
       color: 'orange',
-      trend: `${Math.round(((moduleMetrics.wards?.occupiedBeds || 0) / (moduleMetrics.wards?.totalBeds || 1) * 100))}%`
     },
     {
       label: 'Net Profit',
       value: `₹${(moduleMetrics.financial?.netProfit || 0).toLocaleString()}`,
       icon: TrendingUp,
       color: 'indigo',
-      trend: moduleMetrics.financial?.netProfit >= 0 ? '+' : '-',
-      feature: 'accounts'
+      feature: 'accounts',
     },
   ].filter(m => !m.feature || hasFeature(m.feature));
 
-  const colorMap: any = {
+  const colorMap: Record<string, { bg: string; icon: string; border: string }> = {
     blue: { bg: 'bg-blue-50', icon: 'text-blue-600', border: 'border-blue-100' },
     purple: { bg: 'bg-purple-50', icon: 'text-purple-600', border: 'border-purple-100' },
     red: { bg: 'bg-red-50', icon: 'text-red-600', border: 'border-red-100' },
@@ -146,9 +141,9 @@ export default function DashboardPage() {
 
   // Dynamically calculate appointment status from actual data
   const appointmentStatus = recentActivity.length > 0 ? [
-    { name: 'Completed', value: recentActivity.filter((a: any) => a.status === 'completed').length || 1, color: '#10b981' },
-    { name: 'Pending', value: recentActivity.filter((a: any) => a.status === 'scheduled' || a.status === 'pending').length || 1, color: '#f59e0b' },
-    { name: 'Cancelled', value: recentActivity.filter((a: any) => a.status === 'cancelled').length || 1, color: '#ef4444' },
+    { name: 'Completed', value: recentActivity.filter((a) => a.status === 'completed').length || 1, color: '#10b981' },
+    { name: 'Pending', value: recentActivity.filter((a) => a.status === 'scheduled').length || 1, color: '#f59e0b' },
+    { name: 'Cancelled', value: recentActivity.filter((a) => a.status === 'cancelled').length || 1, color: '#ef4444' },
   ] : [
     { name: 'No Data', value: 1, color: '#e5e7eb' },
   ];
@@ -166,7 +161,7 @@ export default function DashboardPage() {
         {primaryMetrics.map((metric, idx) => {
           const color = colorMap[metric.color];
           const Icon = metric.icon;
-          const hrefMap: any = {
+          const hrefMap: Record<string, string> = {
             'Total Patients': '/patients',
             'Appointments Today': '/appointments',
             'Active Doctors': '/doctors',
@@ -185,9 +180,6 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{metric.label}</p>
                   <p className="mt-2 text-2xl font-bold text-gray-900">{metric.value}</p>
-                  <p className={`text-xs font-semibold mt-2 ${metric.trend.includes('+') ? 'text-green-600' : metric.trend.includes('%') ? 'text-blue-600' : 'text-red-600'}`}>
-                    {metric.trend}
-                  </p>
                 </div>
                 <Icon className={`${color.icon} h-8 w-8 opacity-70 group-hover:scale-110 transition-transform`} />
               </div>
@@ -251,9 +243,9 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold text-gray-600 uppercase">Total Expenses</p>
               <p className="mt-2 text-2xl font-bold text-red-600">₹{(moduleMetrics.financial?.totalExpenses || 0).toLocaleString()}</p>
             </div>
-            <div className={`p-3 rounded-lg border ${moduleMetrics.financial?.netProfit >= 0 ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
+            <div className={`p-3 rounded-lg border ${(moduleMetrics.financial?.netProfit ?? 0) >= 0 ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
               <p className="text-xs font-semibold text-gray-600 uppercase">Net Profit</p>
-              <p className={`mt-2 text-2xl font-bold ${moduleMetrics.financial?.netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+              <p className={`mt-2 text-2xl font-bold ${(moduleMetrics.financial?.netProfit ?? 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                 ₹{(moduleMetrics.financial?.netProfit || 0).toLocaleString()}
               </p>
             </div>
@@ -413,9 +405,9 @@ export default function DashboardPage() {
                     {activity.patientName ? activity.patientName.charAt(0) : '•'}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{activity.patientName || activity.description || 'Activity'}</p>
+                    <p className="font-bold text-slate-900 truncate">{activity.patientName || activity.reason || 'Activity'}</p>
                     <p className="text-sm text-slate-500 font-medium truncate">
-                      {activity.doctorName || activity.timestamp || 'Recently'}
+                      {activity.doctorName || activity.appointmentDate || 'Recently'}
                     </p>
                   </div>
                 </div>

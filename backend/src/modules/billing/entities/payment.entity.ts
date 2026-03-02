@@ -16,6 +16,7 @@ import {
     Index,
 } from 'typeorm';
 import { Subscription } from '../../subscriptions/entities/subscription.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('payments')
 @Index(['organizationId', 'status'])
@@ -27,6 +28,10 @@ export class Payment {
     @Column({ type: 'uuid' })
     @Index()
     organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'organizationId' })
+    organization: Organization;
 
     @ManyToOne(() => Subscription, { nullable: true })
     @JoinColumn({ name: 'subscriptionId' })

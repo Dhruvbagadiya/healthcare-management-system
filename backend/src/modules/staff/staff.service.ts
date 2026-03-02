@@ -5,7 +5,10 @@ import { Staff, StaffRole } from './entities/staff.entity';
 import { User, UserRole, UserStatus } from '../users/entities/user.entity';
 import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/pagination.dto';
 import { CreateStaffDto, UpdateStaffDto } from './dto/create-staff.dto';
+import { TenantService } from '../../common/services/tenant.service';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
+import { BCRYPT_ROUNDS } from '../../common/constants/security';
 
 @Injectable()
 export class StaffService {
@@ -14,19 +17,21 @@ export class StaffService {
     private readonly staffRepo: Repository<Staff>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly tenantService: TenantService,
   ) { }
 
   async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Staff>> {
     const { page = 1, limit = 20, search } = query;
     const skip = (page - 1) * limit;
+    const organizationId = this.tenantService.getTenantId();
 
     const where = search
       ? [
-        { staffId: Like(`%${search}%`) },
-        { user: { firstName: Like(`%${search}%`) } },
-        { user: { lastName: Like(`%${search}%`) } },
+        { staffId: Like(`%${search}%`), organizationId },
+        { user: { firstName: Like(`%${search}%`) }, organizationId },
+        { user: { lastName: Like(`%${search}%`) }, organizationId },
       ]
-      : {};
+      : { organizationId };
 
     const [data, total] = await this.staffRepo.findAndCount({
       where,
@@ -48,8 +53,9 @@ export class StaffService {
   }
 
   async findOne(id: string) {
+    const organizationId = this.tenantService.getTenantId();
     const staff = await this.staffRepo.findOne({
-      where: { id },
+      where: { id, organizationId },
       relations: ['user'],
     });
 
@@ -62,14 +68,14 @@ export class StaffService {
 
   async create(createStaffDto: CreateStaffDto) {
     const { email, firstName, lastName, phoneNumber, ...staffData } = createStaffDto;
+    const organizationId = this.tenantService.getTenantId();
 
-    const existingUser = await this.userRepo.findOne({ where: { email } });
+    const existingUser = await this.userRepo.findOne({ where: { email, organizationId } });
     if (existingUser) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException('Email already registered for this organization');
     }
 
-    // Map StaffRole to UserRole if needed, here they are the same strings
-    const hashedPassword = await bcrypt.hash('Staff@123', 10);
+    const hashedPassword = await bcrypt.hash(randomUUID(), BCRYPT_ROUNDS);
     const user = this.userRepo.create({
       email,
       firstName,
@@ -80,6 +86,7 @@ export class StaffService {
       status: UserStatus.ACTIVE,
       userId: staffData.staffId,
       emailVerified: true,
+      organizationId,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -88,6 +95,7 @@ export class StaffService {
       ...staffData,
       user: savedUser,
       userId: savedUser.id,
+      organizationId,
     });
 
     return this.staffRepo.save(staff);
@@ -108,12 +116,13 @@ export class StaffService {
 
   async remove(id: string) {
     const staff = await this.findOne(id);
-    return this.staffRepo.remove(staff);
+    return this.staffRepo.softRemove(staff);
   }
 
-  // Keep existing methods for compatibility if needed, but refactored to use new patterns
   async getAllStaff(skip = 0, take = 10) {
+    const organizationId = this.tenantService.getTenantId();
     const [staff, total] = await this.staffRepo.findAndCount({
+      where: { organizationId },
       relations: ['user'],
       skip,
       take,
@@ -126,8 +135,9 @@ export class StaffService {
   }
 
   async getStaffByRole(role: any) {
+    const organizationId = this.tenantService.getTenantId();
     return this.staffRepo.find({
-      where: { role },
+      where: { role, organizationId },
       relations: ['user'],
     });
   }

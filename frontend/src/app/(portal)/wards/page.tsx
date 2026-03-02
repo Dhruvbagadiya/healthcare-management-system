@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Building2, Bed, BarChart3, Search, Filter, MoreHorizontal, Plus, X, Trash2, Layers, MapPin } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Ward } from '@/types';
 
 export default function WardsPage() {
-  const [wards, setWards] = useState<any[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
   const [stats, setStats] = useState({ totalWards: 0, totalBeds: 0, occupiedBeds: 0, availableBeds: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -71,6 +73,7 @@ export default function WardsPage() {
         ...formData,
         availableBeds: formData.totalBeds // Initial available = total
       });
+      toast.success('Ward created successfully');
       setIsModalOpen(false);
       setFormData({
         wardName: '',
@@ -81,8 +84,8 @@ export default function WardsPage() {
         status: 'active'
       });
       fetchData(search, page);
-    } catch (error) {
-      console.error('Failed to create ward', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -90,9 +93,10 @@ export default function WardsPage() {
     if (!confirm('Are you sure you want to delete this ward? All bed allocations will be cleared.')) return;
     try {
       await apiClient.delete(`/wards/${id}`);
+      toast.success('Ward deleted');
       fetchData(search, page);
-    } catch (error) {
-      console.error('Failed to delete ward', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -214,7 +218,7 @@ export default function WardsPage() {
                           <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-sm sm:text-base">
                             {ward.wardName}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ward.wardType} Ward</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ward.wardCode}</p>
                         </div>
                       </div>
                     </td>
@@ -225,8 +229,8 @@ export default function WardsPage() {
                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">Total / Occupied</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`badge ${ward.availableBeds > 5 ? 'badge-success' : ward.availableBeds > 0 ? 'badge-warning' : 'badge-error'} font-bold text-[10px]`}>
-                        {ward.availableBeds} Available
+                      <span className={`badge ${(ward.totalBeds - ward.occupiedBeds) > 5 ? 'badge-success' : (ward.totalBeds - ward.occupiedBeds) > 0 ? 'badge-warning' : 'badge-error'} font-bold text-[10px]`}>
+                        {ward.totalBeds - ward.occupiedBeds} Available
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

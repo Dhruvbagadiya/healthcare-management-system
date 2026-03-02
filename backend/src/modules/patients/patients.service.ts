@@ -10,6 +10,8 @@ import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { PatientRepository } from './repositories/patient.repository';
 import { MedicalRecordRepository } from './repositories/medical-record.repository';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
+import { BCRYPT_ROUNDS } from '../../common/constants/security';
 import { TenantService } from '../../common/services/tenant.service';
 import { UsageService } from '../subscriptions/usage.service';
 import { DataSource } from 'typeorm';
@@ -26,9 +28,43 @@ export class PatientsService {
     private readonly dataSource: DataSource,
   ) { }
 
-  async findAll(query: PaginationQueryDto): Promise<PaginatedResponse<Patient>> {
-    const searchFields = ['patientId', 'customUserId'];
-    return this.patientRepository.findPaginated(query, ['user'], searchFields);
+  async findAll(query: PaginationQueryDto & { bloodType?: string; gender?: string }): Promise<PaginatedResponse<Patient>> {
+    const { bloodType, gender } = query;
+
+    // If no extra filters, use the standard paginated search
+    if (!bloodType && !gender) {
+      const searchFields = ['patientId', 'customUserId'];
+      return this.patientRepository.findPaginated(query, ['user'], searchFields);
+    }
+
+    // Custom query builder for filter support
+    const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const skip = (page - 1) * limit;
+    const organizationId = this.tenantService.getTenantId();
+
+    const qb = this.patientRepository.createQueryBuilder('entity')
+      .leftJoinAndSelect('entity.user', 'user')
+      .where('entity.organizationId = :organizationId', { organizationId });
+
+    if (search) {
+      qb.andWhere('(entity.patientId ILIKE :search OR entity.customUserId ILIKE :search)', { search: `%${search}%` });
+    }
+
+    if (bloodType) {
+      qb.andWhere('entity.bloodType = :bloodType', { bloodType });
+    }
+
+    if (gender) {
+      qb.andWhere('user.gender = :gender', { gender });
+    }
+
+    qb.orderBy(`entity.${sortBy}`, sortOrder).skip(skip).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string) {
@@ -51,7 +87,7 @@ export class PatientsService {
         throw new ConflictException('Email already registered for this organization');
       }
 
-      const hashedPassword = await bcrypt.hash('Patient@123', 10);
+      const hashedPassword = await bcrypt.hash(randomUUID(), BCRYPT_ROUNDS);
       const userEntity = manager.create(User, {
         email,
         firstName,

@@ -12,4 +12,19 @@ export class AppointmentPaginationDto extends PaginationQueryDto {
     @IsOptional()
     @IsString()
     doctorId?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    status?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    dateFrom?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    dateTo?: string;
 }

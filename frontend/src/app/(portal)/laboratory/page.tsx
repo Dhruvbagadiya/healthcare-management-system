@@ -4,17 +4,19 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Beaker, Search, Filter, MoreHorizontal, FlaskConical, ClipboardList, X, Trash2 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { LabTest, Patient, Doctor } from '@/types';
 
 export default function LaboratoryPage() {
-  const [labTests, setLabTests] = useState<any[]>([]);
+  const [labTests, setLabTests] = useState<LabTest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [patients, setPatients] = useState<any[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -43,8 +45,8 @@ export default function LaboratoryPage() {
       setLabTests(res.data.data);
       setTotalPages(res.data.meta.totalPages);
       setTotalItems(res.data.meta.total);
-    } catch (error: any) {
-      console.error('Failed to fetch lab tests', error);
+    } catch {
+      // handled by global interceptor
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +60,8 @@ export default function LaboratoryPage() {
       ]);
       setPatients(patientsRes.data.data || []);
       setDoctors(doctorsRes.data.data || []);
-    } catch (error: any) {
-      console.error('Failed to fetch dependencies', error);
+    } catch {
+      // handled by global interceptor
     }
   }, []);
 
@@ -85,6 +87,7 @@ export default function LaboratoryPage() {
     e.preventDefault();
     try {
       await apiClient.post('/laboratory/lab-tests', formData);
+      toast.success('Lab order placed successfully');
       setIsModalOpen(false);
       setFormData({
         patientId: '',
@@ -97,8 +100,8 @@ export default function LaboratoryPage() {
         testResults: []
       });
       fetchLabTests(search, page);
-    } catch (error: any) {
-      console.error('Failed to create lab test order', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -106,9 +109,10 @@ export default function LaboratoryPage() {
     if (!confirm('Are you sure you want to cancel and delete this lab test?')) return;
     try {
       await apiClient.delete(`/laboratory/lab-tests/${id}`);
+      toast.success('Lab test cancelled');
       fetchLabTests(search, page);
-    } catch (error: any) {
-      console.error('Failed to delete lab test', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 

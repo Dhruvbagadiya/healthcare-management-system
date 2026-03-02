@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRequireRole } from '@/hooks/auth';
 import { useOrganization } from '@/hooks/use-organization';
 import { useSubscription } from '@/hooks/use-subscription';
+import { apiClient } from '@/lib/api-client';
+import toast from 'react-hot-toast';
 import {
     Building2,
     Globe,
@@ -14,9 +17,38 @@ import {
 } from 'lucide-react';
 
 export default function OrganizationSettingsPage() {
+    useRequireRole('admin', 'super_admin', 'owner');
     const { organization, isLoading, error } = useOrganization();
     const { plan } = useSubscription();
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    const [name, setName] = useState('');
+    const [logoUrl, setLogoUrl] = useState('');
+
+    useEffect(() => {
+        if (organization) {
+            setName(organization.name);
+            setLogoUrl(organization.logoUrl || '');
+        }
+    }, [organization]);
+
+    const handleSave = async () => {
+        if (!organization) return;
+        setIsSaving(true);
+        setSaveError(null);
+        try {
+            await apiClient.patch(`/organizations/${organization.id}`, {
+                name,
+                logoUrl,
+            });
+            toast.success('Settings saved');
+        } catch (err: any) {
+            setSaveError(err.response?.data?.message || 'Failed to save changes');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -55,7 +87,8 @@ export default function OrganizationSettingsPage() {
                                 <label className="text-sm font-semibold text-slate-700">Hospital Name</label>
                                 <input
                                     type="text"
-                                    defaultValue={organization.name}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                 />
                             </div>
@@ -81,7 +114,8 @@ export default function OrganizationSettingsPage() {
                             <div className="flex gap-4">
                                 <input
                                     type="text"
-                                    defaultValue={organization.logoUrl}
+                                    value={logoUrl}
+                                    onChange={(e) => setLogoUrl(e.target.value)}
                                     placeholder="https://..."
                                     className="flex-1 rounded-xl border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                 />
@@ -92,10 +126,15 @@ export default function OrganizationSettingsPage() {
                             </div>
                         </div>
 
+                        {saveError && (
+                            <p className="text-sm text-rose-600 font-medium">{saveError}</p>
+                        )}
+
                         <div className="flex justify-end pt-4 border-t border-slate-100">
                             <button
-                                onClick={() => setIsSaving(true)}
-                                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                             >
                                 <Save className="h-4 w-4" />
                                 {isSaving ? 'Saving...' : 'Save Changes'}

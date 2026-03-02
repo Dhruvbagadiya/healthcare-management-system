@@ -55,7 +55,7 @@ function StepIndicator({ currentStep, completedSteps }: { currentStep: number; c
                             </span>
                         </div>
                         {idx < STEPS.length - 1 && (
-                            <div className={`h-0.5 w-12 sm:w-16 mx-1 mb-4 transition-all duration-500 ${isDone ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                            <div className={`h-0.5 w-6 sm:w-16 mx-0.5 sm:mx-1 mb-4 transition-all duration-500 ${isDone ? 'bg-blue-500' : 'bg-slate-200'}`} />
                         )}
                     </div>
                 );
@@ -159,7 +159,7 @@ function TeamStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                 {[
                     { label: 'Admin', desc: 'Full system access', color: 'purple' },
                     { label: 'Doctor', desc: 'Patient & prescriptions', color: 'blue' },
@@ -213,7 +213,7 @@ function DemoStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }
                 <div className="rounded-2xl bg-green-50 border border-green-100 p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
                     <h3 className="font-bold text-green-900 text-lg">Demo data loaded! 🎉</h3>
-                    <div className="mt-4 grid grid-cols-3 gap-3">
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                         {Object.entries(result).map(([key, val]: [string, any]) => (
                             <div key={key} className="rounded-xl bg-white border border-green-100 p-3">
                                 <p className="text-2xl font-bold text-green-700">{val}</p>
@@ -245,7 +245,7 @@ function DemoStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 {[
                     { count: '3', label: 'Demo Doctors' },
                     { count: '10', label: 'Sample Patients' },
@@ -300,7 +300,7 @@ function ModulesStep({ onNext }: { onNext: () => void }) {
                 All modules below are enabled based on your subscription. Upgrade anytime to unlock more.
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {modules.map(mod => (
                     <div key={mod.name} className="flex items-center gap-3 rounded-xl border border-green-100 bg-green-50/50 p-3">
                         <span className="text-xl">{mod.icon}</span>
@@ -433,7 +433,7 @@ export default function OnboardingPage() {
 
             {/* Card */}
             <div className="mt-8 w-full max-w-lg">
-                <div className="rounded-3xl bg-white/80 backdrop-blur-xl shadow-2xl shadow-slate-200/60 border border-white/60 p-8">
+                <div className="rounded-3xl bg-white/80 backdrop-blur-xl shadow-2xl shadow-slate-200/60 border border-white/60 p-5 sm:p-8">
                     {/* Step header */}
                     <div className="mb-6">
                         <div className="flex items-center gap-3 mb-2">

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuthStore } from './store';
 
 const getApiUrl = () => {
@@ -93,6 +94,13 @@ apiClient.interceptors.response.use(
         window.location.replace('/subscription-expired');
       }
       return Promise.reject(error);
+    }
+
+    // Show toast for other API errors (skip if already handled above)
+    if (typeof window !== 'undefined' && error.response) {
+      const msg = error.response.data?.message;
+      const errorMessage = Array.isArray(msg) ? msg[0] : msg || 'Something went wrong';
+      toast.error(errorMessage);
     }
 
     return Promise.reject(error);

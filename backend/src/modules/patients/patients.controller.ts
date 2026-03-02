@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, UseGuards, Query, Patch, Delete } f
 import { PatientsService } from './patients.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import { PatientPaginationDto } from './dto/patient-pagination.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -23,7 +24,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Get all patients' })
   @Permissions('patients:read')
   @Audit({ action: 'List Patients', entityType: 'Patient' })
-  async findAll(@Query() query: PaginationQueryDto) {
+  async findAll(@Query() query: PatientPaginationDto) {
     return this.patientsService.findAll(query);
   }
 

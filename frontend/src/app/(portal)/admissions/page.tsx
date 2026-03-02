@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
+import type { Admission, Patient, Doctor, Ward, Bed } from '@/types';
 import {
     UserPlus,
     Search,
@@ -16,16 +17,17 @@ import {
     X
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/auth';
+import toast from 'react-hot-toast';
 
 export default function AdmissionsPage() {
     const { user } = useRequireAuth();
-    const [admissions, setAdmissions] = useState<any[]>([]);
+    const [admissions, setAdmissions] = useState<Admission[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [isAdmitModalOpen, setIsAdmitModalOpen] = useState(false);
     const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
     const [isDischargeModalOpen, setIsDischargeModalOpen] = useState(false);
-    const [selectedAdmission, setSelectedAdmission] = useState<any>(null);
+    const [selectedAdmission, setSelectedAdmission] = useState<Admission | null>(null);
 
     // Form data for admission
     // ... (omitted for brevity in prompt, but I should keep it contextually correct)
@@ -53,10 +55,10 @@ export default function AdmissionsPage() {
         recordedBy: ''
     });
 
-    const [patients, setPatients] = useState<any[]>([]);
-    const [doctors, setDoctors] = useState<any[]>([]);
-    const [wards, setWards] = useState<any[]>([]);
-    const [beds, setBeds] = useState<any[]>([]);
+    const [patients, setPatients] = useState<Patient[]>([]);
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [wards, setWards] = useState<Ward[]>([]);
+    const [beds, setBeds] = useState<Bed[]>([]);
 
     const fetchAdmissions = useCallback(async () => {
         setIsLoading(true);
@@ -107,35 +109,40 @@ export default function AdmissionsPage() {
             // Generate a random-ish admission ID for now (backend should handle this ideally)
             const admissionId = `ADM-${Math.floor(1000 + Math.random() * 9000)}`;
             await apiClient.post('/admissions', { ...admissionForm, admissionId });
+            toast.success('Patient admitted successfully');
             setIsAdmitModalOpen(false);
             fetchAdmissions();
-        } catch (error) {
-            console.error('Failed to admit patient', error);
+        } catch {
+            // handled by global interceptor
         }
     };
 
     const handleUpdateVitals = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedAdmission) return;
         try {
             await apiClient.patch(`/admissions/${selectedAdmission.id}/vitals`, {
                 ...vitalsForm,
                 recordedBy: user ? `${user.firstName} ${user.lastName}` : 'System'
             });
+            toast.success('Vitals updated');
             setIsVitalsModalOpen(false);
             fetchAdmissions();
-        } catch (error) {
-            console.error('Failed to update vitals', error);
+        } catch {
+            // handled by global interceptor
         }
     };
 
     const handleDischarge = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedAdmission) return;
         try {
             await apiClient.post(`/admissions/${selectedAdmission.id}/discharge`, dischargeForm);
+            toast.success('Patient discharged successfully');
             setIsDischargeModalOpen(false);
             fetchAdmissions();
-        } catch (error) {
-            console.error('Failed to discharge patient', error);
+        } catch {
+            // handled by global interceptor
         }
     };
 
@@ -247,7 +254,7 @@ export default function AdmissionsPage() {
                                                 {new Date(adm.admissionDate).toLocaleDateString()}
                                             </p>
                                         </td>
-                                        <td className="px-6 py-6">
+                                        <td className="hidden lg:table-cell px-6 py-6">
                                             <div className="flex items-center gap-2">
                                                 <div className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-1.5 whitespace-nowrap">
@@ -480,8 +487,8 @@ export default function AdmissionsPage() {
 
             {/* Discharge Modal */}
             {isDischargeModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
                         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900 text-rose-600">Patient Discharge</h2>

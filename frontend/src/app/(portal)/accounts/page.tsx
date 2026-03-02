@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRequireRole } from '@/hooks/auth';
 import { apiClient } from '@/lib/api-client';
 import { PieChart, DollarSign, TrendingUp } from 'lucide-react';
 
 export default function AccountsPage() {
+  useRequireRole('admin', 'super_admin');
   const [summary, setSummary] = useState({ totalRevenue: 0, totalExpenses: 0, netProfit: 0 });
   const [_isLoading, _setIsLoading] = useState(true);
 

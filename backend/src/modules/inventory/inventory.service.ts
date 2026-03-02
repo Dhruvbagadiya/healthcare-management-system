@@ -67,7 +67,7 @@ export class InventoryService {
 
   async remove(id: string) {
     const item = await this.findOne(id);
-    return this.inventoryRepo.remove(item);
+    return this.inventoryRepo.softRemove(item);
   }
 
   // Keep existing methods for compatibility

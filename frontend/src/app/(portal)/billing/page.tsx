@@ -4,18 +4,20 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { FileText, Plus, Search, Filter, MoreHorizontal, Download, DollarSign, CreditCard, X, Trash2, PlusCircle } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Invoice, Patient, Admission } from '@/types';
 
 export default function BillingPage() {
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [patients, setPatients] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [activeTab, setActiveTab] = useState<'invoices' | 'admissions'>('invoices');
-  const [activeAdmissions, setActiveAdmissions] = useState<any[]>([]);
+  const [activeAdmissions, setActiveAdmissions] = useState<Admission[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -47,8 +49,8 @@ export default function BillingPage() {
       setInvoices(res.data.data);
       setTotalPages(res.data.meta.totalPages);
       setTotalItems(res.data.meta.total);
-    } catch (error) {
-      console.error('Failed to fetch invoices', error);
+    } catch {
+      // handled by global interceptor
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +60,8 @@ export default function BillingPage() {
     try {
       const res = await apiClient.get('/patients', { params: { limit: 100 } });
       setPatients(res.data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch patients', error);
+    } catch {
+      // handled by global interceptor
     }
   }, []);
 
@@ -68,8 +70,8 @@ export default function BillingPage() {
       const res = await apiClient.get('/admissions', { params: { limit: 100 } });
       // Only show admitted/active ones
       setActiveAdmissions(res.data.data?.filter((a: any) => a.status === 'admitted') || []);
-    } catch (error) {
-      console.error('Failed to fetch active admissions', error);
+    } catch {
+      // handled by global interceptor
     }
   }, []);
 
@@ -137,6 +139,7 @@ export default function BillingPage() {
         dueAmount: totals.dueAmount
       };
       await apiClient.post('/billing/invoices', payload);
+      toast.success('Invoice created successfully');
       setIsModalOpen(false);
       setFormData({
         patientId: '',
@@ -150,8 +153,8 @@ export default function BillingPage() {
         lineItems: [{ description: 'Consultation Fee', quantity: 1, unitPrice: 500, total: 500 }]
       });
       fetchInvoices(search, page);
-    } catch (error) {
-      console.error('Failed to create invoice', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -179,8 +182,8 @@ export default function BillingPage() {
         ]
       });
       setIsModalOpen(true);
-    } catch (error) {
-      console.error('Failed to generate IPD invoice', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -188,14 +191,15 @@ export default function BillingPage() {
     if (!confirm('Are you sure you want to delete this invoice?')) return;
     try {
       await apiClient.delete(`/billing/invoices/${id}`);
+      toast.success('Invoice deleted');
       fetchInvoices(search, page);
-    } catch (error) {
-      console.error('Failed to delete invoice', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Billing</h1>
@@ -252,50 +256,52 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="space-y-3">
         <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
           <button
             onClick={() => setActiveTab('invoices')}
-            className={`flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'invoices' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+            className={`flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'invoices' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             Invoices
           </button>
           <button
             onClick={() => setActiveTab('admissions')}
-            className={`flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'admissions' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+            className={`flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'admissions' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             Active Admissions
           </button>
         </div>
 
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder={activeTab === 'invoices' ? 'Search invoices...' : 'Search patients...'}
-            className="input pl-10 h-11 w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder={activeTab === 'invoices' ? 'Search invoices...' : 'Search patients...'}
+              className="input pl-10 h-11 w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6 font-bold">
+            <Filter size={18} />
+            Filters
+          </button>
         </div>
-        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6 font-bold">
-          <Filter size={18} />
-          Filters
-        </button>
       </div>
 
       {activeTab === 'invoices' ? (
         <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
+            <table className="w-full text-left border-collapse">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice / Date</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</th>
+                  <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
+                  <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                   <th className="px-4 sm:px-6 py-4 text-right"></th>
                 </tr>
               </thead>
@@ -304,9 +310,9 @@ export default function BillingPage() {
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       <td className="px-4 sm:px-6 py-4"><div className="h-4 w-24 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
+                      <td className="hidden sm:table-cell px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                      <td className="px-4 sm:px-6 py-4"><div className="h-4 w-16 bg-slate-100 rounded" /></td>
+                      <td className="hidden md:table-cell px-6 py-4"><div className="h-4 w-20 bg-slate-100 rounded" /></td>
                       <td className="px-4 sm:px-6 py-4 text-right" />
                     </tr>
                   ))
@@ -321,9 +327,13 @@ export default function BillingPage() {
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                             {new Date(invoice.createdAt).toLocaleDateString()}
                           </p>
+                          {/* Show patient name inline on mobile since Patient column is hidden */}
+                          <p className="sm:hidden text-xs text-slate-500 mt-0.5 truncate">
+                            {invoice.patient?.user?.firstName} {invoice.patient?.user?.lastName}
+                          </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div className="h-8 w-8 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-[10px] text-indigo-600 shadow-sm border border-indigo-100">
                             {invoice.patient?.user?.firstName?.charAt(0)}
@@ -338,10 +348,15 @@ export default function BillingPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-900">
+                      <td className="px-4 sm:px-6 py-4 text-sm font-bold text-slate-900">
                         ${invoice.totalAmount?.toLocaleString()}
+                        {/* Show status inline on mobile since Status column is hidden */}
+                        <span className={`md:hidden ml-2 badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
+                          } font-bold text-[10px]`}>
+                          {invoice.status}
+                        </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="hidden md:table-cell px-6 py-4">
                         <span className={`badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'
                           } font-bold text-[10px]`}>
                           {invoice.status}
@@ -394,41 +409,41 @@ export default function BillingPage() {
       ) : (
         <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
+            <table className="w-full text-left border-collapse">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Admission ID / Bed</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Ward / Rate</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Stay Duration</th>
+                  <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Admission / Patient</th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Ward / Rate</th>
+                  <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Stay Duration</th>
                   <th className="px-4 sm:px-6 py-4 text-right"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {activeAdmissions.map((adm) => (
                   <tr key={adm.id} className="hover:bg-indigo-50/30 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-bold text-slate-900">{adm.admissionId}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        Bed {adm.bed?.bedNumber}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-[10px] text-slate-500">
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-slate-100 flex items-center justify-center font-bold text-[10px] text-slate-500">
                           {adm.patient?.user?.firstName?.[0]}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-700">{adm.patient?.user?.firstName} {adm.patient?.user?.lastName}</p>
-                          <p className="text-[10px] text-slate-400">{adm.patient?.patientId}</p>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900">{adm.admissionId}</p>
+                          <p className="text-sm text-slate-700 truncate">{adm.patient?.user?.firstName} {adm.patient?.user?.lastName}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            Bed {adm.bed?.bedNumber}
+                          </p>
+                          {/* Show ward and duration inline on mobile */}
+                          <div className="sm:hidden text-xs text-slate-500 mt-0.5">
+                            {adm.ward?.wardName} - {Math.ceil((new Date().getTime() - new Date(adm.admissionDate).getTime()) / (1000 * 60 * 60 * 24)) || 1} days
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden sm:table-cell px-6 py-4">
                       <p className="text-sm font-bold text-slate-700">{adm.ward?.wardName}</p>
                       <p className="text-[10px] text-slate-400 font-bold tracking-widest">${adm.ward?.pricePerDay || 0}/day</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden md:table-cell px-6 py-4">
                       <span className="text-sm font-bold text-indigo-600">
                         {Math.ceil((new Date().getTime() - new Date(adm.admissionDate).getTime()) / (1000 * 60 * 60 * 24)) || 1} days
                       </span>
@@ -436,10 +451,11 @@ export default function BillingPage() {
                     <td className="px-4 sm:px-6 py-4 text-right">
                       <button
                         onClick={() => handleGenerateIPDInvoice(adm.id)}
-                        className="btn btn-secondary h-9 px-4 text-xs gap-2 font-bold"
+                        className="btn btn-secondary h-9 px-3 sm:px-4 text-xs gap-1.5 sm:gap-2 font-bold"
                       >
                         <DollarSign size={14} />
-                        Invoice Stay
+                        <span className="hidden sm:inline">Invoice Stay</span>
+                        <span className="sm:hidden">Invoice</span>
                       </button>
                     </td>
                   </tr>
@@ -460,7 +476,7 @@ export default function BillingPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
+            <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Create Invoice</h2>
                 <p className="text-sm text-slate-500">Generate a new billing record for patient</p>
@@ -474,7 +490,7 @@ export default function BillingPage() {
             </div>
 
             <form onSubmit={handleCreateInvoice} className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-7">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Patient</label>
                   <select required className="input h-11" value={formData.patientId} onChange={e => setFormData({ ...formData, patientId: e.target.value })}>
@@ -535,7 +551,7 @@ export default function BillingPage() {
                 </div>
               </div>
 
-              <div className="grid gap-8 md:grid-cols-2">
+              <div className="grid gap-8 sm:grid-cols-2">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Special Notes</label>
@@ -566,7 +582,7 @@ export default function BillingPage() {
               </div>
             </form>
 
-            <div className="px-8 py-6 border-t border-slate-100 bg-white flex gap-4 shrink-0">
+            <div className="px-6 sm:px-8 py-5 sm:py-6 border-t border-slate-100 bg-white flex gap-3 sm:gap-4 shrink-0">
               <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1 h-12 font-bold">Cancel</button>
               <button
                 type="submit"

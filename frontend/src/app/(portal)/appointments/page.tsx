@@ -3,18 +3,24 @@
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Calendar as CalendarIcon, Clock, MoreHorizontal, Plus, Search, Filter, X, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Pagination } from '@/components/ui/pagination';
+import type { Appointment, Patient, Doctor } from '@/types';
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [patients, setPatients] = useState<any[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -32,13 +38,15 @@ export default function AppointmentsPage() {
   const fetchAppointments = useCallback(async (searchQuery = '', pageNumber = 1) => {
     setIsLoading(true);
     try {
-      const res = await apiClient.get('/appointments', {
-        params: {
-          search: searchQuery,
-          page: pageNumber,
-          limit
-        }
-      });
+      const params: any = {
+        search: searchQuery,
+        page: pageNumber,
+        limit
+      };
+      if (statusFilter) params.status = statusFilter;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+      const res = await apiClient.get('/appointments', { params });
       setAppointments(res.data.data);
       setTotalPages(res.data.meta.totalPages);
       setTotalItems(res.data.meta.total);
@@ -47,7 +55,7 @@ export default function AppointmentsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [statusFilter, dateFrom, dateTo]);
 
   const fetchDependencies = useCallback(async () => {
     try {
@@ -68,7 +76,7 @@ export default function AppointmentsPage() {
       fetchAppointments(search, 1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, fetchAppointments]);
+  }, [search, statusFilter, dateFrom, dateTo, fetchAppointments]);
 
   useEffect(() => {
     if (page > 1) {
@@ -84,6 +92,7 @@ export default function AppointmentsPage() {
     e.preventDefault();
     try {
       await apiClient.post('/appointments', formData);
+      toast.success('Appointment scheduled successfully');
       setIsModalOpen(false);
       setFormData({
         patientId: '',
@@ -95,8 +104,8 @@ export default function AppointmentsPage() {
         status: 'scheduled'
       });
       fetchAppointments(search, page);
-    } catch (error) {
-      console.error('Failed to create appointment', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -104,14 +113,15 @@ export default function AppointmentsPage() {
     if (!confirm('Are you sure you want to cancel and delete this appointment?')) return;
     try {
       await apiClient.delete(`/appointments/${id}`);
+      toast.success('Appointment deleted');
       fetchAppointments(search, page);
-    } catch (error) {
-      console.error('Failed to delete appointment', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Appointments</h1>
@@ -126,21 +136,75 @@ export default function AppointmentsPage() {
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search appointments..."
-            className="input pl-10 h-11"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search appointments..."
+              className="input pl-10 h-11"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`btn btn-secondary gap-2 h-11 justify-center sm:px-6 ${showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : ''}`}
+          >
+            <Filter size={18} />
+            Filters
+            {(statusFilter || dateFrom || dateTo) && (
+              <span className="h-2 w-2 rounded-full bg-indigo-600" />
+            )}
+          </button>
         </div>
-        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
-          <Filter size={18} />
-          Filters
-        </button>
+
+        {showFilters && (
+          <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in slide-in-from-top-2 duration-200">
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Status</label>
+              <select
+                className="input h-10 text-sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">From Date</label>
+              <input
+                type="date"
+                className="input h-10 text-sm"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1 flex-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">To Date</label>
+              <input
+                type="date"
+                className="input h-10 text-sm"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => { setStatusFilter(''); setDateFrom(''); setDateTo(''); }}
+                className="btn btn-secondary h-10 px-4 text-xs font-bold"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6">
@@ -149,28 +213,28 @@ export default function AppointmentsPage() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date & Time</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-right"></th>
+                  <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient</th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
+                  <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date & Time</th>
+                  <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 sm:px-6 py-4 text-right"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4"><div className="h-10 w-40 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="h-10 w-32 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="h-6 w-32 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="h-6 w-20 bg-slate-100 rounded" /></td>
-                      <td className="px-6 py-4" />
+                      <td className="px-4 sm:px-6 py-4"><div className="h-10 w-40 bg-slate-100 rounded" /></td>
+                      <td className="hidden sm:table-cell px-6 py-4"><div className="h-10 w-32 bg-slate-100 rounded" /></td>
+                      <td className="px-4 sm:px-6 py-4"><div className="h-6 w-32 bg-slate-100 rounded" /></td>
+                      <td className="hidden md:table-cell px-6 py-4"><div className="h-6 w-20 bg-slate-100 rounded" /></td>
+                      <td className="px-4 sm:px-6 py-4" />
                     </tr>
                   ))
                 ) : (
                   appointments.map((app) => (
                     <tr key={app.id} className="hover:bg-indigo-50/30 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shadow-sm">
                             {app.patient?.user?.firstName?.charAt(0)}
@@ -180,16 +244,18 @@ export default function AppointmentsPage() {
                               {app.patient?.user?.firstName} {app.patient?.user?.lastName}
                             </p>
                             <p className="text-xs text-slate-500">{app.patient?.patientId}</p>
+                            {/* Show doctor inline on mobile since Doctor column is hidden */}
+                            <p className="sm:hidden text-xs text-slate-500 mt-0.5">Dr. {app.doctor?.user?.firstName} {app.doctor?.user?.lastName}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="hidden sm:table-cell px-6 py-4">
                         <p className="font-medium text-slate-900 truncate">
                           Dr. {app.doctor?.user?.firstName} {app.doctor?.user?.lastName}
                         </p>
                         <p className="text-xs text-slate-500">{app.doctor?.specialization}</p>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <div className="space-y-1">
                           <div className="flex items-center text-sm text-slate-700 font-medium">
                             <CalendarIcon size={14} className="mr-1.5 text-indigo-400" />
@@ -199,24 +265,30 @@ export default function AppointmentsPage() {
                             <Clock size={14} className="mr-1.5 text-slate-400" />
                             {app.appointmentTime}
                           </div>
+                          {/* Show status inline on mobile since Status column is hidden */}
+                          <span className={`md:hidden badge ${app.status === 'completed' ? 'badge-success' :
+                            app.status === 'scheduled' ? 'badge-primary' : 'badge-warning'
+                            }`}>
+                            {app.status}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="hidden md:table-cell px-6 py-4">
                         <span className={`badge ${app.status === 'completed' ? 'badge-success' :
                           app.status === 'scheduled' ? 'badge-primary' : 'badge-warning'
                           }`}>
                           {app.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <td className="px-4 sm:px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleDelete(app.id)}
-                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                            className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
                           >
                             <Trash2 size={18} />
                           </button>
-                          <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+                          <button className="p-1.5 sm:p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
                             <MoreHorizontal size={18} />
                           </button>
                         </div>
@@ -247,9 +319,9 @@ export default function AppointmentsPage() {
 
       {/* New Appointment Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+            <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">New Appointment</h2>
                 <p className="text-sm text-slate-500">Schedule a new consultation session</p>
@@ -262,8 +334,8 @@ export default function AppointmentsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateAppointment} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-              <div className="grid gap-6 md:grid-cols-2">
+            <form onSubmit={handleCreateAppointment} className="px-6 sm:px-8 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Patient</label>
                   <select
@@ -316,7 +388,7 @@ export default function AppointmentsPage() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2 sm:col-span-2">
                   <label className="text-sm font-bold text-slate-700">Reason for Visit</label>
                   <input
                     required
@@ -328,7 +400,7 @@ export default function AppointmentsPage() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2 sm:col-span-2">
                   <label className="text-sm font-bold text-slate-700">Special Notes</label>
                   <textarea
                     className="input min-h-[100px] py-3"
@@ -339,7 +411,7 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-white pb-1">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
