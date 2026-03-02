@@ -19,7 +19,7 @@ export class AppointmentsService {
   ) { }
 
   async findAll(query: AppointmentPaginationDto): Promise<PaginatedResponse<Appointment>> {
-    const { patientId, doctorId } = query;
+    const { patientId, doctorId, status, dateFrom, dateTo } = query;
     const organizationId = this.tenantService.getTenantId();
     const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
     const skip = (page - 1) * limit;
@@ -33,6 +33,15 @@ export class AppointmentsService {
     }
     if (doctorId) {
       queryBuilder.andWhere('appointment.doctorId = :doctorId', { doctorId });
+    }
+    if (status) {
+      queryBuilder.andWhere('appointment.status = :status', { status });
+    }
+    if (dateFrom) {
+      queryBuilder.andWhere('appointment.appointmentDate >= :dateFrom', { dateFrom });
+    }
+    if (dateTo) {
+      queryBuilder.andWhere('appointment.appointmentDate <= :dateTo', { dateTo });
     }
 
     // Join relations
@@ -72,7 +81,13 @@ export class AppointmentsService {
     const { doctorId, appointmentDate } = createAppointmentDto;
     const organizationId = this.tenantService.getTenantId();
 
-    return await this.dataSource.transaction(async (manager) => {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction('SERIALIZABLE');
+
+    try {
+      const manager = queryRunner.manager;
+
       const todayCount = await manager.count(Appointment, {
         where: {
           doctorId,
@@ -102,8 +117,14 @@ export class AppointmentsService {
         await this.mailService.sendAppointmentConfirmation(detailedAppointment);
       }
 
+      await queryRunner.commitTransaction();
       return savedAppointment;
-    });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async update(id: string, updateAppointmentDto: any) {
@@ -114,6 +135,6 @@ export class AppointmentsService {
 
   async remove(id: string) {
     const appointment = await this.findOne(id);
-    return this.appointmentRepository.remove(appointment);
+    return this.appointmentRepository.softRemove(appointment);
   }
 }

@@ -7,6 +7,8 @@ import { PaginationQueryDto, PaginatedResponse } from '../../common/dto/paginati
 import { CreateDoctorDto, UpdateDoctorDto } from './dto/create-doctor.dto';
 import { DoctorRepository } from './repositories/doctor.repository';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
+import { BCRYPT_ROUNDS } from '../../common/constants/security';
 import { TenantService } from '../../common/services/tenant.service';
 import { UsageService } from '../subscriptions/usage.service';
 import { DataSource } from 'typeorm';
@@ -47,7 +49,7 @@ export class DoctorsService {
         throw new ConflictException('Email already registered for this organization');
       }
 
-      const hashedPassword = await bcrypt.hash('Doctor@123', 10);
+      const hashedPassword = await bcrypt.hash(randomUUID(), BCRYPT_ROUNDS);
       const userEntity = manager.create(User, {
         email,
         firstName,
@@ -95,6 +97,6 @@ export class DoctorsService {
 
   async remove(id: string) {
     const doctor = await this.findOne(id);
-    return this.doctorRepository.remove(doctor);
+    return this.doctorRepository.softRemove(doctor);
   }
 }

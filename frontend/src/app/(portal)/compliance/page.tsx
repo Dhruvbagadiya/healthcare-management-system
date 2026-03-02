@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRequireRole } from '@/hooks/auth';
 import { apiClient } from '@/lib/api-client';
 import { Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
+import type { ComplianceItem, DataAccessLog } from '@/types';
 
 export default function CompliancePage() {
-  const [compliance, setCompliance] = useState<any[]>([]);
-  const [logs, setLogs] = useState<any[]>([]);
+  useRequireRole('admin', 'super_admin');
+  const [compliance, setCompliance] = useState<ComplianceItem[]>([]);
+  const [logs, setLogs] = useState<DataAccessLog[]>([]);
   const [stats, setStats] = useState({ nonCompliant: 0, pending: 0 });
   const [isLoading, setIsLoading] = useState(true);
 

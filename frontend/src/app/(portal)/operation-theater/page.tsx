@@ -4,11 +4,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Stethoscope, Clock, CheckCircle, Search, Filter, MoreHorizontal, Plus, X, Trash2, Calendar, User, UserCheck } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Surgery, Patient, Doctor } from '@/types';
 
 export default function OperationTheaterPage() {
-  const [surgeries, setSurgeries] = useState<any[]>([]);
-  const [patients, setPatients] = useState<any[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [surgeries, setSurgeries] = useState<Surgery[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -90,6 +92,7 @@ export default function OperationTheaterPage() {
     e.preventDefault();
     try {
       await apiClient.post('/operation-theater/surgeries', formData);
+      toast.success('Surgery scheduled successfully');
       setIsModalOpen(false);
       setFormData({
         ...formData,
@@ -101,8 +104,8 @@ export default function OperationTheaterPage() {
         diagnosis: ''
       });
       fetchSurgeries(search, page);
-    } catch (error: any) {
-      console.error('Failed to schedule surgery', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -110,9 +113,10 @@ export default function OperationTheaterPage() {
     if (!confirm('Are you sure you want to cancel this scheduled surgery?')) return;
     try {
       await apiClient.delete(`/operation-theater/surgeries/${id}`);
+      toast.success('Surgery cancelled');
       fetchSurgeries(search, page);
-    } catch (error: any) {
-      console.error('Failed to delete surgery', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -227,7 +231,7 @@ export default function OperationTheaterPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {surgery.patient ? (
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-700">{surgery.patient.firstName} {surgery.patient.lastName}</p>
+                          <p className="text-sm font-bold text-slate-700">{surgery.patient.user?.firstName} {surgery.patient.user?.lastName}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{surgery.patient.patientId}</p>
                         </div>
                       ) : (
@@ -325,7 +329,7 @@ export default function OperationTheaterPage() {
                   <select required className="input h-11" value={formData.patientId} onChange={e => setFormData({ ...formData, patientId: e.target.value })}>
                     <option value="">Select Patient</option>
                     {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.patientId})</option>
+                      <option key={p.id} value={p.id}>{p.user?.firstName} {p.user?.lastName} ({p.patientId})</option>
                     ))}
                   </select>
                 </div>

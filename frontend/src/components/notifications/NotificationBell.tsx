@@ -204,13 +204,20 @@ export function NotificationBell() {
                         </div>
 
                         {/* Footer */}
-                        <div className="border-t border-slate-100 px-4 py-2.5">
+                        <div className="border-t border-slate-100 px-4 py-2.5 flex items-center justify-between">
                             <Link
-                                href="/settings"
+                                href="/notifications"
                                 onClick={() => setOpen(false)}
                                 className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
                             >
-                                Notification settings →
+                                View all notifications
+                            </Link>
+                            <Link
+                                href="/settings"
+                                onClick={() => setOpen(false)}
+                                className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                Settings
                             </Link>
                         </div>
                     </div>

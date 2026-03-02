@@ -68,11 +68,11 @@ export default function RegisterPage() {
         <div className="mb-6 flex items-center justify-center">
           <img src="/logo.svg" alt="Aarogentix logo" className="h-20 w-auto" />
         </div>
-        <h1 className="mb-2 text-3xl font-bold text-primary-600">Join Us</h1>
+        <h1 className="mb-2 text-2xl font-bold text-primary-600 sm:text-3xl">Join Us</h1>
         <p className="mb-6 text-slate-600">Create your Aarogentix account</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="firstName" className="mb-2 block font-medium">
                 First Name

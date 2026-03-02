@@ -14,10 +14,12 @@ import {
     User,
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/auth';
+import toast from 'react-hot-toast';
+import type { Appointment } from '@/types';
 
 export default function OPDQueuePage() {
     const { user } = useRequireAuth();
-    const [appointments, setAppointments] = useState<any[]>([]);
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
 
@@ -40,8 +42,8 @@ export default function OPDQueuePage() {
             // Sort by token number
             const sorted = (res.data.data || []).sort((a: any, b: any) => (a.tokenNumber || 0) - (b.tokenNumber || 0));
             setAppointments(sorted);
-        } catch (error) {
-            console.error('Failed to fetch OPD queue', error);
+        } catch {
+            // handled by global interceptor
         } finally {
             setIsLoading(false);
         }
@@ -54,9 +56,11 @@ export default function OPDQueuePage() {
     const updateStatus = async (id: string, status: string) => {
         try {
             await apiClient.patch(`/appointments/${id}`, { status });
+            const label = status === 'in_progress' ? 'Patient called in' : status === 'completed' ? 'Consultation completed' : 'Status updated';
+            toast.success(label);
             fetchQueue();
-        } catch (error) {
-            console.error('Failed to update status', error);
+        } catch {
+            // handled by global interceptor
         }
     };
 
@@ -128,7 +132,7 @@ export default function OPDQueuePage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[700px] sm:min-w-0">
                         <thead className="bg-slate-50">
                             <tr>
                                 <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Token</th>
@@ -142,24 +146,24 @@ export default function OPDQueuePage() {
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td className="px-6 py-6"><div className="h-8 w-10 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-10 w-48 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-6 w-32 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-6 w-24 bg-slate-100 rounded-lg" /></td>
-                                        <td className="px-6 py-6"><div className="h-10 w-32 bg-slate-100 rounded-lg float-right" /></td>
+                                        <td className="px-4 sm:px-6 py-6"><div className="h-8 w-10 bg-slate-100 rounded-lg" /></td>
+                                        <td className="px-4 sm:px-6 py-6"><div className="h-10 w-48 bg-slate-100 rounded-lg" /></td>
+                                        <td className="hidden md:table-cell px-6 py-6"><div className="h-6 w-32 bg-slate-100 rounded-lg" /></td>
+                                        <td className="px-4 sm:px-6 py-6"><div className="h-6 w-24 bg-slate-100 rounded-lg" /></td>
+                                        <td className="px-4 sm:px-6 py-6"><div className="h-10 w-32 bg-slate-100 rounded-lg float-right" /></td>
                                     </tr>
                                 ))
                             ) : (
                                 appointments.map((app) => (
                                     <tr key={app.id} className={`group hover:bg-slate-50/50 transition-colors ${app.status === 'in_progress' ? 'bg-indigo-50/20' : ''}`}>
-                                        <td className="px-6 py-6">
+                                        <td className="px-4 sm:px-6 py-6">
                                             <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${app.status === 'completed' ? 'bg-slate-100 text-slate-400' :
                                                 app.status === 'in_progress' ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white border border-slate-200 text-slate-700'
                                                 }`}>
                                                 {app.tokenNumber || '-'}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-6">
+                                        <td className="px-4 sm:px-6 py-6">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                                                     <User size={20} />
@@ -177,7 +181,7 @@ export default function OPDQueuePage() {
                                         <td className="hidden md:table-cell px-6 py-5 text-sm text-slate-600 font-medium">
                                             Dr. {app.doctor?.user?.lastName}
                                         </td>
-                                        <td className="px-6 py-6">
+                                        <td className="px-4 sm:px-6 py-6">
                                             <span className={`badge ${app.status === 'completed' ? 'badge-success' :
                                                 app.status === 'in_progress' ? 'badge-primary animate-pulse' :
                                                     app.status === 'cancelled' ? 'badge-error' : 'badge-warning'
@@ -185,7 +189,7 @@ export default function OPDQueuePage() {
                                                 {app.status === 'scheduled' ? 'Waiting' : app.status === 'in_progress' ? 'Consulting' : app.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-6 text-right">
+                                        <td className="px-4 sm:px-6 py-6 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 {app.status !== 'completed' && app.status !== 'in_progress' && (
                                                     <button

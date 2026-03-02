@@ -68,7 +68,7 @@ export class WardsService {
 
   async remove(id: string) {
     const ward = await this.findOne(id);
-    return this.wardRepo.remove(ward);
+    return this.wardRepo.softRemove(ward);
   }
 
   // Keep existing methods for compatibility

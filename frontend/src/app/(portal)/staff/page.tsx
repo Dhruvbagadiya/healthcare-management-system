@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRequireRole } from '@/hooks/auth';
 import { apiClient } from '@/lib/api-client';
 import { Search, Filter, MoreHorizontal, X, Trash2, Plus, Mail, Phone, Briefcase, Calendar } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Staff } from '@/types';
 
 export default function StaffPage() {
-  const [staff, setStaff] = useState<any[]>([]);
+  useRequireRole('admin', 'super_admin');
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -19,7 +23,6 @@ export default function StaffPage() {
     firstName: '',
     lastName: '',
     email: '',
-    password: 'Password123!',
     phoneNumber: '',
     role: 'Nurse',
     department: 'General',
@@ -70,12 +73,12 @@ export default function StaffPage() {
     e.preventDefault();
     try {
       await apiClient.post('/staff', formData);
+      toast.success('Staff member added successfully');
       setIsModalOpen(false);
       setFormData({
         firstName: '',
         lastName: '',
         email: '',
-        password: 'Password123!',
         phoneNumber: '',
         role: 'Nurse',
         department: 'General',
@@ -86,9 +89,8 @@ export default function StaffPage() {
         notes: ''
       });
       fetchStaff(search, page);
-    } catch (error: any) {
-      console.error('Failed to add staff', error);
-      alert(error.response?.data?.message || 'Failed to add staff');
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -96,14 +98,15 @@ export default function StaffPage() {
     if (!confirm('Are you sure you want to remove this staff member?')) return;
     try {
       await apiClient.delete(`/staff/${id}`);
+      toast.success('Staff member removed');
       fetchStaff(search, page);
-    } catch (error: any) {
-      console.error('Failed to delete staff', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 font-display">Staff Management</h1>
@@ -137,12 +140,12 @@ export default function StaffPage() {
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[750px] sm:min-w-0">
+          <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 sm:px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Staff Details</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Department</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status / Hire Date</th>
+                <th className="hidden sm:table-cell px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Department</th>
+                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status / Hire Date</th>
                 <th className="px-4 sm:px-6 py-4 text-right"></th>
               </tr>
             </thead>
@@ -151,8 +154,8 @@ export default function StaffPage() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     <td className="px-4 sm:px-6 py-4"><div className="h-4 w-48 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
+                    <td className="hidden sm:table-cell px-6 py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
+                    <td className="hidden md:table-cell px-6 py-4"><div className="h-4 w-40 bg-slate-100 rounded" /></td>
                     <td className="px-4 sm:px-6 py-4 text-right" />
                   </tr>
                 ))
@@ -169,17 +172,24 @@ export default function StaffPage() {
                             {member.user?.firstName} {member.user?.lastName}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-slate-500 font-medium">{member.user?.email}</span>
+                            <span className="text-[10px] text-slate-500 font-medium truncate">{member.user?.email}</span>
                             <span className="h-3 w-[1px] bg-slate-200"></span>
                             <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">{member.role}</span>
+                          </div>
+                          {/* Show department and status inline on mobile since columns are hidden */}
+                          <div className="sm:hidden flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-slate-500 font-medium">{member.department}</span>
+                            <span className={`md:hidden badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'} font-bold text-[10px]`}>
+                              {member.status}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden sm:table-cell px-6 py-4">
                       <p className="text-sm font-bold text-slate-700">{member.department}</p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                       <div className="min-w-0">
                         <div className="mb-1">
                           <span className={`badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'} font-bold text-[10px]`}>
@@ -187,7 +197,7 @@ export default function StaffPage() {
                           </span>
                         </div>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                          Joined: {new Date(member.hireDate).toLocaleDateString()}
+                          Joined: {member.hireDate ? new Date(member.hireDate).toLocaleDateString() : 'N/A'}
                         </p>
                       </div>
                     </td>
@@ -241,7 +251,7 @@ export default function StaffPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
+            <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">Add Staff Member</h2>
                 <p className="text-sm text-slate-500">Create new staff profile and credentials</p>

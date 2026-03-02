@@ -8,6 +8,7 @@ import {
     Index,
 } from 'typeorm';
 import { Organization } from '../../organizations/entities/organization.entity';
+import { User } from '../../users/entities/user.entity';
 
 export type NotificationType = 'appointment' | 'billing' | 'system' | 'alert' | 'onboarding' | 'inventory';
 
@@ -28,6 +29,10 @@ export class Notification {
 
     @Column({ nullable: true })
     userId: string; // null = org-wide notification
+
+    @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'userId' })
+    user: User;
 
     @Column({ length: 50 })
     type: NotificationType;

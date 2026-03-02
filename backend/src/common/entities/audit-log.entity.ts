@@ -33,7 +33,7 @@ export class AuditLog {
   @JoinColumn({ name: 'organizationId' })
   organization: Organization;
 
-  @Column()
+  @Column({ nullable: true })
   @Index()
   userId: string;
 

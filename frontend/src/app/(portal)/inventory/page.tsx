@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Package, AlertTriangle, TrendingDown, Search, Filter, MoreHorizontal, Plus, X, Trash2, Calendar, DollarSign, Layers } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { InventoryItem } from '@/types';
 
 export default function InventoryPage() {
-  const [inventory, setInventory] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [stats, setStats] = useState({ lowStock: 0, expired: 0, stockValue: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -45,8 +47,8 @@ export default function InventoryPage() {
       setInventory(res.data.data || []);
       setTotalPages(res.data.meta?.totalPages || 1);
       setTotalItems(res.data.meta?.total || 0);
-    } catch (error) {
-      console.error('Failed to fetch inventory', error);
+    } catch {
+      // handled by global interceptor
     }
 
     try {
@@ -60,8 +62,8 @@ export default function InventoryPage() {
         expired: (expired.data || []).length,
         stockValue: value.data?.stockValue || 0,
       });
-    } catch (error) {
-      console.error('Failed to fetch stats', error);
+    } catch {
+      // handled by global interceptor
     }
     setIsLoading(false);
   }, []);
@@ -84,6 +86,7 @@ export default function InventoryPage() {
     e.preventDefault();
     try {
       await apiClient.post('/inventory', formData);
+      toast.success('Stock item added successfully');
       setIsModalOpen(false);
       setFormData({
         itemName: '',
@@ -99,8 +102,8 @@ export default function InventoryPage() {
         status: 'in_stock'
       });
       fetchInventory(search, page);
-    } catch (error) {
-      console.error('Failed to add inventory item', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -108,9 +111,10 @@ export default function InventoryPage() {
     if (!confirm('Are you sure you want to remove this item from inventory?')) return;
     try {
       await apiClient.delete(`/inventory/${id}`);
+      toast.success('Inventory item removed');
       fetchInventory(search, page);
-    } catch (error) {
-      console.error('Failed to delete inventory item', error);
+    } catch {
+      // handled by global interceptor
     }
   };
 
@@ -221,7 +225,7 @@ export default function InventoryPage() {
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.itemCode}</span>
                             <span className="h-3 w-[1px] bg-slate-200"></span>
-                            <span className="text-[10px] text-slate-500 font-medium">{item.itemCategory}</span>
+                            <span className="text-[10px] text-slate-500 font-medium">{item.category}</span>
                           </div>
                         </div>
                       </div>
@@ -237,10 +241,10 @@ export default function InventoryPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-bold text-slate-900">
-                      ${item.unitPrice?.toLocaleString()}
+                      ${item.unitCost?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
-                      {new Date(item.expiryDate).toLocaleDateString()}
+                      {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">

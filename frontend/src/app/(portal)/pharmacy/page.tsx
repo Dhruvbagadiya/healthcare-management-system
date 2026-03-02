@@ -4,17 +4,22 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Pill, Search, Filter, MoreHorizontal, Plus, AlertCircle, ShoppingBag, X, Trash2, Edit } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
+import toast from 'react-hot-toast';
+import type { Medicine } from '@/types';
 
 export default function PharmacyPage() {
-    const [medicines, setMedicines] = useState<any[]>([]);
+    const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [selectedMedicine, setSelectedMedicine] = useState<any>(null);
+    const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+    const [formulationFilter, setFormulationFilter] = useState('');
+    const [stockFilter, setStockFilter] = useState('');
 
     // Form state
     const [formData, setFormData] = useState({
@@ -34,13 +39,14 @@ export default function PharmacyPage() {
     const fetchMedicines = useCallback(async (searchQuery = '', pageNumber = 1) => {
         setIsLoading(true);
         try {
-            const res = await apiClient.get('/pharmacy/medicines', {
-                params: {
-                    search: searchQuery,
-                    page: pageNumber,
-                    limit
-                }
-            });
+            const params: any = {
+                search: searchQuery,
+                page: pageNumber,
+                limit
+            };
+            if (formulationFilter) params.formulation = formulationFilter;
+            if (stockFilter) params.stockFilter = stockFilter;
+            const res = await apiClient.get('/pharmacy/medicines', { params });
             setMedicines(res.data.data);
             setTotalPages(res.data.meta.totalPages);
             setTotalItems(res.data.meta.total);
@@ -49,12 +55,13 @@ export default function PharmacyPage() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [formulationFilter, stockFilter]);
 
     const handleAddMedicine = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await apiClient.post('/pharmacy/medicines', formData);
+            toast.success('Medicine added successfully');
             setIsAddModalOpen(false);
             setFormData({
                 name: '',
@@ -68,8 +75,8 @@ export default function PharmacyPage() {
                 description: ''
             });
             fetchMedicines(search, page);
-        } catch (error) {
-            console.error('Failed to add medicine', error);
+        } catch {
+            // handled by global interceptor
         }
     };
 
@@ -77,10 +84,11 @@ export default function PharmacyPage() {
         if (!confirm('Are you sure you want to delete this medicine?')) return;
         try {
             await apiClient.delete(`/pharmacy/medicines/${id}`);
+            toast.success('Medicine deleted');
             setIsDetailsOpen(false);
             fetchMedicines(search, page);
-        } catch (error) {
-            console.error('Failed to delete medicine', error);
+        } catch {
+            // handled by global interceptor
         }
     };
 
@@ -90,7 +98,7 @@ export default function PharmacyPage() {
             fetchMedicines(search, 1);
         }, 300);
         return () => clearTimeout(timer);
-    }, [search, fetchMedicines]);
+    }, [search, formulationFilter, stockFilter, fetchMedicines]);
 
     useEffect(() => {
         if (page > 1) {
@@ -124,21 +132,69 @@ export default function PharmacyPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search medicines..."
-                        className="input pl-10 h-11"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+            <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search medicines..."
+                            className="input pl-10 h-11"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`btn btn-secondary gap-2 h-11 justify-center sm:px-6 ${showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : ''}`}
+                    >
+                        <Filter size={18} />
+                        Filters
+                        {(formulationFilter || stockFilter) && (
+                            <span className="h-2 w-2 rounded-full bg-indigo-600" />
+                        )}
+                    </button>
                 </div>
-                <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6">
-                    <Filter size={18} />
-                    Filters
-                </button>
+
+                {showFilters && (
+                    <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in slide-in-from-top-2 duration-200">
+                        <div className="space-y-1 flex-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Formulation</label>
+                            <select
+                                className="input h-10 text-sm"
+                                value={formulationFilter}
+                                onChange={(e) => setFormulationFilter(e.target.value)}
+                            >
+                                <option value="">All</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Capsule">Capsule</option>
+                                <option value="Syrup">Syrup</option>
+                                <option value="Injection">Injection</option>
+                                <option value="Ointment">Ointment</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1 flex-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stock Status</label>
+                            <select
+                                className="input h-10 text-sm"
+                                value={stockFilter}
+                                onChange={(e) => setStockFilter(e.target.value)}
+                            >
+                                <option value="">All</option>
+                                <option value="low">Low Stock (&lt; 20)</option>
+                                <option value="out">Out of Stock</option>
+                            </select>
+                        </div>
+                        <div className="flex items-end">
+                            <button
+                                onClick={() => { setFormulationFilter(''); setStockFilter(''); }}
+                                className="btn btn-secondary h-10 px-4 text-xs font-bold"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -172,7 +228,7 @@ export default function PharmacyPage() {
                                     <div className="text-sm">
                                         <span className="text-slate-500">Stock: </span>
                                         <span className={`font-bold ${medicine.stock < 20 ? 'text-red-600' : 'text-slate-900'}`}>
-                                            {medicine.stock} {medicine.unit || 'units'}
+                                            {medicine.stock} units
                                         </span>
                                     </div>
                                     {medicine.stock < 20 && (
@@ -231,7 +287,7 @@ export default function PharmacyPage() {
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
-                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
+                        <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900">Add New Medicine</h2>
                                 <p className="text-sm text-slate-500">Register a new item in the pharmacy inventory</p>

@@ -101,6 +101,29 @@ export class MailService {
         }
     }
 
+    async sendPasswordResetEmail(user: any, rawToken: string): Promise<void> {
+        const resetUrl =
+            `${this.configService.get('FRONTEND_URL')}/auth/reset-password?token=${rawToken}`;
+
+        try {
+            await this.mailerService.sendMail({
+                to: user.email,
+                subject: 'Reset your Aarogentix password',
+                template: './reset-password',
+                context: {
+                    name: `${user.firstName} ${user.lastName}`,
+                    resetUrl,
+                    expiryHours: 1,
+                },
+            });
+            this.logger.log(`Password reset email sent to ${user.email}`);
+        } catch (error) {
+            this.logger.error(
+                `Failed to send password reset email to ${user.email}: ${error.message}`,
+            );
+        }
+    }
+
     async sendPaymentFailedNotification(adminUser: any, organization: any) {
         const billingUrl = `${this.configService.get('FRONTEND_URL')}/dashboard/billing`;
 

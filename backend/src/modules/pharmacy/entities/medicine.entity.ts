@@ -16,6 +16,8 @@ import { Organization } from '../../organizations/entities/organization.entity';
 @Index(['name'])
 @Index(['stock'])
 @Index(['organizationId'])
+@Index(['organizationId', 'name'])
+@Index(['organizationId', 'expiryDate'])
 export class Medicine {
   @PrimaryGeneratedColumn('uuid')
   id: string;

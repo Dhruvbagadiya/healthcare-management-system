@@ -4,8 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   Index,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Organization } from '../../organizations/entities/organization.entity';
@@ -67,16 +69,23 @@ export class Ward {
   @Column({ nullable: true })
   remarks: string;
 
+  @OneToMany(() => Bed, bed => bed.ward)
+  beds: Bed[];
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }
 
 @Entity('beds')
 @Index(['wardId'])
 @Index(['bedNumber'])
+@Index(['organizationId', 'wardId', 'status'])
 export class Bed {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -91,6 +100,10 @@ export class Bed {
 
   @Column()
   wardId: string;
+
+  @ManyToOne(() => Ward, ward => ward.beds, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'wardId' })
+  ward: Ward;
 
   @Column()
   bedNumber: string;
@@ -112,4 +125,7 @@ export class Bed {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }
