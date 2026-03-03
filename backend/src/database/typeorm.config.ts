@@ -25,6 +25,8 @@ import { ComplianceRecord, DataAccessLog } from '../modules/compliance/entities/
 import { Organization } from '../modules/organizations/entities/organization.entity';
 import { Role } from '../modules/rbac/entities/role.entity';
 import { Permission } from '../modules/rbac/entities/permission.entity';
+import { Notification } from '../modules/notifications/entities/notification.entity';
+import { OnboardingProgress } from '../modules/onboarding/entities/onboarding-progress.entity';
 
 const sanitize = (val: any): any => {
   if (typeof val !== 'string') return val;
@@ -45,7 +47,7 @@ const ENTITIES = [
   Expense, Revenue, ComplianceRecord, DataAccessLog,
   Organization, Role, Permission,
   Plan, Subscription, FeatureLimit, OrganizationUsage, Payment,
-  EmailVerificationToken,
+  EmailVerificationToken, Notification, OnboardingProgress,
 ];
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
@@ -65,7 +67,8 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     migrationsTableName: 'typeorm_migrations',
     synchronize: false, // We use migrations now to handle data preservation
     logging: env === 'development',
-  };
+    autoLoadEntities: true, // Fail-safe for NestJS modules
+  } as any;
 
   let config: DataSourceOptions;
 
