@@ -28,10 +28,11 @@ export class AddCompositeIndexesForTenantedEntities1772420000000 implements Migr
             CREATE INDEX IF NOT EXISTS "IDX_patients_org_created_at"
             ON "patients" ("organizationId", "createdAt")
         `);
-        await queryRunner.query(`
-            CREATE INDEX IF NOT EXISTS "IDX_patients_org_status"
-            ON "patients" ("organizationId", "status")
-        `);
+        // Patients has no status column in current entity/DB
+        // await queryRunner.query(`
+        //     CREATE INDEX IF NOT EXISTS "IDX_patients_org_status"
+        //     ON "patients" ("organizationId", "status")
+        // `);
 
         // ── appointments ──────────────────────────────────────────────────────
         await queryRunner.query(`
@@ -48,9 +49,10 @@ export class AddCompositeIndexesForTenantedEntities1772420000000 implements Migr
             CREATE INDEX IF NOT EXISTS "IDX_doctors_org_created_at"
             ON "doctors" ("organizationId", "createdAt")
         `);
+        // Doctors uses isActive instead of status
         await queryRunner.query(`
-            CREATE INDEX IF NOT EXISTS "IDX_doctors_org_status"
-            ON "doctors" ("organizationId", "status")
+            CREATE INDEX IF NOT EXISTS "IDX_doctors_org_active"
+            ON "doctors" ("organizationId", "isActive")
         `);
 
         // ── audit_logs ────────────────────────────────────────────────────────
