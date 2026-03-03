@@ -80,14 +80,14 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     // Rate Limiting — named throttlers allow per-route overrides via @Throttle({ name: ... })
     ThrottlerModule.forRoot([
       {
-        name: 'global',   // Default: 100 requests per minute per IP
+        name: 'global',   // Default: 1000 requests per minute per IP
         ttl: 60_000,
-        limit: 100,
+        limit: 1000,
       },
       {
         name: 'auth-strict', // Used by auth endpoints via @Throttle({ 'auth-strict': { ... } })
         ttl: 60_000,
-        limit: 5,
+        limit: 50,
       },
     ]),
   ],

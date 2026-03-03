@@ -111,7 +111,10 @@ export class AppointmentsService {
       // Fetch details for email
       const detailedAppointment = await manager.findOne(Appointment, {
         where: { id: appointmentId },
-        relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+        relations: {
+          patient: { user: true },
+          doctor: { user: true }
+        },
       });
       if (detailedAppointment) {
         await this.mailService.sendAppointmentConfirmation(detailedAppointment);

@@ -91,11 +91,23 @@ async function seedData() {
             const tablesToPatch = [
                 'wards', 'beds', 'inventory', 'staff', 'surgeries', 'admissions',
                 'lab_tests', 'radiology_requests', 'operation_theaters',
-                'medical_records', 'prescriptions', 'invoices', 'patients', 'doctors', 'appointments'
+                'medical_records', 'prescriptions', 'invoices', 'patients', 'doctors', 'appointments',
+                'onboarding_progress'
             ];
 
             for (const table of tablesToPatch) {
                 await AppDataSource.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "deletedAt" "timestamp"`);
+            }
+
+            // Specific patch for onboarding_progress snake_case columns
+            try {
+                await AppDataSource.query(`ALTER TABLE "onboarding_progress" ADD COLUMN IF NOT EXISTS "organization_id" "uuid"`);
+                await AppDataSource.query(`ALTER TABLE "onboarding_progress" ADD COLUMN IF NOT EXISTS "current_step" "int" DEFAULT 1`);
+                await AppDataSource.query(`ALTER TABLE "onboarding_progress" ADD COLUMN IF NOT EXISTS "is_completed" "boolean" DEFAULT false`);
+                await AppDataSource.query(`ALTER TABLE "onboarding_progress" ADD COLUMN IF NOT EXISTS "created_at" "timestamp" DEFAULT now()`);
+                await AppDataSource.query(`ALTER TABLE "onboarding_progress" ADD COLUMN IF NOT EXISTS "updated_at" "timestamp" DEFAULT now()`);
+            } catch (pErr) {
+                console.warn('⚠️ OnboardingProgress patch warning:', pErr.message);
             }
 
             console.log('✅ Schema patches applied where needed.');

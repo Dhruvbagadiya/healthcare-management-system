@@ -22,7 +22,10 @@ export class PrescriptionsService {
     const organizationId = this.tenantService.getTenantId();
     const [data, total] = await this.prescriptionRepo.findAndCount({
       where: { organizationId },
-      relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+      relations: {
+        patient: { user: true },
+        doctor: { user: true }
+      },
       order: { issuedDate: 'DESC' },
       take: limit,
       skip,
@@ -43,7 +46,10 @@ export class PrescriptionsService {
     const organizationId = this.tenantService.getTenantId();
     const prescription = await this.prescriptionRepo.findOne({
       where: { id, organizationId },
-      relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+      relations: {
+        patient: { user: true },
+        doctor: { user: true }
+      },
     });
 
     if (!prescription) {
