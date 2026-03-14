@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import {
-    FileText, Plus, X, Search, Clock, CheckCircle2, FileCheck, Send,
+    FileText, Plus, X, Clock, CheckCircle2, FileCheck, Send,
 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import toast from 'react-hot-toast';

@@ -28,7 +28,7 @@ interface Department {
 }
 
 export default function DepartmentsPage() {
-    const { user } = useRequireAuth();
+    useRequireAuth();
     const [departments, setDepartments] = useState<Department[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -238,7 +238,7 @@ export default function DepartmentsPage() {
                         <Pagination
                             currentPage={page}
                             totalPages={totalPages}
-                            totalItems={totalItems}
+                            total={totalItems}
                             onPageChange={setPage}
                         />
                     </div>

@@ -7,7 +7,6 @@ import {
   Book,
   Phone,
   Mail,
-  ExternalLink,
   ChevronDown,
   Video,
   Activity,

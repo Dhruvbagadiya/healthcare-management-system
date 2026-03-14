@@ -5,11 +5,9 @@ import { apiClient } from '@/lib/api-client';
 import {
     Clock,
     Search,
-    Filter,
     Play,
     Check,
     UserPlus,
-    MoreHorizontal,
     Calendar,
     User,
     X,
@@ -37,7 +35,7 @@ const PRIORITY_CONFIG: Record<QueuePriority, { label: string; color: string }> =
 };
 
 export default function OPDQueuePage() {
-    const { user } = useRequireAuth();
+    useRequireAuth();
     const [queue, setQueue] = useState<OpdQueueEntry[]>([]);
     const [stats, setStats] = useState<QueueStats>({ waiting: 0, inConsultation: 0, completed: 0, total: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -98,17 +96,6 @@ export default function OPDQueuePage() {
                 : status === 'cancelled' ? 'Cancelled'
                 : 'Status updated';
             toast.success(label);
-            fetchQueue();
-        } catch {
-            // handled by global interceptor
-        }
-    };
-
-    const removeEntry = async (id: string) => {
-        if (!confirm('Remove this patient from the queue?')) return;
-        try {
-            await apiClient.delete(`/opd-queue/${id}`);
-            toast.success('Removed from queue');
             fetchQueue();
         } catch {
             // handled by global interceptor

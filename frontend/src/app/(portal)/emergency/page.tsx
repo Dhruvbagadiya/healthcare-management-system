@@ -5,13 +5,12 @@ import { apiClient } from '@/lib/api-client';
 import {
     Siren,
     Search,
-    Plus,
     Clock,
     User,
     X,
     AlertTriangle,
     Activity,
-    Ambulance,
+    Truck,
     Footprints,
     ShieldAlert,
     Check,
@@ -69,9 +68,9 @@ const STATUS_CONFIG: Record<CaseStatus, { label: string; badge: string }> = {
     deceased: { label: 'Deceased', badge: 'badge-error' },
 };
 
-const ARRIVAL_ICONS: Record<ArrivalMode, { label: string; icon: typeof Ambulance }> = {
+const ARRIVAL_ICONS: Record<ArrivalMode, { label: string; icon: typeof Truck }> = {
     walk_in: { label: 'Walk-in', icon: Footprints },
-    ambulance: { label: 'Ambulance', icon: Ambulance },
+    ambulance: { label: 'Ambulance', icon: Truck },
     police: { label: 'Police', icon: ShieldAlert },
     referral: { label: 'Referral', icon: ArrowRight },
 };

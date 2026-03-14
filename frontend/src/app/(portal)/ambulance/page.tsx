@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import {
-    Truck, Plus, X, MapPin, Phone, Clock, AlertTriangle, Wrench, CheckCircle2, Navigation,
+    Truck, Plus, X, MapPin, Phone, AlertTriangle, Wrench, CheckCircle2, Navigation,
 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import toast from 'react-hot-toast';

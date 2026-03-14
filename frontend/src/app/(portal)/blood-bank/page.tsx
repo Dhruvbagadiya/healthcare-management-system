@@ -4,13 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import {
     Droplets,
-    Search,
     Plus,
     X,
     Package,
     AlertTriangle,
     Check,
-    Clock,
     FileText,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -84,7 +82,6 @@ export default function BloodBankPage() {
     const [requests, setRequests] = useState<BloodRequest[]>([]);
     const [stats, setStats] = useState<InventoryStats>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [search, setSearch] = useState('');
     const [bloodGroupFilter, setBloodGroupFilter] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [showRequestModal, setShowRequestModal] = useState(false);

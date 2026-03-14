@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     try {
       await apiClient.post('/auth/forgot-password', { email });
       setIsSubmitted(true);
-    } catch (error: any) {
+    } catch {
       // Always show the same message to avoid email enumeration
       setIsSubmitted(true);
     } finally {

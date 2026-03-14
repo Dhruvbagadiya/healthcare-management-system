@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import {
-    ShieldCheck, Search, Plus, X, FileText, Building2, Check, Clock, AlertTriangle, IndianRupee,
+    ShieldCheck, Plus, X, FileText, Building2,
 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import toast from 'react-hot-toast';
@@ -56,9 +56,9 @@ export default function InsurancePage() {
     const [activeTab, setActiveTab] = useState<'claims' | 'providers'>('claims');
     const [claims, setClaims] = useState<InsuranceClaim[]>([]);
     const [providers, setProviders] = useState<InsuranceProvider[]>([]);
-    const [stats, setStats] = useState<ClaimStats>({});
+    const [, setStats] = useState<ClaimStats>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [search, setSearch] = useState('');
+    const [search] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Beaker, Search, Filter, MoreHorizontal, FlaskConical, ClipboardList, X, Trash2 } from 'lucide-react';
+import { Beaker, Search, MoreHorizontal, FlaskConical, ClipboardList, X, Trash2 } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import toast from 'react-hot-toast';
 import type { LabTest, Patient, Doctor } from '@/types';
