@@ -8,6 +8,7 @@ export function middleware(request: NextRequest) {
     const isPublicPath =
         pathname.startsWith('/auth') ||
         pathname.startsWith('/api') ||
+        pathname.startsWith('/admin') ||
         pathname.startsWith('/_next') ||
         pathname === '/favicon.ico' ||
         pathname === '/subscription-expired';

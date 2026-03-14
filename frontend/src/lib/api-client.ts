@@ -5,20 +5,19 @@ import { useAuthStore } from './store';
 const getApiUrl = () => {
   const url = process.env.NEXT_PUBLIC_API_URL || '';
 
-  // In browser context: always use the Vercel proxy UNLESS it's a localhost URL (local dev)
-  // This ensures mobile clients only need to reach Vercel, not Railway directly
+  // In browser context: use proxy for production, direct for local dev
   if (typeof window !== 'undefined') {
     if (url.includes('localhost') || url.includes('127.0.0.1')) {
       return url; // Local dev: hit local backend directly
     }
-    return '/api-proxy'; // Production: always go through Vercel proxy → Railway
+    return url || '/api-proxy'; // Production: go through proxy or use configured URL
   }
 
-  // SSR / server context: call Railway directly (servers can reach Railway fine)
+  // SSR / server context
   if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
     return url;
   }
-  return 'https://healthcare-management-system-production-5c2d.up.railway.app/api';
+  return process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api` : 'http://localhost:3001/api';
 };
 
 const API_URL = getApiUrl();

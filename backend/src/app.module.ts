@@ -40,6 +40,8 @@ import { EmergencyModule } from './modules/emergency/emergency.module';
 import { InsuranceModule } from './modules/insurance/insurance.module';
 import { AmbulanceModule } from './modules/ambulance/ambulance.module';
 import { DischargeSummaryModule } from './modules/discharge-summary/discharge-summary.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { HealthModule } from './modules/health/health.module';
 
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
@@ -91,6 +93,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     InsuranceModule,
     AmbulanceModule,
     DischargeSummaryModule,
+    AdminModule,
+    HealthModule,
     // Rate Limiting — named throttlers allow per-route overrides via @Throttle({ name: ... })
     ThrottlerModule.forRoot([
       {

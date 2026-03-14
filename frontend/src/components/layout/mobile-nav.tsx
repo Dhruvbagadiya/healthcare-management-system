@@ -31,7 +31,9 @@ import {
   ShieldCheck,
   Truck,
   FileOutput,
+  Crown,
 } from 'lucide-react';
+import { useAuthStore } from '@/lib/store';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, feature: 'dashboard' },
@@ -62,11 +64,17 @@ const NAV_ITEMS = [
   { href: '/help', label: 'Help & Support', icon: HelpCircle, feature: 'help' },
 ];
 
+const ADMIN_ITEMS = [
+  { href: '/admin', label: 'Admin Panel', icon: Crown },
+];
+
 export function MobileNav() {
   const pathname = usePathname();
   const { hasFeature } = useSubscription();
+  const user = useAuthStore((s) => s.user);
 
   const filteredItems = NAV_ITEMS.filter((item) => hasFeature(item.feature));
+  const isAdmin = user?.roles?.some((r) => ['admin', 'super_admin', 'owner'].includes(r.toLowerCase()));
 
   return (
     <nav className="space-y-1.5">
@@ -93,6 +101,38 @@ export function MobileNav() {
           </Link>
         );
       })}
+
+      {/* Admin Section - only visible to admins */}
+      {isAdmin && (
+        <>
+          <div className="pt-4 pb-1 px-4">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Administration</p>
+          </div>
+          {ADMIN_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${isActive
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 translate-x-1'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                  }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon
+                    className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600'
+                      }`}
+                  />
+                  <span>{item.label}</span>
+                </div>
+                {isActive && <ChevronRight className="h-4 w-4 text-white/70" />}
+              </Link>
+            );
+          })}
+        </>
+      )}
     </nav>
   );
 }

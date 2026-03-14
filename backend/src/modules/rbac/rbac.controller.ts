@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, UseGuards, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../../guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { RbacService } from './rbac.service';
 import { OrganizationId } from '../../common/decorators/organization-id.decorator';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('RBAC')
+@ApiBearerAuth()
 @Controller('rbac')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RbacController {
@@ -22,6 +25,12 @@ export class RbacController {
         return this.rbacService.getOrganizationRoles(organizationId);
     }
 
+    @Get('roles/:id')
+    @Roles([UserRole.ADMIN])
+    async getRole(@Param('id') id: string) {
+        return this.rbacService.getRoleWithPermissions(id);
+    }
+
     @Post('permissions')
     @Roles([UserRole.ADMIN])
     async createPermission(@Body() data: { name: string; category: string; description?: string }) {
@@ -32,8 +41,28 @@ export class RbacController {
     @Roles([UserRole.ADMIN])
     async createRole(
         @OrganizationId() organizationId: string,
-        @Body() data: { name: string; permissionNames: string[]; isSystemRole?: boolean },
+        @Body() data: { name: string; description?: string; permissionNames: string[]; isSystemRole?: boolean },
     ) {
         return this.rbacService.createRole(data.name, organizationId, data.permissionNames, data.isSystemRole);
+    }
+
+    @Patch('roles/:id')
+    @Roles([UserRole.ADMIN])
+    async updateRole(
+        @Param('id') id: string,
+        @OrganizationId() organizationId: string,
+        @Body() data: { name?: string; description?: string; permissionNames?: string[] },
+    ) {
+        return this.rbacService.updateRole(id, organizationId, data);
+    }
+
+    @Delete('roles/:id')
+    @Roles([UserRole.ADMIN])
+    async deleteRole(
+        @Param('id') id: string,
+        @OrganizationId() organizationId: string,
+    ) {
+        await this.rbacService.deleteRole(id, organizationId);
+        return { message: 'Role deleted successfully' };
     }
 }

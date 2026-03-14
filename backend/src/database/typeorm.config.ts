@@ -74,6 +74,11 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     migrationsTableName: 'typeorm_migrations',
     synchronize: false, // We use migrations now to handle data preservation
     logging: env === 'development',
+    extra: {
+      max: env === 'production' ? 20 : 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    },
   };
 
   let config: DataSourceOptions;
@@ -89,7 +94,7 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
       type: 'postgres',
       url: databaseUrl,
       ...commonOptions,
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
+      ssl: useSsl ? { rejectUnauthorized: env === 'production' } : false,
     } as DataSourceOptions;
   } else {
     const host = getVal('DATABASE_HOST', getVal('PGHOST', 'localhost'));
@@ -119,7 +124,7 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
       password,
       database,
       ...commonOptions,
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
+      ssl: useSsl ? { rejectUnauthorized: env === 'production' } : false,
     } as DataSourceOptions;
   }
 
@@ -148,5 +153,5 @@ export const AppDataSource = new DataSource({
   migrationsTableName: 'typeorm_migrations',
   synchronize: false, // For CLI always false to avoid side effects during migration generation
   logging: env === 'development',
-  ssl: useSsl ? { rejectUnauthorized: false } : false,
+  ssl: useSsl ? { rejectUnauthorized: env === 'production' } : false,
 } as DataSourceOptions);

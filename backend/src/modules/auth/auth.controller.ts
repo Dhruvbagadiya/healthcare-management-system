@@ -131,7 +131,7 @@ export class AuthController {
     await this.authService.logout(req.user.id);
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
-    return { message: 'Logged out successfully' };
+    return { message: 'Logged out' };
   }
 
   @Public()
@@ -158,7 +158,7 @@ export class AuthController {
     const commonOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict' as const,
+      sameSite: 'lax' as const,
       path: '/',
     };
 
