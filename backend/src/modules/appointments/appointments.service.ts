@@ -1,12 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Appointment } from './entities/appointment.entity';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Appointment, AppointmentStatus } from './entities/appointment.entity';
 import { AppointmentPaginationDto } from './dto/appointment-pagination.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { TenantService } from '../../common/services/tenant.service';
 import { MailService } from '../mail/mail.service';
 import { UsageService } from '../subscriptions/usage.service';
-import { DataSource } from 'typeorm';
+import { DataSource, Not, In } from 'typeorm';
 
 @Injectable()
 export class AppointmentsService {
@@ -88,6 +88,23 @@ export class AppointmentsService {
     try {
       const manager = queryRunner.manager;
 
+      // Check for double-booking
+      const existingAppointment = await manager.findOne(Appointment, {
+        where: {
+          doctorId,
+          appointmentDate: new Date(appointmentDate),
+          appointmentTime: createAppointmentDto.appointmentTime,
+          organizationId,
+          status: Not(In([AppointmentStatus.CANCELLED])),
+        },
+      });
+
+      if (existingAppointment) {
+        throw new ConflictException(
+          `Doctor already has an appointment at ${createAppointmentDto.appointmentTime} on ${appointmentDate}`,
+        );
+      }
+
       const todayCount = await manager.count(Appointment, {
         where: {
           doctorId,
@@ -111,10 +128,7 @@ export class AppointmentsService {
       // Fetch details for email
       const detailedAppointment = await manager.findOne(Appointment, {
         where: { id: appointmentId },
-        relations: {
-          patient: { user: true },
-          doctor: { user: true }
-        },
+        relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
       });
       if (detailedAppointment) {
         await this.mailService.sendAppointmentConfirmation(detailedAppointment);

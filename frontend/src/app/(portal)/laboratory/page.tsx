@@ -17,6 +17,8 @@ export default function LaboratoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [labStats, setLabStats] = useState({ pending: 0, completed: 0, critical: 0 });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -27,6 +29,7 @@ export default function LaboratoryPage() {
     status: 'pending',
     orderedBy: '',
     notes: '',
+    priority: 'normal',
     testResults: [] as any[]
   });
 
@@ -35,22 +38,31 @@ export default function LaboratoryPage() {
   const fetchLabTests = useCallback(async (searchQuery = '', pageNumber = 1) => {
     setIsLoading(true);
     try {
-      const res = await apiClient.get('/laboratory/lab-tests', {
-        params: {
-          search: searchQuery,
-          page: pageNumber,
-          limit
-        }
-      });
-      setLabTests(res.data.data);
-      setTotalPages(res.data.meta.totalPages);
-      setTotalItems(res.data.meta.total);
+      const params: any = {
+        search: searchQuery,
+        page: pageNumber,
+        limit
+      };
+      if (statusFilter) params.status = statusFilter;
+      const res = await apiClient.get('/laboratory/lab-tests', { params });
+      const data = res.data.data || [];
+      setLabTests(data);
+      setTotalPages(res.data.meta?.totalPages || 1);
+      setTotalItems(res.data.meta?.total || 0);
+      // Compute stats from data (first page approximation)
+      if (pageNumber === 1 && !searchQuery) {
+        setLabStats({
+          pending: data.filter((t: LabTest) => t.status === 'pending').length,
+          completed: data.filter((t: LabTest) => t.status === 'completed').length,
+          critical: data.filter((t: LabTest) => t.status === 'critical').length,
+        });
+      }
     } catch {
       // handled by global interceptor
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [statusFilter]);
 
   const fetchDependencies = useCallback(async () => {
     try {
@@ -71,7 +83,7 @@ export default function LaboratoryPage() {
       fetchLabTests(search, 1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, fetchLabTests]);
+  }, [search, statusFilter, fetchLabTests]);
 
   useEffect(() => {
     if (page > 1) {
@@ -97,6 +109,7 @@ export default function LaboratoryPage() {
         status: 'pending',
         orderedBy: '',
         notes: '',
+        priority: 'normal',
         testResults: []
       });
       fetchLabTests(search, page);
@@ -137,17 +150,17 @@ export default function LaboratoryPage() {
           <div className="flex flex-col gap-1">
             <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Pending Tests</span>
             <div className="flex items-center gap-3">
-              <span className="text-2xl md:text-3xl font-bold text-slate-900 font-display">24</span>
-              <span className="badge badge-warning text-[9px] font-bold">+4 new</span>
+              <span className="text-2xl md:text-3xl font-bold text-slate-900 font-display">{labStats.pending}</span>
+              <span className="badge badge-warning text-[9px] font-bold">Awaiting</span>
             </div>
           </div>
         </div>
         <div className="card shadow-sm border-slate-200 p-5 bg-white">
           <div className="flex flex-col gap-1">
-            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Completed Today</span>
+            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Completed</span>
             <div className="flex items-center gap-3">
-              <span className="text-2xl md:text-3xl font-bold text-slate-900 font-display">42</span>
-              <span className="badge badge-success text-[9px] font-bold uppercase">Target</span>
+              <span className="text-2xl md:text-3xl font-bold text-slate-900 font-display">{labStats.completed}</span>
+              <span className="badge badge-success text-[9px] font-bold uppercase">Done</span>
             </div>
           </div>
         </div>
@@ -155,17 +168,17 @@ export default function LaboratoryPage() {
           <div className="flex flex-col gap-1">
             <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Critical Results</span>
             <div className="flex items-center gap-3">
-              <span className="text-2xl md:text-3xl font-bold text-rose-600 font-display">3</span>
-              <span className="badge badge-error text-[9px] font-bold pulse">Action</span>
+              <span className="text-2xl md:text-3xl font-bold text-rose-600 font-display">{labStats.critical}</span>
+              {labStats.critical > 0 && <span className="badge badge-error text-[9px] font-bold pulse">Action</span>}
             </div>
           </div>
         </div>
         <div className="card shadow-sm border-slate-200 p-5 bg-white">
           <div className="flex flex-col gap-1">
-            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Turnaround Time</span>
+            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Tests</span>
             <div className="flex items-center gap-3">
-              <span className="text-2xl md:text-3xl font-bold text-indigo-600 font-display">4.2h</span>
-              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-tight">Avg this week</span>
+              <span className="text-2xl md:text-3xl font-bold text-indigo-600 font-display">{totalItems}</span>
+              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-tight">Records</span>
             </div>
           </div>
         </div>
@@ -182,10 +195,17 @@ export default function LaboratoryPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary gap-2 h-11 justify-center sm:px-6 font-bold">
-          <Filter size={18} />
-          Filters
-        </button>
+        <select
+          className="input h-11 text-sm sm:w-44"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="critical">Critical</option>
+        </select>
       </div>
 
       <div className="card overflow-hidden !p-0 shadow-sm border-slate-200">
@@ -357,7 +377,7 @@ export default function LaboratoryPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Priority</label>
-                  <select className="input h-11" defaultValue="normal">
+                  <select className="input h-11" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
                     <option value="normal">Normal</option>
                     <option value="urgent">Urgent (STAT)</option>
                     <option value="emergency">Emergency</option>

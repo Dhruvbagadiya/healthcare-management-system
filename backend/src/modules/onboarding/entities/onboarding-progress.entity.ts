@@ -18,30 +18,30 @@ export class OnboardingProgress {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'organization_id' })
+    @Column()
     @Index()
     organizationId: string;
 
     @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'organization_id' })
+    @JoinColumn({ name: 'organizationId' })
     organization: Organization;
 
-    @Column({ name: 'current_step', type: 'int', default: 1 })
+    @Column({ type: 'int', default: 1 })
     currentStep: number;
 
-    @Column({ name: 'completed_steps', type: 'jsonb', default: [] })
+    @Column({ type: 'jsonb', default: [] })
     completedSteps: OnboardingStep[];
 
-    @Column({ name: 'is_completed', default: false })
+    @Column({ default: false })
     isCompleted: boolean;
 
     @Column({ type: 'jsonb', nullable: true })
     metadata: Record<string, any>;
 
-    @CreateDateColumn({ name: 'created_at' })
+    @CreateDateColumn()
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at' })
+    @UpdateDateColumn()
     updatedAt: Date;
 
     constructor(partial: Partial<OnboardingProgress>) {

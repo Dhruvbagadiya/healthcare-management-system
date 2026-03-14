@@ -25,8 +25,6 @@ import { ComplianceRecord, DataAccessLog } from '../modules/compliance/entities/
 import { Organization } from '../modules/organizations/entities/organization.entity';
 import { Role } from '../modules/rbac/entities/role.entity';
 import { Permission } from '../modules/rbac/entities/permission.entity';
-import { Notification } from '../modules/notifications/entities/notification.entity';
-import { OnboardingProgress } from '../modules/onboarding/entities/onboarding-progress.entity';
 
 const sanitize = (val: any): any => {
   if (typeof val !== 'string') return val;
@@ -39,6 +37,13 @@ import { FeatureLimit } from '../modules/subscriptions/entities/feature-limit.en
 import { OrganizationUsage } from '../modules/subscriptions/entities/organization-usage.entity';
 import { Payment } from '../modules/billing/entities/payment.entity';
 import { EmailVerificationToken } from '../modules/auth/entities/email-verification-token.entity';
+import { Department } from '../modules/departments/entities/department.entity';
+import { OpdQueue } from '../modules/opd-queue/entities/opd-queue.entity';
+import { BloodInventory, BloodRequest } from '../modules/blood-bank/entities/blood-bank.entity';
+import { EmergencyCase } from '../modules/emergency/entities/emergency.entity';
+import { InsuranceProvider, InsuranceClaim } from '../modules/insurance/entities/insurance.entity';
+import { Ambulance, AmbulanceTrip } from '../modules/ambulance/entities/ambulance.entity';
+import { DischargeSummary } from '../modules/discharge-summary/entities/discharge-summary.entity';
 
 const ENTITIES = [
   User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
@@ -47,7 +52,9 @@ const ENTITIES = [
   Expense, Revenue, ComplianceRecord, DataAccessLog,
   Organization, Role, Permission,
   Plan, Subscription, FeatureLimit, OrganizationUsage, Payment,
-  EmailVerificationToken, Notification, OnboardingProgress,
+  EmailVerificationToken, Department, OpdQueue,
+  BloodInventory, BloodRequest, EmergencyCase,
+  InsuranceProvider, InsuranceClaim, Ambulance, AmbulanceTrip, DischargeSummary,
 ];
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
@@ -67,8 +74,7 @@ export const typeormConfig = (configService: ConfigService): DataSourceOptions =
     migrationsTableName: 'typeorm_migrations',
     synchronize: false, // We use migrations now to handle data preservation
     logging: env === 'development',
-    autoLoadEntities: true, // Fail-safe for NestJS modules
-  } as any;
+  };
 
   let config: DataSourceOptions;
 

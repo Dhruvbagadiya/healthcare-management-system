@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
+import { Department } from '../../departments/entities/department.entity';
 
 export enum StaffRole {
   DOCTOR = 'doctor',
@@ -34,6 +35,7 @@ export enum StaffStatus {
 @Index(['userId'])
 @Index(['staffId'])
 @Index(['status'])
+@Index(['organizationId', 'status'])
 export class Staff {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -46,7 +48,7 @@ export class Staff {
   @JoinColumn({ name: 'organizationId' })
   organization: Organization;
 
-  @Column({ unique: true })
+  @Column({ length: 50, unique: true })
   staffId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE', eager: true })
@@ -61,22 +63,27 @@ export class Staff {
   @Column({ type: 'enum', enum: StaffStatus, default: StaffStatus.ACTIVE })
   status: StaffStatus;
 
-  @Column({ nullable: true })
+  @Column({ length: 100, nullable: true })
   specialization: string;
 
-  @Column({ nullable: true })
+  @Column({ length: 50, nullable: true })
   licenseNumber: string;
 
   @Column({ nullable: true })
   licenseExpiry: Date;
 
   @Column({ nullable: true })
+  @Index()
   departmentId: string;
+
+  @ManyToOne(() => Department, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'departmentId' })
+  department: Department;
 
   @Column({ nullable: true })
   joiningDate: Date;
 
-  @Column({ nullable: true })
+  @Column({ length: 255, nullable: true })
   qualification: string;
 
   @Column({ nullable: true })

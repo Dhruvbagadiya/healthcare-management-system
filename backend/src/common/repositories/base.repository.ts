@@ -48,28 +48,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> extends Repository
 
         // Relations
         relations.forEach((relation) => {
-            const parts = relation.split('.');
-            if (parts.length === 1) {
-                queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
-            } else {
-                // For nested relations like 'patient.user', join step by step
-                let currentAlias = 'entity';
-                for (let i = 0; i < parts.length; i++) {
-                    const property = parts[i];
-                    const parentAlias = currentAlias;
-                    currentAlias = parts.slice(0, i + 1).join('_'); // e.g., 'patient', 'patient_user'
-
-                    // Only add the join if it's not already joined
-                    // This is a bit complex in QueryBuilder, but we can check the expression map
-                    const hasJoin = (queryBuilder as any).expressionMap.joinAttributes.some(
-                        (attr: any) => attr.alias.name === currentAlias
-                    );
-
-                    if (!hasJoin) {
-                        queryBuilder.leftJoinAndSelect(`${parentAlias}.${property}`, currentAlias);
-                    }
-                }
-            }
+            queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
         });
 
         // Sorting

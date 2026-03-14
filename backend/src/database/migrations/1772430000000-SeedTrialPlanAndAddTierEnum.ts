@@ -25,11 +25,42 @@ export class SeedTrialPlanAndAddTierEnum1772430000000 implements MigrationInterf
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // ── 1. Add 'trial' to the enum type ──────────────────────────────────
-        // PostgreSQL does not support using new enum values in the same transaction
-        // they were added. We skip seeding data here and handle it in the seed script instead.
+        // PostgreSQL does not support removing enum values, but adding is safe.
         await queryRunner.query(`
-            ALTER TYPE "plans_tier_enum"
+            ALTER TYPE "subscription_plan_tier_enum"
             ADD VALUE IF NOT EXISTS 'trial'
+        `);
+
+        // ── 2. Seed the Trial plan row ────────────────────────────────────────
+        await queryRunner.query(`
+            INSERT INTO "plans" (
+                "id",
+                "tier",
+                "name",
+                "slug",
+                "description",
+                "price",
+                "currency",
+                "billingCycle",
+                "isActive",
+                "createdAt",
+                "updatedAt"
+            )
+            SELECT
+                gen_random_uuid(),
+                'trial',
+                'Trial',
+                'trial',
+                '14-day free trial — full access to all features',
+                0,
+                'INR',
+                'MONTHLY',
+                true,
+                NOW(),
+                NOW()
+            WHERE NOT EXISTS (
+                SELECT 1 FROM "plans" WHERE "slug" = 'trial'
+            )
         `);
     }
 

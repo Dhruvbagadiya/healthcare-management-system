@@ -20,6 +20,7 @@ import { LaboratoryModule } from './modules/laboratory/laboratory.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { StaffModule } from './modules/staff/staff.module';
+import { DepartmentsModule } from './modules/departments/departments.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { WardsModule } from './modules/wards/wards.module';
 import { OperationTheaterModule } from './modules/operation-theater/operation-theater.module';
@@ -33,6 +34,12 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MailModule } from './modules/mail/mail.module';
+import { OpdQueueModule } from './modules/opd-queue/opd-queue.module';
+import { BloodBankModule } from './modules/blood-bank/blood-bank.module';
+import { EmergencyModule } from './modules/emergency/emergency.module';
+import { InsuranceModule } from './modules/insurance/insurance.module';
+import { AmbulanceModule } from './modules/ambulance/ambulance.module';
+import { DischargeSummaryModule } from './modules/discharge-summary/discharge-summary.module';
 
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
@@ -64,6 +71,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     PharmacyModule,
     DashboardModule,
     StaffModule,
+    DepartmentsModule,
     InventoryModule,
     WardsModule,
     OperationTheaterModule,
@@ -77,17 +85,23 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     OnboardingModule,
     NotificationsModule,
     MailModule,
+    OpdQueueModule,
+    BloodBankModule,
+    EmergencyModule,
+    InsuranceModule,
+    AmbulanceModule,
+    DischargeSummaryModule,
     // Rate Limiting — named throttlers allow per-route overrides via @Throttle({ name: ... })
     ThrottlerModule.forRoot([
       {
-        name: 'global',   // Default: 1000 requests per minute per IP
+        name: 'global',   // Default: 100 requests per minute per IP
         ttl: 60_000,
-        limit: 1000,
+        limit: 100,
       },
       {
         name: 'auth-strict', // Used by auth endpoints via @Throttle({ 'auth-strict': { ... } })
         ttl: 60_000,
-        limit: 50,
+        limit: 5,
       },
     ]),
   ],

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { Package, AlertTriangle, TrendingDown, Search, Filter, MoreHorizontal, Plus, X, Trash2, Calendar, DollarSign, Layers } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, Search, Filter, MoreHorizontal, Plus, X, Trash2, Calendar, IndianRupee, Layers } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import toast from 'react-hot-toast';
 import type { InventoryItem } from '@/types';
@@ -16,6 +16,7 @@ export default function InventoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -84,6 +85,8 @@ export default function InventoryPage() {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await apiClient.post('/inventory', formData);
       toast.success('Stock item added successfully');
@@ -104,6 +107,8 @@ export default function InventoryPage() {
       fetchInventory(search, page);
     } catch {
       // handled by global interceptor
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -343,7 +348,7 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><DollarSign size={14} /> Unit Price ($)</label>
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><IndianRupee size={14} /> Unit Price (&#8377;)</label>
                   <input type="number" step="0.01" required className="input h-11" value={formData.unitPrice} onChange={e => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) })} />
                 </div>
 
@@ -374,9 +379,10 @@ export default function InventoryPage() {
               <button
                 type="submit"
                 onClick={handleAddItem}
-                className="btn btn-primary flex-1 h-12 shadow-indigo-100 font-bold"
+                disabled={isSubmitting}
+                className="btn btn-primary flex-1 h-12 shadow-indigo-100 font-bold disabled:opacity-50"
               >
-                Add Stock Item
+                {isSubmitting ? 'Adding...' : 'Add Stock Item'}
               </button>
             </div>
           </div>

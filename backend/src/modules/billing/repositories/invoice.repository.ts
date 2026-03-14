@@ -19,7 +19,7 @@ export class InvoiceRepository extends BaseRepository<Invoice> {
     async findById(id: string): Promise<Invoice | null> {
         return this.createTenantQueryBuilder('invoice')
             .leftJoinAndSelect('invoice.patient', 'patient')
-            .leftJoinAndSelect('patient.user', 'patientUser')
+            .leftJoinAndSelect('patient.user', 'user')
             .where('invoice.id = :id', { id })
             .getOne();
     }
