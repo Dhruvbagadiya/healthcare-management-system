@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { winstonConfig } from './common/logger/logger.config';
 
 const sanitize = (val: any): any => {
   if (typeof val !== 'string') return val;
@@ -18,7 +19,10 @@ const sanitize = (val: any): any => {
 
 async function bootstrap() {
   console.log('🚀 Starting Aarogentix API - Version: 1.0.5 (Explicit Host Binding & Health Check)');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    logger: winstonConfig,
+  });
   app.set('trust proxy', 1);
 
   // Mandatory Request Logger
