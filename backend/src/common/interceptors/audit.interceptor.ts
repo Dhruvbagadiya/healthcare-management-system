@@ -6,19 +6,17 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { Reflector } from '@nestjs/core';
+import { Reflector, ModuleRef } from '@nestjs/core';
 import { AUDIT_KEY, AuditOptions } from '../decorators/audit.decorator';
 import { ComplianceService } from '../../modules/compliance/compliance.service';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-    constructor(
-        private readonly reflector: Reflector,
-        private readonly complianceService: ComplianceService,
-    ) { }
+    constructor(private readonly moduleRef: ModuleRef) { }
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-        const auditOptions = this.reflector.getAllAndOverride<AuditOptions>(AUDIT_KEY, [
+        const reflector = this.moduleRef.get(Reflector, { strict: false });
+        const auditOptions = reflector.getAllAndOverride<AuditOptions>(AUDIT_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
@@ -41,7 +39,8 @@ export class AuditInterceptor implements NestInterceptor {
                     // Extract entityId from params or returned data
                     const entityId = request.params.id || (data && data.id) || 'N/A';
 
-                    await this.complianceService.logDataAccess(
+                    const complianceService = this.moduleRef.get(ComplianceService, { strict: false });
+                    await complianceService.logDataAccess(
                         user.id,
                         user.organizationId,
                         action,

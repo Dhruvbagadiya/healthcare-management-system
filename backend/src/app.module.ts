@@ -120,7 +120,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     },
     {
       provide: APP_GUARD,
-      useClass: CustomThrottlerGuard,  // Swagger-bypass + proxy-aware IP
+      useClass: CustomThrottlerGuard,
     },
     {
       provide: APP_GUARD,
