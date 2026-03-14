@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from '../../common/common.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { Medicine } from './entities/medicine.entity';
 import { PharmacyService } from './pharmacy.service';
 import { PharmacyController } from './pharmacy.controller';
 
 @Module({
-  imports: [CommonModule, TypeOrmModule.forFeature([Medicine])],
+  imports: [CommonModule, SubscriptionsModule, TypeOrmModule.forFeature([Medicine])],
   controllers: [PharmacyController],
   providers: [PharmacyService],
   exports: [PharmacyService],

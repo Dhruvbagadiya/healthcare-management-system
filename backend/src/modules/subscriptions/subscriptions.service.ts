@@ -16,7 +16,7 @@ import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class SubscriptionsService {
-    private stripe: Stripe;
+    private stripe: Stripe | null = null;
 
     constructor(
         @InjectRepository(Plan)
@@ -36,14 +36,14 @@ export class SubscriptionsService {
     ) {
         const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY');
         if (!stripeSecret) {
-            throw new Error(
-                '[FATAL] STRIPE_SECRET_KEY environment variable is not set. '
-                + 'SubscriptionsService cannot be initialised without a valid Stripe secret.',
+            console.warn(
+                '[WARN] STRIPE_SECRET_KEY not set. Stripe-dependent features (upgrades, webhooks) will be unavailable.',
             );
+        } else {
+            this.stripe = new Stripe(stripeSecret, {
+                apiVersion: '2024-12-18.acacia' as any,
+            });
         }
-        this.stripe = new Stripe(stripeSecret, {
-            apiVersion: '2024-12-18.acacia' as any,
-        });
     }
 
     async getAvailablePlans(): Promise<Plan[]> {
@@ -85,6 +85,7 @@ export class SubscriptionsService {
     }
 
     async upgradePlan(organizationId: string, dto: UpgradePlanDto) {
+        if (!this.stripe) throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY to enable upgrades.');
         const plan = await this.plansRepository.findOne({ where: { id: dto.planId } });
         if (!plan) throw new NotFoundException('Plan not found');
 
@@ -131,7 +132,7 @@ export class SubscriptionsService {
     async cancelPlan(organizationId: string) {
         const sub = await this.getCurrentSubscription(organizationId);
 
-        if (sub.gatewaySubscriptionId) {
+        if (sub.gatewaySubscriptionId && this.stripe) {
             // Unsubscribe from Stripe end-of-period
             await this.stripe.subscriptions.update(sub.gatewaySubscriptionId, {
                 cancel_at_period_end: true,
@@ -145,6 +146,7 @@ export class SubscriptionsService {
     }
 
     async handleStripeWebhook(payload: Buffer, signature: string) {
+        if (!this.stripe) throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY to enable webhooks.');
         const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
         if (!webhookSecret) {
             throw new Error(
