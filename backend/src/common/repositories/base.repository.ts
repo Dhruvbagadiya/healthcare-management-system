@@ -48,7 +48,15 @@ export abstract class BaseRepository<T extends ObjectLiteral> extends Repository
 
         // Relations
         relations.forEach((relation) => {
-            queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
+            if (relation.includes('.')) {
+                // For nested relations like 'patient.user', join on the parent alias
+                const parts = relation.split('.');
+                const parentAlias = parts.slice(0, -1).join('.');
+                const childRelation = parts[parts.length - 1];
+                queryBuilder.leftJoinAndSelect(`${parentAlias}.${childRelation}`, relation.replace(/\./g, '_'));
+            } else {
+                queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
+            }
         });
 
         // Sorting

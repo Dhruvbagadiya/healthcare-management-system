@@ -30,7 +30,6 @@ export class OperationTheaterService {
 
     const [data, total] = await this.surgeryRepo.findAndCount({
       where,
-      relations: ['patient', 'patient.user', 'surgeon', 'surgeon.user'],
       order: { scheduledDate: 'DESC' },
       take: limit,
       skip,
@@ -51,7 +50,6 @@ export class OperationTheaterService {
     const organizationId = this.tenantService.getTenantId();
     const surgery = await this.surgeryRepo.findOne({
       where: { id, organizationId },
-      relations: ['patient', 'patient.user', 'surgeon', 'surgeon.user'],
     });
 
     if (!surgery) {

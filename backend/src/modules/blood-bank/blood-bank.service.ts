@@ -212,10 +212,8 @@ export class BloodBankService {
     }
 
     // Emergency/urgent first, then by request date descending
-    qb.orderBy(
-      `CASE req.priority WHEN 'emergency' THEN 1 WHEN 'urgent' THEN 2 ELSE 3 END`,
-      'ASC',
-    ).addOrderBy('req.requestDate', 'DESC');
+    qb.orderBy('req.priority', 'ASC')
+    .addOrderBy('req.requestDate', 'DESC');
 
     qb.skip(skip).take(limit);
 

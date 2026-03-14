@@ -32,22 +32,24 @@ export class AuditInterceptor implements NestInterceptor {
 
         return next.handle().pipe(
             tap(async (data) => {
-                if (user) {
-                    const action = auditOptions.action || `${method} ${url}`;
-                    const entityType = auditOptions.entityType || 'unknown';
+                try {
+                    if (user) {
+                        const action = auditOptions.action || `${method} ${url}`;
+                        const entityType = auditOptions.entityType || 'unknown';
+                        const entityId = request.params.id || (data && data.id) || 'N/A';
 
-                    // Extract entityId from params or returned data
-                    const entityId = request.params.id || (data && data.id) || 'N/A';
-
-                    const complianceService = this.moduleRef.get(ComplianceService, { strict: false });
-                    await complianceService.logDataAccess(
-                        user.id,
-                        user.organizationId,
-                        action,
-                        entityType,
-                        entityId,
-                        `Accessed through API: ${method} ${url}`
-                    );
+                        const complianceService = this.moduleRef.get(ComplianceService, { strict: false });
+                        await complianceService.logDataAccess(
+                            user.id,
+                            user.organizationId,
+                            action,
+                            entityType,
+                            entityId,
+                            `Accessed through API: ${method} ${url}`
+                        );
+                    }
+                } catch {
+                    // Audit logging should never crash the request
                 }
             }),
         );

@@ -44,6 +44,7 @@ import { EmergencyCase } from '../modules/emergency/entities/emergency.entity';
 import { InsuranceProvider, InsuranceClaim } from '../modules/insurance/entities/insurance.entity';
 import { Ambulance, AmbulanceTrip } from '../modules/ambulance/entities/ambulance.entity';
 import { DischargeSummary } from '../modules/discharge-summary/entities/discharge-summary.entity';
+import { Notification } from '../modules/notifications/entities/notification.entity';
 
 const ENTITIES = [
   User, Patient, Doctor, Appointment, Prescription, MedicalRecord,
@@ -55,6 +56,7 @@ const ENTITIES = [
   EmailVerificationToken, Department, OpdQueue,
   BloodInventory, BloodRequest, EmergencyCase,
   InsuranceProvider, InsuranceClaim, Ambulance, AmbulanceTrip, DischargeSummary,
+  Notification,
 ];
 
 export const typeormConfig = (configService: ConfigService): DataSourceOptions => {
